@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Workbench — mini-games for curious kids</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Be+Vietnam+Pro:wght@400;500;700&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --mat:#1E3A35; --mat2:#27524A; --matline:rgba(223,233,227,.09); --matline2:rgba(223,233,227,.16);
+  --paper:#F7F2E7; --paper2:#EDE5D4; --ink:#16241F; --chalk:#DFE9E3; --chalk-dim:#9DB3AB;
+  --amber:#F0A63C; --red:#E2563F;
+  --c0:#E2563F; --c1:#F0A63C; --c2:#3FB8A0; --c3:#4C8FD1; --c4:#9B6BB5; --c5:#7FB550;
+  --display:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;
+  --body:"Be Vietnam Pro","Segoe UI",system-ui,sans-serif;
+  --mono:"Space Mono",ui-monospace,monospace;
+  --r:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:var(--body); color:var(--chalk); background:var(--mat);
+  background-image:
+    linear-gradient(var(--matline) 1px,transparent 1px),
+    linear-gradient(90deg,var(--matline) 1px,transparent 1px),
+    linear-gradient(var(--matline2) 1px,transparent 1px),
+    linear-gradient(90deg,var(--matline2) 1px,transparent 1px),
+    radial-gradient(120% 90% at 50% 0%, var(--mat2), var(--mat) 70%);
+  background-size:24px 24px,24px 24px,120px 120px,120px 120px,100% 100%;
+  -webkit-font-smoothing:antialiased;
+  overflow:hidden;
+}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+:focus-visible{outline:3px solid var(--amber);outline-offset:3px;border-radius:6px}
+
+/* ---------- shell ---------- */
+.shell{max-width:1440px;margin:0 auto;padding:14px 20px 16px;height:100%;height:100dvh;
+  display:flex;flex-direction:column}
+#main{flex:1;min-height:0;display:flex;flex-direction:column}
+.hub{flex:1;min-height:0;overflow-y:auto;padding-bottom:20px}
+.bar{display:flex;align-items:center;gap:14px;padding:2px 0 16px;flex:none}
+.mark{width:34px;height:34px;flex:none;position:relative}
+.mark i{position:absolute;inset:0;border:2.5px solid var(--chalk);border-radius:4px;transform:rotate(-8deg)}
+.mark i:last-child{border-style:dashed;border-color:var(--amber);transform:rotate(14deg) scale(.72)}
+.brand{font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:-.02em;line-height:1}
+.brand small{display:block;font-family:var(--body);font-weight:400;font-size:11.5px;color:var(--chalk-dim);letter-spacing:.02em;margin-top:3px}
+.bar .spacer{flex:1}
+.chip{border:1.5px solid rgba(223,233,227,.28);border-radius:999px;padding:7px 13px;font-size:12.5px;font-weight:500;transition:.15s}
+.chip:hover{border-color:var(--amber);color:var(--amber)}
+.chip.ghost{border-style:dashed}
+
+/* ---------- hub ---------- */
+.lede{font-family:var(--display);font-weight:600;font-size:clamp(26px,5vw,40px);line-height:1.06;letter-spacing:-.03em;max-width:16ch;margin-bottom:8px}
+.lede em{font-style:normal;color:var(--amber)}
+.sub{color:var(--chalk-dim);font-size:14.5px;max-width:44ch;margin-bottom:26px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.card{background:var(--paper);color:var(--ink);border-radius:var(--r);padding:16px 16px 14px;text-align:left;position:relative;overflow:hidden;
+  box-shadow:0 10px 24px -12px rgba(0,0,0,.55);transition:transform .18s cubic-bezier(.2,.8,.3,1),box-shadow .18s}
+.card:hover{transform:translateY(-3px) rotate(-.4deg);box-shadow:0 18px 32px -14px rgba(0,0,0,.6)}
+.card .tag{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;color:#8A9A8F;display:block;margin-bottom:36px}
+.card h3{font-family:var(--display);font-weight:800;font-size:19px;letter-spacing:-.02em;margin-bottom:5px}
+.card p{font-size:13px;line-height:1.45;color:#4E5F58}
+.card .strip{position:absolute;top:0;left:0;right:0;height:9px;display:flex}
+.card .strip span{flex:1}
+.card.soon{background:transparent;color:var(--chalk-dim);border:1.5px dashed rgba(223,233,227,.24);box-shadow:none;cursor:default}
+.card.soon:hover{transform:none}
+.card.soon h3{color:var(--chalk);font-size:17px}
+.card.soon p{color:var(--chalk-dim)}
+.card.soon .tag{color:var(--chalk-dim);margin-bottom:26px}
+
+/* ---------- module ---------- */
+.tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;flex:none}
+.tab{border:1.5px solid rgba(223,233,227,.22);border-radius:999px;padding:8px 15px;font-size:13px;font-weight:500;transition:.15s}
+.tab[aria-selected="true"]{background:var(--paper);color:var(--ink);border-color:var(--paper);font-weight:700}
+.lab{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px;align-items:stretch;flex:1;min-height:0}
+.side{min-height:0;overflow-y:auto;scrollbar-width:thin}
+
+.stage{position:relative;height:100%;min-height:240px;border-radius:var(--r);overflow:hidden;
+  background:
+    linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px),
+    radial-gradient(80% 70% at 50% 32%, #2C5B52, #1B342F 78%);
+  background-size:26px 26px,26px 26px,100% 100%;
+  border:1.5px solid rgba(223,233,227,.14);
+  perspective:1400px;perspective-origin:50% 46%;
+  touch-action:none;cursor:grab;
+  user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.stage:active{cursor:grabbing}
+.world{position:absolute;inset:0;transform-style:preserve-3d}
+.netwrap{position:absolute;left:50%;top:50%;transform-style:preserve-3d}
+.face{position:absolute;left:0;top:0;width:0;height:0;transform-style:preserve-3d}
+.face > svg{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
+.face > svg polygon{stroke:rgba(22,36,31,.34);stroke-width:2;stroke-linejoin:round;pointer-events:auto}
+.face.tappable > svg polygon{cursor:pointer}
+.face.tappable:hover > svg polygon{stroke:#fff;stroke-width:5}
+.face.pick > svg polygon{stroke:#fff;stroke-width:6}
+.face.clash > svg polygon{animation:clash .9s infinite}
+@keyframes clash{0%,100%{stroke:rgba(255,255,255,.3);stroke-width:3}50%{stroke:#fff;stroke-width:7}}
+.lab-num{position:absolute;font-family:var(--display);font-weight:800;color:rgba(22,36,31,.6);
+  backface-visibility:hidden;pointer-events:none;white-space:nowrap;line-height:1}
+.face.star > .lab-num{color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.4)}
+.crease{fill:none;stroke:rgba(22,36,31,.6);stroke-width:2;stroke-dasharray:6 5;pointer-events:none}
+.hint{position:absolute;left:12px;bottom:10px;font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:rgba(223,233,227,.4);pointer-events:none}
+.reset{position:absolute;right:10px;top:10px;font-size:11.5px;padding:6px 11px;border:1.5px solid rgba(223,233,227,.2);border-radius:999px;color:var(--chalk-dim)}
+.reset:hover{color:var(--amber);border-color:var(--amber)}
+
+/* ---------- panel ---------- */
+.panel{background:var(--paper);color:var(--ink);border-radius:var(--r);padding:16px;box-shadow:0 12px 28px -16px rgba(0,0,0,.6)}
+.panel h4{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;color:#8A9A8F;margin-bottom:10px}
+.panel + .panel{margin-top:12px}
+.rowbtns{display:flex;gap:8px}
+.btn{flex:1;background:var(--ink);color:var(--paper);border-radius:10px;padding:11px 12px;font-size:13.5px;font-weight:700;transition:.15s}
+.btn:hover{background:#2B4239}
+.btn.alt{background:transparent;color:var(--ink);border:1.5px solid rgba(22,36,31,.25)}
+.btn.alt:hover{background:rgba(22,36,31,.06)}
+.btn.big{padding:15px 12px;font-size:15px}
+.btn.yes{background:#2F7D5F}.btn.yes:hover{background:#37916E}
+.btn.no{background:#B4432F}.btn.no:hover{background:#C74E38}
+.btn[disabled]{opacity:.4;pointer-events:none}
+
+/* shape picker */
+.shapes{display:flex;flex-wrap:wrap;gap:6px}
+.shape{border:1.5px solid rgba(22,36,31,.2);border-radius:999px;padding:7px 12px;font-size:12.5px;font-weight:500;color:var(--ink);transition:.15s}
+.shape:hover{border-color:var(--ink)}
+.shape[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink);font-weight:700}
+
+/* fold lever — the signature control */
+.lever-wrap{padding:2px 2px 0}
+.ticks{height:12px;margin:0 15px;
+  background-image:repeating-linear-gradient(90deg,rgba(22,36,31,.45) 0 1.5px,transparent 1.5px 10%);
+  border-bottom:1.5px solid rgba(22,36,31,.3)}
+.lever{-webkit-appearance:none;appearance:none;width:100%;background:transparent;margin-top:-3px}
+.lever::-webkit-slider-runnable-track{height:10px;border-radius:2px;background:linear-gradient(90deg,var(--paper2),#D8CDB6);border:1.5px solid rgba(22,36,31,.3)}
+.lever::-moz-range-track{height:10px;border-radius:2px;background:linear-gradient(90deg,var(--paper2),#D8CDB6);border:1.5px solid rgba(22,36,31,.3)}
+.lever::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:32px;margin-top:-13px;border-radius:5px;
+  background:var(--amber);border:2px solid var(--ink);box-shadow:inset 0 -6px 0 rgba(0,0,0,.14);cursor:grab}
+.lever::-moz-range-thumb{width:26px;height:32px;border-radius:5px;background:var(--amber);border:2px solid var(--ink);cursor:grab}
+.leverlab{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:#8A9A8F;margin-top:8px}
+
+/* net picker */
+.strip-nets{display:grid;grid-template-columns:repeat(auto-fill,minmax(54px,1fr));gap:7px}
+.thumb{aspect-ratio:1;border:1.5px solid rgba(22,36,31,.18);border-radius:8px;padding:4px;display:grid;place-items:center;background:#fff;transition:.15s}
+.thumb:hover{border-color:var(--ink)}
+.thumb[aria-pressed="true"]{border-color:var(--ink);box-shadow:0 0 0 2.5px var(--amber)}
+.thumb svg{width:100%;height:100%;display:block}
+.thumb polygon{fill:rgba(22,36,31,.72);stroke:#fff;stroke-width:1.5;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+
+/* quiz */
+.q{font-family:var(--display);font-weight:700;font-size:17px;line-height:1.25;letter-spacing:-.01em;margin-bottom:12px}
+.note{font-size:12px;color:#4E5F58;margin-top:11px;line-height:1.45}
+.verdict{border-radius:10px;padding:11px 13px;font-size:13.5px;line-height:1.45;margin-bottom:12px}
+.verdict.ok{background:#DDEDE1;color:#1E4A34}
+.verdict.bad{background:#F6DFD9;color:#7A2E1D}
+.verdict b{display:block;font-family:var(--display);font-size:15px;margin-bottom:2px}
+.score{display:flex;gap:18px;font-size:12.5px;color:#4E5F58}
+.score b{font-family:var(--display);font-size:20px;color:var(--ink);display:block;line-height:1}
+.scrap{position:absolute;width:9px;height:12px;pointer-events:none;z-index:5}
+@keyframes fly{to{transform:translate(var(--dx),var(--dy)) rotate(var(--rot));opacity:0}}
+
+/* ---------- responsive ---------- */
+@media(max-width:900px){ .lab{grid-template-columns:minmax(0,1fr) 280px} }
+@media(max-width:820px){
+  body{overflow:auto}
+  .shell{height:auto;min-height:100dvh;padding:12px 14px 20px}
+  #main{display:block}
+  .lab{display:block}
+  .stage{height:48vh;min-height:280px;margin-bottom:14px}
+  .side{overflow:visible}
+  .brand small{display:none}
+}
+@media(max-width:420px){
+  .stage{height:42vh;min-height:250px}
+  .btn.big{padding:13px 10px;font-size:14px}
+  .cards{grid-template-columns:1fr 1fr}
+  .card .tag{margin-bottom:22px}
+}
+@media(max-height:560px) and (min-width:821px){ .bar{padding-bottom:10px} .lede{font-size:26px} }
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="bar">
+    <div class="mark"><i></i><i></i></div>
+    <div class="brand" id="brand">Workbench<small id="tagline">mini-games for curious kids</small></div>
+    <div class="spacer"></div>
+    <button class="chip ghost" id="backBtn" hidden>← <span>Back</span></button>
+    <button class="chip" id="langBtn">Tiếng Việt</button>
+  </div>
+  <main id="main"></main>
+</div>
+
+<script>
+/* ============================================================
+   WORKBENCH — a standalone, modular learning game.
+   One file. No dependencies. Open it anywhere.
+
+   To add a module later, drop an entry into MODULES below and
+   write a render function for each of its games. The shell,
+   language toggle and routing handle the rest.
+   ============================================================ */
+
+/* ---------- 1. strings ---------- */
+const T = {
+  en:{
+    brand:"Workbench", tagline:"mini-games for curious kids", back:"Back", lang:"Tiếng Việt",
+    lede:["Learn by ","making a mess"," of it."],
+    sub:"Pick a workshop. Each one holds a few small games that only work if you actually understand the idea.",
+    soon:"in the workshop",
+    modCube:"Solid Lab", modCubeP:"Flatten a solid into paper — then fold it back up.",
+    modTimes:"Times Tables", modTimesP:"Coming next.",
+    modFrac:"Fractions", modFracP:"Coming next.",
+    modClock:"Telling Time", modClockP:"Coming next.",
+    gFold:"Fold Lab", gNet:"Folds or not?", gOpp:"Opposite sides",
+    gFoldP:"Unfold five different solids.", gNetP:"Does this paper make a cube?", gOppP:"Which square lands across?",
+    shape:"Shape", pattern:"Pattern", fold:"Fold", flat:"FLAT", solid:"SOLID",
+    foldIt:"Fold it up", flatten:"Flatten it", drag:"DRAG THE MAT TO LOOK AROUND", reset:"Reset view",
+    nets:"Nets",
+    netsHelp:function(n,name){return "All "+n+" ways to unfold a "+name+". Nothing else folds up.";},
+    sCube:"cube", sTetra:"triangle pyramid", sPyr:"square pyramid", sPrism:"triangle prism", sOcta:"octahedron",
+    qNet:"Would this fold into a cube?", yes:"It folds", no:"It doesn't",
+    qOpp:"Tap the square that ends up opposite the ★.",
+    next:"Next shape", nextO:"Next puzzle",
+    okNet:"Yes — it folds.", badNet:"No — it doesn't.",
+    okNetW:"All six squares land on six different sides.",
+    clashW:function(n,h){return n+" squares land on the same side"+(h?", so the box has "+h+" hole"+(h>1?"s":""):"")+".";},
+    right:"Nice.", wrong:"Not this one.",
+    oppOk:function(a,b){return "Square "+a+" and square "+b+" never touch — they end up on opposite sides.";},
+    oppBad:function(a,b,c){return "Square "+a+" touches the ★ square when it folds. The one across is square "+c+".";},
+    cubeOnly:"This game uses cubes only.",
+    streak:"Streak", best:"Best", solved:"Solved"
+  },
+  vi:{
+    brand:"Bàn Thợ", tagline:"trò chơi nhỏ cho bạn nhỏ tò mò", back:"Quay lại", lang:"English",
+    lede:["Học bằng cách ","nghịch cho tới khi hiểu","."],
+    sub:"Chọn một xưởng. Mỗi xưởng có vài trò chơi nhỏ, chỉ thắng được khi mình thật sự hiểu.",
+    soon:"đang làm",
+    modCube:"Xưởng Hình Khối", modCubeP:"Trải một khối thành giấy phẳng, rồi gấp lại.",
+    modTimes:"Bảng Nhân", modTimesP:"Sắp có.",
+    modFrac:"Phân Số", modFracP:"Sắp có.",
+    modClock:"Xem Giờ", modClockP:"Sắp có.",
+    gFold:"Gấp thử", gNet:"Gấp được không?", gOpp:"Mặt đối diện",
+    gFoldP:"Trải năm khối khác nhau.", gNetP:"Tờ giấy này có thành khối lập phương không?", gOppP:"Ô nào nằm đối diện?",
+    shape:"Khối", pattern:"Hình trải", fold:"Gấp", flat:"PHẲNG", solid:"KHỐI",
+    foldIt:"Gấp lại", flatten:"Trải phẳng", drag:"KÉO NỀN ĐỂ XOAY", reset:"Xoay về giữa",
+    nets:"Hình trải",
+    netsHelp:function(n,name){return "Cả "+n+" cách trải một "+name+". Ngoài ra thì không gấp được.";},
+    sCube:"khối lập phương", sTetra:"khối chóp tam giác", sPyr:"khối chóp vuông", sPrism:"khối lăng trụ tam giác", sOcta:"khối bát diện",
+    qNet:"Hình này có gấp thành khối lập phương không?", yes:"Gấp được", no:"Không được",
+    qOpp:"Chạm vào ô sẽ nằm đối diện ô ★.",
+    next:"Hình khác", nextO:"Câu khác",
+    okNet:"Đúng — gấp được.", badNet:"Không — gấp không được.",
+    okNetW:"Sáu ô rơi vào đúng sáu mặt khác nhau.",
+    clashW:function(n,h){return n+" ô rơi vào cùng một mặt"+(h?", nên khối bị hở "+h+" chỗ":"")+".";},
+    right:"Giỏi lắm.", wrong:"Chưa đúng.",
+    oppOk:function(a,b){return "Ô "+a+" và ô "+b+" không bao giờ chạm nhau — hai ô nằm đối diện.";},
+    oppBad:function(a,b,c){return "Ô "+a+" chạm vào ô ★ khi gấp. Ô đối diện là ô "+c+".";},
+    cubeOnly:"Trò này chỉ dùng khối lập phương.",
+    streak:"Chuỗi", best:"Kỷ lục", solved:"Đã giải"
+  }
+};
+let L = "en";
+const t = k => T[L][k];
+
+/* ============================================================
+   2. GEOMETRY
+
+   Two producers, one consumer.
+   (a) grid nets  — 6 squares on a grid, used by the cube quizzes
+                    (they need INVALID shapes too, which only the
+                    grid enumeration can give us)
+   (b) solid nets — any polyhedron, unfolded along a spanning tree
+   Both emit the same flat-net format that the renderer eats.
+   ============================================================ */
+
+/* --- vectors --- */
+const sub3=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]];
+const add3=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]];
+const mul3=(a,s)=>[a[0]*s,a[1]*s,a[2]*s];
+const dot3=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+const crs3=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+const len3=a=>Math.sqrt(dot3(a,a));
+const nrm3=a=>mul3(a,1/len3(a));
+const mean3=ps=>mul3(ps.reduce(add3,[0,0,0]),1/ps.length);
+
+/* --- (a) grid: hexominoes and cube folding --- */
+const DIRS = [[0,1,"right"],[0,-1,"left"],[1,0,"down"],[-1,0,"up"]];
+const key = (r,c) => r+","+c;
+const neg = v => [-v[0],-v[1],-v[2]];
+
+function normalize(cells){
+  const mr=Math.min(...cells.map(p=>p[0])), mc=Math.min(...cells.map(p=>p[1]));
+  return cells.map(([r,c])=>[r-mr,c-mc]).sort((a,b)=>a[0]-b[0]||a[1]-b[1]);
+}
+const sig = cells => normalize(cells).map(p=>p.join(",")).join(" ");
+function freeSig(cells){
+  const out=[]; let cur=cells;
+  for(let i=0;i<4;i++){
+    cur=cur.map(([r,c])=>[c,-r]);
+    out.push(sig(cur)); out.push(sig(cur.map(([r,c])=>[r,-c])));
+  }
+  return out.sort()[0];
+}
+function generateHexominoes(){
+  let shapes=new Map([[sig([[0,0]]),[[0,0]]]]);
+  for(let k=1;k<6;k++){
+    const next=new Map();
+    for(const s of shapes.values()){
+      const set=new Set(s.map(p=>key(p[0],p[1])));
+      for(const [r,c] of s) for(const [dr,dc] of DIRS){
+        const p=[r+dr,c+dc];
+        if(set.has(key(p[0],p[1]))) continue;
+        const cand=[...s,p];
+        next.set(freeSig(cand), normalize(cand));
+      }
+    }
+    shapes=next;
+  }
+  return [...shapes.values()];
+}
+/* fold a child square 90° up toward the viewer and carry its orientation with it */
+function childFrame(f,dir){
+  const {R,D,N}=f;
+  if(dir==="right") return {R:N,      D:D,      N:neg(R)};
+  if(dir==="left")  return {R:neg(N), D:D,      N:R};
+  if(dir==="down")  return {R:R,      D:N,      N:neg(D)};
+  return                   {R:R,      D:neg(N), N:D};
+}
+const faceId = v => v[0] ? (v[0]>0?0:1) : v[1] ? (v[1]>0?2:3) : (v[2]>0?4:5);
+
+/* the square that stays put while everything folds up around it */
+function pickRoot(cells){
+  const set=new Set(cells.map(p=>key(p[0],p[1])));
+  let best=0,bestScore=-Infinity;
+  cells.forEach((p,i)=>{
+    const deg=DIRS.filter(([dr,dc])=>set.has(key(p[0]+dr,p[1]+dc))).length;
+    const dist=cells.reduce((a,q)=>a+Math.abs(q[0]-p[0])+Math.abs(q[1]-p[1]),0);
+    const score=deg*100-dist;
+    if(score>bestScore){bestScore=score;best=i;}
+  });
+  return best;
+}
+function analyze(cells,root){
+  const r0 = root==null ? pickRoot(cells) : root;
+  const map=new Map(cells.map((p,i)=>[key(p[0],p[1]),i]));
+  const frames=Array(cells.length).fill(null), parent=Array(cells.length).fill(-1), hinge=Array(cells.length).fill(null);
+  frames[r0]={R:[1,0,0],D:[0,1,0],N:[0,0,1]};
+  const order=[r0], seen=new Set([r0]);
+  for(let q=0;q<order.length;q++){
+    const i=order[q], [r,c]=cells[i];
+    for(const [dr,dc,d] of DIRS){
+      const j=map.get(key(r+dr,c+dc));
+      if(j===undefined||seen.has(j)) continue;
+      seen.add(j); parent[j]=i; hinge[j]=d; frames[j]=childFrame(frames[i],d); order.push(j);
+    }
+  }
+  const sides=frames.map(f=>faceId(f.N));
+  const count={}; sides.forEach(s=>count[s]=(count[s]||0)+1);
+  const stacked=Object.values(count).filter(n=>n>1).reduce((a,n)=>a+n,0);
+  const holes=6-Object.keys(count).length;
+  return {cells,root:r0,sides,parent,hinge,order,stacked,holes,valid:Object.keys(count).length===6};
+}
+const HEX=generateHexominoes();
+const NETS_CUBE=HEX.filter(h=>analyze(h).valid);      // exactly 11
+const NOTNETS=HEX.filter(h=>!analyze(h).valid);       // the other 24
+
+/* turn a grid shape into the common flat-net format */
+function netFromCells(cells){
+  const a=analyze(cells);
+  const polys=cells.map(([r,c])=>[[c,r],[c+1,r],[c+1,r+1],[c,r+1]]);
+  const hinges=Array(cells.length).fill(null);
+  for(const i of a.order){
+    if(a.parent[i]<0) continue;
+    const [r,c]=cells[i], d=a.hinge[i];
+    const seg = d==="right" ? [[c,r],[c,r+1]]
+              : d==="left"  ? [[c+1,r],[c+1,r+1]]
+              : d==="down"  ? [[c,r],[c+1,r]]
+              :               [[c,r+1],[c+1,r+1]];
+    hinges[i]=hingeOf(seg[0],seg[1],polys[i],Math.PI/2);
+  }
+  return {polys,parent:a.parent,hinge:hinges,order:a.order,root:a.root,analysis:a};
+}
+/* which way does this flap have to swing so it rises toward the viewer? */
+function hingeOf(A,B,poly,angle){
+  const dx=B[0]-A[0], dy=B[1]-A[1], dl=Math.hypot(dx,dy);
+  const d=[dx/dl,dy/dl];
+  const cx=poly.reduce((s,p)=>s+p[0],0)/poly.length, cy=poly.reduce((s,p)=>s+p[1],0)/poly.length;
+  const m=[cx-A[0],cy-A[1]];
+  const sgn=Math.sign(d[0]*m[1]-d[1]*m[0]) || 1;
+  return {a:A,d:d,theta:sgn*angle};
+}
+
+/* --- (b) any polyhedron, unfolded --- */
+const SQ2=Math.SQRT1_2, TRI=Math.sqrt(3)/2;
+const DEFS={
+  cube:{v:[[0,0,0],[1,0,0],[1,1,0],[0,1,0],[0,0,1],[1,0,1],[1,1,1],[0,1,1]],
+        f:[[0,1,2,3],[4,5,6,7],[0,1,5,4],[1,2,6,5],[2,3,7,6],[3,0,4,7]]},
+  tetra:{v:[[1,1,1],[1,-1,-1],[-1,1,-1],[-1,-1,1]].map(p=>mul3(p,1/(2*Math.SQRT2))),
+         f:[[0,1,2],[0,1,3],[0,2,3],[1,2,3]]},
+  pyramid:{v:[[-.5,-.5,0],[.5,-.5,0],[.5,.5,0],[-.5,.5,0],[0,0,SQ2]],
+           f:[[0,1,2,3],[0,1,4],[1,2,4],[2,3,4],[3,0,4]]},
+  prism:{v:[[0,0,0],[1,0,0],[.5,TRI,0],[0,0,1],[1,0,1],[.5,TRI,1]],
+         f:[[0,1,2],[3,4,5],[0,1,4,3],[1,2,5,4],[2,0,3,5]]},
+  octa:{v:[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]].map(p=>mul3(p,SQ2)),
+        f:[[0,2,4],[2,1,4],[1,3,4],[3,0,4],[2,0,5],[1,2,5],[3,1,5],[0,3,5]]}
+};
+function faceNormal(V,face){
+  let n=[0,0,0];
+  for(let k=0;k<face.length;k++) n=add3(n,crs3(V[face[k]],V[face[(k+1)%face.length]]));
+  return nrm3(n);
+}
+function prepSolid(def){
+  const V=def.v, F=def.f.map(f=>f.slice()), C=mean3(V);
+  F.forEach(f=>{ if(dot3(faceNormal(V,f), sub3(mean3(f.map(i=>V[i])),C))<0) f.reverse(); });
+  const N=F.map(f=>faceNormal(V,f));
+  const em=new Map();
+  F.forEach((f,fi)=>{ for(let k=0;k<f.length;k++){
+    const a=f[k],b=f[(k+1)%f.length], kk=Math.min(a,b)+"_"+Math.max(a,b);
+    if(!em.has(kk)) em.set(kk,[]);
+    em.get(kk).push({fi,a,b});
+  }});
+  const adj=[];
+  for(const list of em.values()){
+    if(list.length!==2) continue;
+    const [x,y]=list;
+    adj.push({i:x.fi,j:y.fi,e:[Math.min(x.a,x.b),Math.max(x.a,x.b)],
+              angle:Math.acos(Math.max(-1,Math.min(1,dot3(N[x.fi],N[y.fi]))))});
+  }
+  return {V,F,N,adj};
+}
+/* local frame with the INWARD normal as +z, so folding toward the viewer
+   rebuilds the real solid rather than its mirror image */
+function unfoldTree(s,tree,root){
+  const n=s.F.length, nb=Array.from({length:n},()=>[]);
+  tree.forEach(t=>{nb[t.i].push({to:t.j,t});nb[t.j].push({to:t.i,t});});
+  const pos=Array(n).fill(null), parent=Array(n).fill(-1), hinge=Array(n).fill(null);
+  const put=(fi,ia,ib,A2,B2)=>{
+    const o=s.V[ia], e1=nrm3(sub3(s.V[ib],o)), e3=mul3(s.N[fi],-1), e2=crs3(e3,e1);
+    const phi=Math.atan2(B2[1]-A2[1],B2[0]-A2[0]), cs=Math.cos(phi), sn=Math.sin(phi);
+    const m=new Map();
+    for(const vi of s.F[fi]){
+      const d=sub3(s.V[vi],o), x=dot3(d,e1), y=dot3(d,e2);
+      m.set(vi,[A2[0]+x*cs-y*sn, A2[1]+x*sn+y*cs]);
+    }
+    pos[fi]=m;
+  };
+  const f0=s.F[root];
+  put(root,f0[0],f0[1],[0,0],[len3(sub3(s.V[f0[1]],s.V[f0[0]])),0]);
+  const q=[root], seen=new Set([root]);
+  for(let k=0;k<q.length;k++){
+    const fi=q[k];
+    for(const {to,t} of nb[fi]){
+      if(seen.has(to)) continue;
+      seen.add(to); parent[to]=fi;
+      const [ia,ib]=t.e, A2=pos[fi].get(ia), B2=pos[fi].get(ib);
+      put(to,ia,ib,A2,B2);
+      hinge[to]=hingeOf(A2,B2,s.F[to].map(vi=>pos[to].get(vi)),t.angle);
+      q.push(to);
+    }
+  }
+  if(seen.size!==n) return null;
+  return {polys:s.F.map((f,fi)=>f.map(vi=>pos[fi].get(vi))),parent,hinge,order:q,root};
+}
+function shrinkPoly(p,k){
+  const c=[p.reduce((a,q)=>a+q[0],0)/p.length, p.reduce((a,q)=>a+q[1],0)/p.length];
+  return p.map(q=>[c[0]+(q[0]-c[0])*k, c[1]+(q[1]-c[1])*k]);
+}
+function polysOverlap(A,B){
+  for(const poly of [A,B]) for(let k=0;k<poly.length;k++){
+    const p=poly[k],q=poly[(k+1)%poly.length];
+    const ax=-(q[1]-p[1]), ay=q[0]-p[0];
+    let a1=Infinity,a2=-Infinity,b1=Infinity,b2=-Infinity;
+    for(const v of A){const d=v[0]*ax+v[1]*ay;a1=Math.min(a1,d);a2=Math.max(a2,d);}
+    for(const v of B){const d=v[0]*ax+v[1]*ay;b1=Math.min(b1,d);b2=Math.max(b2,d);}
+    if(a2<b1+1e-9||b2<a1+1e-9) return false;
+  }
+  return true;
+}
+function netSelfOverlaps(net){
+  const P=net.polys.map(p=>shrinkPoly(p,.9));
+  for(let i=0;i<P.length;i++) for(let j=i+1;j<P.length;j++) if(polysOverlap(P[i],P[j])) return true;
+  return false;
+}
+function combos(arr,k){
+  const out=[];
+  (function rec(start,cur){
+    if(cur.length===k){out.push(cur.slice());return;}
+    for(let i=start;i<arr.length;i++){cur.push(arr[i]);rec(i+1,cur);cur.pop();}
+  })(0,[]);
+  return out;
+}
+function isSpanningTree(n,edges){
+  const p=[...Array(n).keys()], find=x=>p[x]===x?x:(p[x]=find(p[x]));
+  for(const e of edges){const a=find(e.i),b=find(e.j); if(a===b) return false; p[a]=b;}
+  return true;
+}
+function treeCenter(n,tree){
+  const nb=Array.from({length:n},()=>[]);
+  tree.forEach(t=>{nb[t.i].push(t.j);nb[t.j].push(t.i);});
+  let best=0,bs=Infinity;
+  for(let s=0;s<n;s++){
+    const d=Array(n).fill(-1); d[s]=0; const q=[s];
+    for(let k=0;k<q.length;k++) for(const x of nb[q[k]]) if(d[x]<0){d[x]=d[q[k]]+1;q.push(x);}
+    const ecc=Math.max(...d);
+    if(ecc<bs){bs=ecc;best=s;}
+  }
+  return best;
+}
+function netSignature(net){
+  const pts=[];
+  for(const f of net.polys) for(const p of f)
+    if(!pts.some(q=>Math.hypot(q[0]-p[0],q[1]-p[1])<1e-6)) pts.push(p);
+  const d=[];
+  for(let i=0;i<pts.length;i++) for(let j=i+1;j<pts.length;j++)
+    d.push(Math.hypot(pts[i][0]-pts[j][0],pts[i][1]-pts[j][1]).toFixed(4));
+  return pts.length+"|"+d.sort().join(",");
+}
+const solidCache={};
+function netsOfSolid(name){
+  if(solidCache[name]) return solidCache[name];
+  const s=prepSolid(DEFS[name]), n=s.F.length, seen=new Map();
+  for(const tree of combos(s.adj,n-1)){
+    if(!isSpanningTree(n,tree)) continue;
+    const net=unfoldTree(s,tree,treeCenter(n,tree));
+    if(!net||netSelfOverlaps(net)) continue;
+    const sg=netSignature(net);
+    if(!seen.has(sg)) seen.set(sg,net);
+  }
+  return solidCache[name]=[...seen.values()];
+}
+
+/* ---------- 3. the folding view ---------- */
+function rotAbout(p,A,d,ang){            // rotate 3D point p about the line through A with direction d
+  const v=[p[0]-A[0],p[1]-A[1],p[2]-A[2]];
+  const c=Math.cos(ang), s=Math.sin(ang);
+  const kv=crs3(d,v), kd=dot3(d,v);
+  return [v[0]*c+kv[0]*s+d[0]*kd*(1-c)+A[0],
+          v[1]*c+kv[1]*s+d[1]*kd*(1-c)+A[1],
+          v[2]*c+kv[2]*s+d[2]*kd*(1-c)+A[2]];
+}
+const SVGNS="http://www.w3.org/2000/svg";
+class FoldView{
+  constructor(stage){
+    this.stage=stage;
+    this.world=document.createElement("div"); this.world.className="world";
+    this.wrap=document.createElement("div"); this.wrap.className="netwrap";
+    this.world.appendChild(this.wrap); stage.appendChild(this.world);
+    this.t=0; this.spin=-24; this.tilt=56; this.onFace=null; this.moved=0;
+    this.stage.addEventListener("keydown",e=>{
+      if(e.key!=="Enter"&&e.key!==" ") return;
+      const s=e.target.closest&&e.target.closest("[data-i]");
+      if(!s||!this.onFace) return;
+      e.preventDefault(); this.onFace(+s.dataset.i);
+    });
+    this._drag();
+    new ResizeObserver(()=>this.build()).observe(stage);
+  }
+  _drag(){
+    let on=false,px=0,py=0,hit=null;
+    this.stage.addEventListener("pointerdown",e=>{
+      if(e.target.closest("button")) return;
+      e.preventDefault();                 // no native text selection or drag-image
+      on=true;px=e.clientX;py=e.clientY;this.moved=0;
+      hit=e.target.closest("[data-i]");   // captured before pointer capture retargets
+      this.stage.setPointerCapture(e.pointerId);
+    });
+    this.stage.addEventListener("dragstart",e=>e.preventDefault());
+    this.stage.addEventListener("pointermove",e=>{
+      if(!on) return;
+      this.moved+=Math.abs(e.clientX-px)+Math.abs(e.clientY-py);
+      this.spin+=(e.clientX-px)*0.42;
+      // 0° = straight-down plan view, 90° = edge on, past 90° = looking up at the underside
+      this.tilt=Math.max(-20,Math.min(170,this.tilt-(e.clientY-py)*0.32));
+      px=e.clientX;py=e.clientY;this.update();
+    });
+    this.stage.addEventListener("pointerup",()=>{
+      if(on&&hit&&this.moved<=7&&this.onFace) this.onFace(+hit.dataset.i);
+      on=false;hit=null;
+    });
+    this.stage.addEventListener("pointercancel",()=>{on=false;hit=null;});
+  }
+  setNet(net,opts){
+    this.net=net;
+    this.opts=Object.assign({star:-1,marks:{},clash:false,clashSides:null},opts||{});
+    this.build();
+  }
+  resetView(){ this.spin=-24; this.tilt=56; this.update(); }
+  setFold(v){ this.t=Math.max(0,Math.min(1,v)); this.update(); }
+
+  build(){
+    const net=this.net; if(!net) return;
+    const W=this.stage.clientWidth, H=this.stage.clientHeight;
+    if(!W||!H) return;
+    const xs=[].concat(...net.polys.map(p=>p.map(q=>q[0])));
+    const ys=[].concat(...net.polys.map(p=>p.map(q=>q[1])));
+    const x0=Math.min(...xs), y0=Math.min(...ys);
+    const bw=Math.max(...xs)-x0, bh=Math.max(...ys)-y0;
+    // the mat is tilted, so the net needs less vertical room than horizontal
+    const sc=Math.min(170, W*0.84/bw, H*0.84/(bh*0.72));
+    const PW=bw*sc, PH=bh*sc;
+    const to=p=>[(p[0]-x0)*sc,(p[1]-y0)*sc];
+    const polys=net.polys.map(p=>p.map(to));
+    const hinges=net.hinge.map(hg=>hg?{a:to(hg.a),d:hg.d,theta:hg.theta}:null);
+    this.px={polys,hinges,PW,PH};
+
+    // where to sit the camera: net centre when flat, solid centre when folded
+    this.cFlat=[PW/2,PH/2,0];
+    this.cSolid=(()=>{
+      const pts=[];
+      for(let i=0;i<polys.length;i++){
+        let v=polys[i].map(p=>[p[0],p[1],0]);
+        let cur=i, chain=[];
+        while(net.parent[cur]>=0){chain.push(cur);cur=net.parent[cur];}
+        for(const c of chain){
+          const hg=hinges[c], A=[hg.a[0],hg.a[1],0], d=[hg.d[0],hg.d[1],0];
+          v=v.map(p=>rotAbout(p,A,d,hg.theta));
+        }
+        pts.push(...v);
+      }
+      return mean3(pts);
+    })();
+
+    this.wrap.innerHTML="";
+    const fs=Math.max(11,Math.min(30,sc*0.3));
+    const nodes=polys.map((poly,i)=>{
+      const n=document.createElement("div"); n.className="face";
+      if(this.opts.star===i) n.classList.add("star");
+      const svg=document.createElementNS(SVGNS,"svg");
+      svg.setAttribute("width",PW); svg.setAttribute("height",PH);
+      svg.setAttribute("viewBox","0 0 "+PW+" "+PH);
+      const pg=document.createElementNS(SVGNS,"polygon");
+      pg.setAttribute("points",poly.map(p=>p[0].toFixed(2)+","+p[1].toFixed(2)).join(" "));
+      pg.setAttribute("fill","var(--c"+(i%6)+")");
+      pg.dataset.i=i;
+      svg.appendChild(pg);
+      // the crease this flap folds on
+      const hg=hinges[i];
+      if(hg){
+        const ln=document.createElementNS(SVGNS,"line");
+        ln.setAttribute("class","crease");
+        const L=this.creaseSpan(poly,hg);
+        ln.setAttribute("x1",L[0][0]);ln.setAttribute("y1",L[0][1]);
+        ln.setAttribute("x2",L[1][0]);ln.setAttribute("y2",L[1][1]);
+        svg.appendChild(ln);
+      }
+      n.appendChild(svg);
+      const cx=poly.reduce((s,p)=>s+p[0],0)/poly.length, cy=poly.reduce((s,p)=>s+p[1],0)/poly.length;
+      const txt=this.opts.star===i ? "★" : String(i+1);
+      for(const side of ["f","b"]){
+        const sp=document.createElement("span");
+        sp.className="lab-num "+side; sp.textContent=txt;
+        sp.style.left=cx+"px"; sp.style.top=cy+"px"; sp.style.fontSize=fs+"px";
+        sp.style.transform = side==="f" ? "translate(-50%,-50%) translateZ(.5px)"
+                                        : "translate(-50%,-50%) rotateY(180deg) translateZ(.5px)";
+        n.appendChild(sp);
+      }
+      if(this.onFace){ n.classList.add("tappable"); pg.setAttribute("tabindex","0"); }
+      return n;
+    });
+    this.nodes=nodes;
+    for(const i of net.order){
+      if(net.parent[i]<0) continue;
+      nodes[net.parent[i]].appendChild(nodes[i]);
+    }
+    this.wrap.appendChild(nodes[net.root]);
+    this.applyMarks();
+    this.update();
+  }
+  creaseSpan(poly,hg){                    // the polygon edge that lies on the hinge line
+    let best=null,bd=Infinity;
+    for(let k=0;k<poly.length;k++){
+      const p=poly[k],q=poly[(k+1)%poly.length];
+      const d1=Math.abs((p[0]-hg.a[0])*hg.d[1]-(p[1]-hg.a[1])*hg.d[0]);
+      const d2=Math.abs((q[0]-hg.a[0])*hg.d[1]-(q[1]-hg.a[1])*hg.d[0]);
+      if(d1+d2<bd){bd=d1+d2;best=[p,q];}
+    }
+    return best;
+  }
+  applyMarks(){
+    if(!this.nodes) return;
+    const m=this.opts.marks||{};
+    this.nodes.forEach((n,i)=>{
+      n.classList.toggle("pick",!!m[i]);
+      n.classList.remove("clash");
+    });
+    const cs=this.opts.clashSides;
+    if(this.opts.clash&&cs){
+      const c={}; cs.forEach(s=>c[s]=(c[s]||0)+1);
+      this.nodes.forEach((n,i)=>{ if(c[cs[i]]>1) n.classList.add("clash"); });
+    }
+  }
+  mark(i,on){ this.opts.marks[i]=on; this.applyMarks(); }
+  showClash(on){ this.opts.clash=on; this.applyMarks(); }
+  update(){
+    if(!this.px) return;
+    const t=this.t;
+    this.world.style.transform="rotateX("+this.tilt+"deg) rotateZ("+this.spin+"deg)";
+    const c=[0,1,2].map(k=>this.cFlat[k]+(this.cSolid[k]-this.cFlat[k])*t);
+    this.wrap.style.transform="translate3d("+(-c[0])+"px,"+(-c[1])+"px,"+(-c[2])+"px)";
+    this.nodes.forEach((n,i)=>{
+      const hg=this.px.hinges[i]; if(!hg) return;
+      const deg=hg.theta*t*180/Math.PI;
+      n.style.transform="translate3d("+hg.a[0]+"px,"+hg.a[1]+"px,0) rotate3d("
+        +hg.d[0].toFixed(6)+","+hg.d[1].toFixed(6)+",0,"+deg.toFixed(3)+"deg) translate3d("
+        +(-hg.a[0])+"px,"+(-hg.a[1])+"px,0)";
+    });
+  }
+  animateTo(target,ms){
+    if(matchMedia("(prefers-reduced-motion: reduce)").matches){ this.setFold(target); return; }
+    cancelAnimationFrame(this._raf);
+    const from=this.t, t0=performance.now(); ms=ms||850;
+    const step=now=>{
+      const k=Math.min(1,(now-t0)/ms);
+      const e=k<.5?4*k*k*k:1-Math.pow(-2*k+2,3)/2;
+      this.setFold(from+(target-from)*e);
+      if(onFoldTick) onFoldTick(this.t);
+      if(k<1) this._raf=requestAnimationFrame(step);
+    };
+    this._raf=requestAnimationFrame(step);
+  }
+}
+let onFoldTick=null;
+
+/* ---------- 4. little helpers ---------- */
+function h(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e;}
+function netThumb(net){
+  const xs=[].concat(...net.polys.map(p=>p.map(q=>q[0])));
+  const ys=[].concat(...net.polys.map(p=>p.map(q=>q[1])));
+  const x0=Math.min(...xs),y0=Math.min(...ys),bw=Math.max(...xs)-x0,bh=Math.max(...ys)-y0;
+  const svg=document.createElementNS(SVGNS,"svg");
+  svg.setAttribute("viewBox",(x0-0.06)+" "+(y0-0.06)+" "+(bw+0.12)+" "+(bh+0.12));
+  svg.setAttribute("preserveAspectRatio","xMidYMid meet");
+  for(const poly of net.polys){
+    const pg=document.createElementNS(SVGNS,"polygon");
+    pg.setAttribute("points",poly.map(p=>p[0].toFixed(3)+","+p[1].toFixed(3)).join(" "));
+    svg.appendChild(pg);
+  }
+  return svg;
+}
+function scraps(host){
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const cols=["var(--c0)","var(--c1)","var(--c2)","var(--c3)","var(--c4)","var(--c5)"];
+  for(let i=0;i<16;i++){
+    const s=h("div","scrap");
+    s.style.background=cols[i%6];
+    s.style.left="50%"; s.style.top="46%";
+    s.style.setProperty("--dx",(Math.random()*300-150)+"px");
+    s.style.setProperty("--dy",(Math.random()*-220-40)+"px");
+    s.style.setProperty("--rot",(Math.random()*720-360)+"deg");
+    s.style.animation="fly "+(700+Math.random()*500)+"ms cubic-bezier(.2,.7,.4,1) forwards";
+    host.appendChild(s);
+    setTimeout(()=>s.remove(),1400);
+  }
+}
+const rand=arr=>arr[Math.floor(Math.random()*arr.length)];
+
+/* ---------- 5. modules ---------- */
+const SHAPES=[
+  {id:"cube",   name:"sCube"},
+  {id:"tetra",  name:"sTetra"},
+  {id:"pyramid",name:"sPyr"},
+  {id:"prism",  name:"sPrism"},
+  {id:"octa",   name:"sOcta"}
+];
+const MODULES=[
+  { id:"cube", live:true, name:"modCube", blurb:"modCubeP", colors:[0,1,2,3,4,5],
+    games:[
+      {id:"fold", name:"gFold", blurb:"gFoldP", render:renderFoldLab},
+      {id:"net",  name:"gNet",  blurb:"gNetP",  render:renderNetQuiz},
+      {id:"opp",  name:"gOpp",  blurb:"gOppP",  render:renderOpposite}
+    ]},
+  // ——— add new modules here ———
+  { id:"times", name:"modTimes", blurb:"modTimesP" },
+  { id:"frac",  name:"modFrac",  blurb:"modFracP" },
+  { id:"clock", name:"modClock", blurb:"modClockP" }
+];
+
+/* ---------- 6. routing + screens ---------- */
+const main=document.getElementById("main");
+const backBtn=document.getElementById("backBtn");
+const langBtn=document.getElementById("langBtn");
+let route={mod:null,game:"fold"};
+let view=null;
+
+function render(){
+  document.getElementById("brand").firstChild.textContent=t("brand");
+  document.getElementById("tagline").textContent=t("tagline");
+  langBtn.textContent=t("lang");
+  backBtn.hidden=!route.mod;
+  backBtn.querySelector("span").textContent=t("back");
+  main.innerHTML=""; view=null; onFoldTick=null;
+  route.mod ? renderModule() : renderHub();
+}
+backBtn.onclick=()=>{route.mod=null;render();};
+langBtn.onclick=()=>{L=L==="en"?"vi":"en"; document.documentElement.lang=L; render();};
+
+function renderHub(){
+  const wrap=h("div","hub");
+  const p=t("lede");
+  const lede=h("h1","lede"); lede.append(p[0],h("em",null,p[1]),p[2]);
+  wrap.append(lede,h("p","sub",t("sub")));
+  const cards=h("div","cards");
+  MODULES.forEach((m,i)=>{
+    const c=h("button","card"+(m.live?"":" soon"));
+    if(m.live){
+      const strip=h("div","strip");
+      m.colors.forEach(n=>{const s=h("span");s.style.background="var(--c"+n+")";strip.appendChild(s);});
+      c.appendChild(strip);
+    }
+    c.append(h("span","tag",m.live?String(i+1).padStart(2,"0"):t("soon")),
+             h("h3",null,t(m.name)),h("p",null,t(m.blurb)));
+    if(m.live) c.onclick=()=>{route={mod:m.id,game:m.games[0].id};render();};
+    else c.disabled=true;
+    cards.appendChild(c);
+  });
+  wrap.appendChild(cards);
+  main.appendChild(wrap);
+}
+
+function renderModule(){
+  const mod=MODULES.find(m=>m.id===route.mod);
+  const tabs=h("div","tabs");
+  mod.games.forEach(g=>{
+    const b=h("button","tab",t(g.name));
+    b.setAttribute("role","tab");
+    b.setAttribute("aria-selected",g.id===route.game);
+    b.onclick=()=>{route.game=g.id;render();};
+    tabs.appendChild(b);
+  });
+  main.appendChild(tabs);
+  const lab=h("div","lab");
+  const stage=h("div","stage");
+  stage.append(h("div","hint",t("drag")));
+  const rb=h("button","reset",t("reset"));
+  stage.appendChild(rb);
+  const side=h("div","side");
+  lab.append(stage,side);
+  main.appendChild(lab);
+  view=new FoldView(stage);
+  rb.onclick=()=>view.resetView();
+  mod.games.find(g=>g.id===route.game).render(side,stage);
+}
+
+/* ---------- 7. game 1 — Fold Lab ---------- */
+let foldShape="cube", foldIdx=0;
+function renderFoldLab(side){
+  let nets=[];
+
+  const p0=h("div","panel");
+  p0.append(h("h4",null,t("shape").toUpperCase()));
+  const shapes=h("div","shapes");
+  SHAPES.forEach(s=>{
+    const b=h("button","shape",t(s.name));
+    b.setAttribute("aria-pressed",s.id===foldShape);
+    b.onclick=()=>{ foldShape=s.id; foldIdx=0; loadShape(); };
+    shapes.appendChild(b);
+  });
+  p0.appendChild(shapes);
+
+  const p1=h("div","panel");
+  p1.append(h("h4",null,t("fold").toUpperCase()));
+  const lw=h("div","lever-wrap");
+  lw.appendChild(h("div","ticks"));
+  const lever=document.createElement("input");
+  lever.type="range";lever.min=0;lever.max=1000;lever.value=0;lever.className="lever";
+  lever.setAttribute("aria-label",t("fold"));
+  lw.appendChild(lever);
+  const ll=h("div","leverlab"); ll.append(h("span",null,t("flat")),h("span",null,t("solid")));
+  lw.appendChild(ll);
+  p1.appendChild(lw);
+  const rowb=h("div","rowbtns"); rowb.style.marginTop="14px";
+  const bFold=h("button","btn",t("foldIt")), bFlat=h("button","btn alt",t("flatten"));
+  rowb.append(bFold,bFlat); p1.appendChild(rowb);
+
+  const p2=h("div","panel");
+  const h4=h("h4",null,t("nets").toUpperCase());
+  const strip=h("div","strip-nets");
+  const note=h("p","note");
+  p2.append(h4,strip,note);
+
+  side.append(p0,p1,p2);
+  lever.oninput=()=>view.setFold(lever.value/1000);
+  onFoldTick=v=>lever.value=Math.round(v*1000);
+  bFold.onclick=()=>view.animateTo(1);
+  bFlat.onclick=()=>view.animateTo(0);
+
+  function loadShape(){
+    nets=netsOfSolid(foldShape);
+    if(foldIdx>=nets.length) foldIdx=0;
+    [...shapes.children].forEach((b,k)=>b.setAttribute("aria-pressed",SHAPES[k].id===foldShape));
+    strip.innerHTML="";
+    nets.forEach((n,i)=>{
+      const b=h("button","thumb"); b.appendChild(netThumb(n));
+      b.setAttribute("aria-pressed",i===foldIdx);
+      b.onclick=()=>{ foldIdx=i; show(); [...strip.children].forEach((x,k)=>x.setAttribute("aria-pressed",k===i)); };
+      strip.appendChild(b);
+    });
+    note.textContent=t("netsHelp")(nets.length,t(SHAPES.find(s=>s.id===foldShape).name));
+    show();
+  }
+  function show(){
+    view.setNet(nets[foldIdx]);
+    view.setFold(0); lever.value=0; view.resetView();
+  }
+  loadShape();
+}
+
+/* ---------- 8. game 2 — Folds or not? (cubes) ---------- */
+function renderNetQuiz(side,stage){
+  let streak=0,best=0,solved=0,answered=false,a=null;
+
+  const p=h("div","panel");
+  const q=h("div","q",t("qNet"));
+  const row=h("div","rowbtns");
+  const bYes=h("button","btn big yes",t("yes")), bNo=h("button","btn big no",t("no"));
+  row.append(bYes,bNo);
+  const vbox=h("div"); const nextRow=h("div","rowbtns");
+  const bNext=h("button","btn",t("next")); nextRow.appendChild(bNext); nextRow.hidden=true;
+  p.append(q,row,vbox,nextRow);
+
+  const sc=h("div","panel score");
+  const mk=lab=>{const d=h("div");const b=h("b","0");d.append(b,document.createTextNode(t(lab)));return[d,b];};
+  const [d1,vStreak]=mk("streak"),[d2,vBest]=mk("best"),[d3,vSolved]=mk("solved");
+  sc.append(d1,d2,d3);
+  side.append(p,sc);
+
+  function deal(){
+    answered=false; vbox.innerHTML=""; row.hidden=false; nextRow.hidden=true;
+    const cells=Math.random()<0.5?rand(NETS_CUBE):rand(NOTNETS);
+    const net=netFromCells(cells); a=net.analysis;
+    view.setNet(net,{clashSides:a.sides});
+    view.setFold(0); view.resetView();
+  }
+  function answer(said){
+    if(answered) return; answered=true;
+    const ok=(said===a.valid);
+    row.hidden=true; nextRow.hidden=false;
+    const v=h("div","verdict "+(ok?"ok":"bad"));
+    v.append(h("b",null,ok?t("right"):t("wrong")));
+    v.append(document.createTextNode(
+      a.valid ? t("okNet")+" "+t("okNetW") : t("badNet")+" "+t("clashW")(a.stacked,a.holes)));
+    vbox.appendChild(v);
+    if(ok){streak++;solved++;best=Math.max(best,streak);scraps(stage);} else streak=0;
+    vStreak.textContent=streak; vBest.textContent=best; vSolved.textContent=solved;
+    view.animateTo(1,1100);
+    if(!a.valid) setTimeout(()=>view.showClash(true),1100);
+  }
+  bYes.onclick=()=>answer(true);
+  bNo.onclick=()=>answer(false);
+  bNext.onclick=deal;
+  deal();
+}
+
+/* ---------- 9. game 3 — Opposite sides (cubes) ---------- */
+function renderOpposite(side,stage){
+  let streak=0,best=0,solved=0,answered=false,star=0,a=null;
+
+  const p=h("div","panel");
+  const q=h("div","q",t("qOpp"));
+  const vbox=h("div");
+  const nextRow=h("div","rowbtns");
+  const bNext=h("button","btn",t("nextO")); nextRow.appendChild(bNext); nextRow.hidden=true;
+  p.append(q,vbox,nextRow);
+
+  const sc=h("div","panel score");
+  const mk=lab=>{const d=h("div");const b=h("b","0");d.append(b,document.createTextNode(t(lab)));return[d,b];};
+  const [d1,vStreak]=mk("streak"),[d2,vBest]=mk("best"),[d3,vSolved]=mk("solved");
+  sc.append(d1,d2,d3);
+  side.append(p,sc);
+
+  function deal(){
+    answered=false; vbox.innerHTML=""; nextRow.hidden=true;
+    const net=netFromCells(rand(NETS_CUBE)); a=net.analysis;
+    star=Math.floor(Math.random()*6);
+    view.onFace=pick;
+    view.setNet(net,{star:star});
+    view.setFold(0); view.resetView();
+  }
+  function pick(i){
+    if(answered||i===star) return;
+    answered=true;
+    const target=a.sides.indexOf(a.sides[star]^1);   // ^1 flips +axis to -axis
+    const ok=i===target;
+    view.mark(i,true); view.mark(target,true);
+    const v=h("div","verdict "+(ok?"ok":"bad"));
+    v.append(h("b",null,ok?t("right"):t("wrong")));
+    v.append(document.createTextNode(ok?t("oppOk")(star+1,target+1):t("oppBad")(i+1,star+1,target+1)));
+    vbox.appendChild(v); nextRow.hidden=false;
+    if(ok){streak++;solved++;best=Math.max(best,streak);scraps(stage);} else streak=0;
+    vStreak.textContent=streak; vBest.textContent=best; vSolved.textContent=solved;
+    view.animateTo(1,1100);
+  }
+  bNext.onclick=deal;
+  deal();
+}
+
+/* ---------- go ---------- */
+render();
+</script>
+</body>
+</html>
