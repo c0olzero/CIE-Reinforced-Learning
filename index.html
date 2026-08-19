@@ -159,6 +159,54 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .scrap{position:absolute;width:9px;height:12px;pointer-events:none;z-index:5}
 @keyframes fly{to{transform:translate(var(--dx),var(--dy)) rotate(var(--rot));opacity:0}}
 
+/* ---------- in-stage verdict + countdown ---------- */
+.toast{position:absolute;left:12px;right:12px;bottom:12px;z-index:6;border-radius:12px;
+  padding:13px 14px;background:var(--paper);color:var(--ink);
+  box-shadow:0 16px 36px -14px rgba(0,0,0,.75);animation:toastIn .26s cubic-bezier(.2,.9,.3,1)}
+.toast.ok{border-left:6px solid #2F7D5F}
+.toast.bad{border-left:6px solid #B4432F}
+.toast b{display:block;font-family:var(--display);font-size:18px;letter-spacing:-.01em;margin-bottom:3px}
+.toast.ok b{color:#1E4A34}
+.toast.bad b{color:#7A2E1D}
+.toast p{font-size:13px;line-height:1.45;color:#4E5F58}
+@keyframes toastIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.stage.has-toast .hint{display:none}
+.nextbtn{position:relative;overflow:hidden;display:block;width:100%;margin-top:12px;
+  background:var(--ink);color:var(--paper);border-radius:10px;padding:12px;
+  font-size:13.5px;font-weight:700;text-align:center}
+.nextbtn:hover{background:#2B4239}
+.nextbar{position:absolute;left:0;top:0;bottom:0;width:100%;background:rgba(240,166,60,.35);
+  transform-origin:left center;pointer-events:none}
+.nextlab{position:relative}
+.nextnum{font-family:var(--mono);opacity:.7;margin-left:7px}
+
+/* ---------- angles ---------- */
+.stage.ang,.stage.ang:active{cursor:crosshair}
+.stage.ang.locked,.stage.ang.locked:active{cursor:default}
+.angsvg{position:absolute;inset:0;width:100%;height:100%}
+.ang-ray{stroke:var(--chalk);stroke-width:4;stroke-linecap:round}
+.ang-arc{fill:none;stroke-width:3}
+.ang-wedge{opacity:.28}
+.ang-tick{stroke:rgba(223,233,227,.2);stroke-width:1.5}
+.ang-tick.maj{stroke:rgba(223,233,227,.45);stroke-width:2.5}
+.ang-dot{fill:var(--chalk)}
+.ang-handle{fill:var(--amber);stroke:var(--ink);stroke-width:2.5}
+.ang-sq{fill:none;stroke-width:2.5}
+.ang-val{fill:var(--chalk);font-family:var(--display);font-weight:800}
+.bigval{font-family:var(--display);font-weight:800;font-size:46px;line-height:1;letter-spacing:-.03em}
+.bigname{font-size:14.5px;font-weight:700;margin-top:5px}
+.bigrange{font-family:var(--mono);font-size:10.5px;color:#8A9A8F;margin-top:4px;letter-spacing:.06em}
+.typerow{display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:9px;font-size:13px;transition:.15s}
+.typerow.on{background:rgba(22,36,31,.09)}
+.typerow i{width:12px;height:12px;border-radius:3px;flex:none}
+.typerow b{font-weight:700}
+.typerow span{margin-left:auto;font-family:var(--mono);font-size:10px;color:#8A9A8F}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.grid2 .wide{grid-column:1/-1}
+.toggles{display:flex;gap:6px;margin-top:12px}
+.toggle{border:1.5px solid rgba(22,36,31,.2);border-radius:999px;padding:6px 12px;font-size:12px;color:var(--ink);transition:.15s}
+.toggle[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink);font-weight:700}
+
 /* ---------- responsive ---------- */
 @media(max-width:900px){ .lab{grid-template-columns:minmax(0,1fr) 280px} }
 @media(max-width:820px){
@@ -230,7 +278,27 @@ const T = {
     oppOk:function(a,b){return "Square "+a+" and square "+b+" never touch — they end up on opposite sides.";},
     oppBad:function(a,b,c){return "Square "+a+" touches the ★ square when it folds. The one across is square "+c+".";},
     cubeOnly:"This game uses cubes only.",
-    streak:"Streak", best:"Best", solved:"Solved"
+    streak:"Streak", best:"Best", solved:"Solved",
+
+    modAng:"Angle Lab", modAngP:"Tell acute from right from obtuse — and catch a reflex.",
+    gAngL:"Protractor", gAngLP:"Swing the arm, watch the name change.",
+    gAngN:"Name it", gAngNP:"What kind of angle is this?",
+    gAngM:"Make it", gAngMP:"Drag until it matches.",
+    angle:"Angle", kinds:"Kinds of angle", dragAng:"DRAG TO SWING THE ARM",
+    snap5:"Snap 5°", ticksT:"Ticks", jump:"Jump to",
+    qAngN:"What kind of angle is this?", qAngM:"Make this kind of angle:",
+    check:"Check it", nextA:"Next angle",
+    tacute:"Acute", tright:"Right", tobtuse:"Obtuse", tstraight:"Straight", treflex:"Reflex", tzero:"No angle",
+    racute:"UNDER 90°", rright:"EXACTLY 90°", robtuse:"90° TO 180°", rstraight:"EXACTLY 180°", rreflex:"OVER 180°", rzero:"0°",
+    why:{
+      acute:function(d){return d+"° is under 90°, so it's acute.";},
+      right:function(d){return "Exactly 90° — that's a right angle.";},
+      obtuse:function(d){return d+"° sits between 90° and 180°, so it's obtuse.";},
+      straight:function(d){return "Exactly 180° — the two arms make a straight line.";},
+      reflex:function(d){return d+"° is more than 180°, so it's reflex.";},
+      zero:function(d){return "The arms are on top of each other.";}
+    },
+    youMade:function(d,n){return "You made "+d+"° — that's "+n.toLowerCase()+".";}
   },
   vi:{
     brand:"Bàn Thợ", tagline:"trò chơi nhỏ cho bạn nhỏ tò mò", back:"Quay lại", lang:"English",
@@ -258,7 +326,27 @@ const T = {
     oppOk:function(a,b){return "Ô "+a+" và ô "+b+" không bao giờ chạm nhau — hai ô nằm đối diện.";},
     oppBad:function(a,b,c){return "Ô "+a+" chạm vào ô ★ khi gấp. Ô đối diện là ô "+c+".";},
     cubeOnly:"Trò này chỉ dùng khối lập phương.",
-    streak:"Chuỗi", best:"Kỷ lục", solved:"Đã giải"
+    streak:"Chuỗi", best:"Kỷ lục", solved:"Đã giải",
+
+    modAng:"Xưởng Góc", modAngP:"Phân biệt góc nhọn, góc vuông, góc tù — và bắt được góc phản.",
+    gAngL:"Thước đo góc", gAngLP:"Xoay cạnh góc, xem tên góc đổi theo.",
+    gAngN:"Gọi tên góc", gAngNP:"Đây là góc gì?",
+    gAngM:"Tạo góc", gAngMP:"Kéo cho đúng loại góc.",
+    angle:"Góc", kinds:"Các loại góc", dragAng:"KÉO ĐỂ XOAY CẠNH GÓC",
+    snap5:"Bước 5°", ticksT:"Vạch chia", jump:"Nhảy tới",
+    qAngN:"Đây là góc gì?", qAngM:"Hãy tạo một góc loại này:",
+    check:"Kiểm tra", nextA:"Góc khác",
+    tacute:"Góc nhọn", tright:"Góc vuông", tobtuse:"Góc tù", tstraight:"Góc bẹt", treflex:"Góc phản", tzero:"Chưa có góc",
+    racute:"NHỎ HƠN 90°", rright:"ĐÚNG 90°", robtuse:"TỪ 90° ĐẾN 180°", rstraight:"ĐÚNG 180°", rreflex:"LỚN HƠN 180°", rzero:"0°",
+    why:{
+      acute:function(d){return d+"° nhỏ hơn 90°, nên là góc nhọn.";},
+      right:function(d){return "Đúng 90° — đây là góc vuông.";},
+      obtuse:function(d){return d+"° nằm giữa 90° và 180°, nên là góc tù.";},
+      straight:function(d){return "Đúng 180° — hai cạnh nằm trên một đường thẳng.";},
+      reflex:function(d){return d+"° lớn hơn 180°, nên là góc phản.";},
+      zero:function(d){return "Hai cạnh đang chồng lên nhau.";}
+    },
+    youMade:function(d,n){return "Bạn tạo góc "+d+"° — đây là "+n.toLowerCase()+".";}
   }
 };
 let L = "en";
@@ -723,6 +811,115 @@ class FoldView{
 }
 let onFoldTick=null;
 
+/* ---------- 3b. angles ---------- */
+const ANG_TYPES=["acute","right","obtuse","straight","reflex"];
+const ANG_COL={acute:2,right:1,obtuse:3,straight:5,reflex:4,zero:0};
+function angType(d){
+  if(Math.abs(d-90)<0.5) return "right";
+  if(Math.abs(d-180)<0.5) return "straight";
+  if(d<0.5||d>359.5) return "zero";
+  if(d<90) return "acute";
+  if(d<180) return "obtuse";
+  return "reflex";
+}
+/* is this angle a fair example of the type the kid was asked for? */
+function angMatches(d,want){
+  if(want==="right")    return Math.abs(d-90)<=3;
+  if(want==="straight") return Math.abs(d-180)<=3;
+  if(want==="acute")    return d>=1&&d<=89;
+  if(want==="obtuse")   return d>=91&&d<=179;
+  return d>=181&&d<=359;
+}
+/* quiz angles: exact 90 and 180 sometimes, otherwise a clear
+   distance from the boundaries so nothing is a coin flip */
+function randAngle(){
+  const r=Math.random();
+  if(r<0.14) return 90;
+  if(r<0.24) return 180;
+  const kind=r<0.52?"acute":r<0.80?"obtuse":"reflex";
+  if(kind==="acute")  return 8+Math.floor(Math.random()*75);    // 8–82
+  if(kind==="obtuse") return 98+Math.floor(Math.random()*75);   // 98–172
+  return 190+Math.floor(Math.random()*161);                     // 190–350
+}
+
+class AngleView{
+  constructor(stage){
+    this.stage=stage;
+    this.svg=document.createElementNS(SVGNS,"svg");
+    this.svg.setAttribute("class","angsvg");
+    stage.appendChild(this.svg);
+    this.base=0; this.theta=45; this.snap=1; this.ticks=false;
+    this.locked=false; this.showValue=true; this.onChange=null;
+    this._drag();
+    new ResizeObserver(()=>this.draw()).observe(stage);
+  }
+  geom(){
+    const W=this.stage.clientWidth,H=this.stage.clientHeight;
+    return {W,H,cx:W/2,cy:H/2,R:Math.min(W,H)*0.32};
+  }
+  _drag(){
+    let on=false;
+    const upd=e=>{
+      const g=this.geom(), r=this.stage.getBoundingClientRect();
+      const dx=e.clientX-r.left-g.cx, dy=e.clientY-r.top-g.cy;
+      if(Math.hypot(dx,dy)<10) return;             // too close to the vertex to mean anything
+      const a=Math.atan2(-dy,dx)*180/Math.PI;
+      let th=((a-this.base)%360+360)%360;
+      if(this.snap) th=Math.round(th/this.snap)*this.snap;
+      if(th>=360) th-=360;
+      this.theta=th; this.draw();
+      if(this.onChange) this.onChange(th);
+    };
+    this.stage.addEventListener("pointerdown",e=>{
+      if(this.locked||e.target.closest("button")) return;
+      e.preventDefault(); on=true; this.stage.setPointerCapture(e.pointerId); upd(e);
+    });
+    this.stage.addEventListener("pointermove",e=>{ if(on) upd(e); });
+    const off=()=>{on=false;};
+    this.stage.addEventListener("pointerup",off);
+    this.stage.addEventListener("pointercancel",off);
+    this.stage.addEventListener("dragstart",e=>e.preventDefault());
+  }
+  set(deg,base){ this.theta=deg; if(base!=null) this.base=base; this.draw(); }
+  lock(on){ this.locked=on; this.stage.classList.toggle("locked",on); this.draw(); }
+  draw(){
+    const {W,H,cx,cy,R}=this.geom();
+    if(!W||!H) return;
+    const svg=this.svg;
+    svg.setAttribute("viewBox","0 0 "+W+" "+H);
+    while(svg.firstChild) svg.removeChild(svg.firstChild);
+    const P=(a,r)=>[cx+r*Math.cos(a*Math.PI/180), cy-r*Math.sin(a*Math.PI/180)];
+    const mk=(tag,at)=>{const e=document.createElementNS(SVGNS,tag);for(const k in at)e.setAttribute(k,at[k]);svg.appendChild(e);return e;};
+    const th=this.theta, b=this.base, type=angType(th), col="var(--c"+ANG_COL[type]+")";
+    if(this.ticks) for(let d=0;d<360;d+=5){
+      const maj=d%45===0;
+      const p1=P(b+d,R*(maj?0.86:0.94)), p2=P(b+d,R);
+      mk("line",{x1:p1[0],y1:p1[1],x2:p2[0],y2:p2[1],class:"ang-tick"+(maj?" maj":"")});
+    }
+    const rw=R*0.7, s=P(b,rw), e2=P(b+th,rw), large=th>180?1:0;
+    // sweep-flag 0 = anticlockwise on screen, because SVG's y axis points down
+    const arc="A"+rw+","+rw+" 0 "+large+" 0 "+e2[0]+","+e2[1];
+    if(th>0.2){
+      mk("path",{d:"M"+cx+","+cy+" L"+s[0]+","+s[1]+" "+arc+" Z",class:"ang-wedge",fill:col});
+      mk("path",{d:"M"+s[0]+","+s[1]+" "+arc,class:"ang-arc",stroke:col});
+    }
+    const L=R*1.32, r1=P(b,L), r2=P(b+th,L);
+    mk("line",{x1:cx,y1:cy,x2:r1[0],y2:r1[1],class:"ang-ray"});
+    mk("line",{x1:cx,y1:cy,x2:r2[0],y2:r2[1],class:"ang-ray"});
+    if(type==="right"){                                  // the usual square corner mark
+      const q=R*0.19, a1=P(b,q), a2=P(b+90,q), a3=[a1[0]+a2[0]-cx, a1[1]+a2[1]-cy];
+      mk("path",{d:"M"+a1+" L"+a3+" L"+a2,class:"ang-sq",stroke:col});
+    }
+    mk("circle",{cx:cx,cy:cy,r:6,class:"ang-dot"});
+    if(!this.locked) mk("circle",{cx:r2[0],cy:r2[1],r:11,class:"ang-handle"});
+    if(this.showValue&&th>0.2){
+      const mp=P(b+th/2, th<40?rw*1.18:rw*0.58);
+      const tx=mk("text",{x:mp[0],y:mp[1],class:"ang-val","text-anchor":"middle","dominant-baseline":"central","font-size":Math.max(17,R*0.18)});
+      tx.textContent=Math.round(th)+"°";
+    }
+  }
+}
+
 /* ---------- 4. little helpers ---------- */
 function h(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e;}
 function netThumb(net){
@@ -738,6 +935,38 @@ function netThumb(net){
     svg.appendChild(pg);
   }
   return svg;
+}
+/* verdict banner shown on the stage itself, with a 5s reverse countdown.
+   Hovering pauses it — kids read slower than five seconds. */
+let pending=[];
+function stopPending(){ pending.forEach(f=>f()); pending=[]; }
+function verdict(stage,ok,text,onNext,nextLabel){
+  const box=h("div","toast "+(ok?"ok":"bad"));
+  box.append(h("b",null,ok?t("right"):t("wrong")),h("p",null,text));
+  const btn=h("button","nextbtn");
+  const bar=h("span","nextbar"), lab=h("span","nextlab",nextLabel), num=h("span","nextnum","5");
+  lab.appendChild(num); btn.append(bar,lab);
+  box.appendChild(btn); stage.appendChild(box); stage.classList.add("has-toast");
+
+  const MS=5000;
+  let elapsed=0, last=performance.now(), paused=false, raf=0, done=false;
+  const fire=()=>{ if(done) return; done=true; cancelAnimationFrame(raf);
+    box.remove(); stage.classList.remove("has-toast"); onNext(); };
+  const tick=now=>{
+    const dt=now-last; last=now;
+    if(!paused) elapsed+=dt;
+    const k=Math.min(1,elapsed/MS);
+    bar.style.transform="scaleX("+(1-k)+")";
+    num.textContent=Math.max(0,Math.ceil((MS-elapsed)/1000));
+    if(k>=1){ fire(); return; }
+    raf=requestAnimationFrame(tick);
+  };
+  raf=requestAnimationFrame(tick);
+  box.addEventListener("pointerenter",()=>{paused=true;});
+  box.addEventListener("pointerleave",()=>{paused=false;});
+  btn.onclick=e=>{ e.stopPropagation(); fire(); };
+  pending.push(()=>{ done=true; cancelAnimationFrame(raf); stage.classList.remove("has-toast"); });
+  return box;
 }
 function scraps(host){
   if(matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -771,6 +1000,12 @@ const MODULES=[
       {id:"net",  name:"gNet",  blurb:"gNetP",  render:renderNetQuiz},
       {id:"opp",  name:"gOpp",  blurb:"gOppP",  render:renderOpposite}
     ]},
+  { id:"ang", live:true, name:"modAng", blurb:"modAngP", colors:[2,1,3,5,4],
+    games:[
+      {id:"lab",  name:"gAngL", blurb:"gAngLP", render:renderAngleLab},
+      {id:"name", name:"gAngN", blurb:"gAngNP", render:renderAngleName},
+      {id:"make", name:"gAngM", blurb:"gAngMP", render:renderAngleMake}
+    ]},
   // ——— add new modules here ———
   { id:"times", name:"modTimes", blurb:"modTimesP" },
   { id:"frac",  name:"modFrac",  blurb:"modFracP" },
@@ -790,6 +1025,7 @@ function render(){
   langBtn.textContent=t("lang");
   backBtn.hidden=!route.mod;
   backBtn.querySelector("span").textContent=t("back");
+  stopPending();
   main.innerHTML=""; view=null; onFoldTick=null;
   route.mod ? renderModule() : renderHub();
 }
@@ -832,20 +1068,46 @@ function renderModule(){
   main.appendChild(tabs);
   const lab=h("div","lab");
   const stage=h("div","stage");
-  stage.append(h("div","hint",t("drag")));
-  const rb=h("button","reset",t("reset"));
-  stage.appendChild(rb);
   const side=h("div","side");
   lab.append(stage,side);
   main.appendChild(lab);
+  mod.games.find(g=>g.id===route.game).render(side,stage);
+}
+
+/* each game dresses the stage with the view it needs */
+function foldStage(stage){
+  stage.append(h("div","hint",t("drag")));
+  const rb=h("button","reset",t("reset"));
+  stage.appendChild(rb);
   view=new FoldView(stage);
   rb.onclick=()=>view.resetView();
-  mod.games.find(g=>g.id===route.game).render(side,stage);
+  return view;
+}
+function angleStage(stage,draggable){
+  stage.classList.add("ang");
+  if(draggable) stage.append(h("div","hint",t("dragAng")));
+  view=new AngleView(stage);
+  view.lock(!draggable);
+  return view;
+}
+function scorePanel(){
+  const sc=h("div","panel score"), out={};
+  ["streak","best","solved"].forEach(k=>{
+    const d=h("div"), b=h("b","0");
+    d.append(b,document.createTextNode(t(k))); sc.appendChild(d); out[k]=b;
+  });
+  out.el=sc; out.s=0; out.b=0; out.n=0;
+  out.hit=ok=>{
+    if(ok){out.s++;out.n++;out.b=Math.max(out.b,out.s);} else out.s=0;
+    out.streak.textContent=out.s; out.best.textContent=out.b; out.solved.textContent=out.n;
+  };
+  return out;
 }
 
 /* ---------- 7. game 1 — Fold Lab ---------- */
 let foldShape="cube", foldIdx=0;
-function renderFoldLab(side){
+function renderFoldLab(side,stage){
+  foldStage(stage);
   let nets=[];
 
   const p0=h("div","panel");
@@ -909,6 +1171,7 @@ function renderFoldLab(side){
 
 /* ---------- 8. game 2 — Folds or not? (cubes) ---------- */
 function renderNetQuiz(side,stage){
+  foldStage(stage);
   let streak=0,best=0,solved=0,answered=false,a=null;
 
   const p=h("div","panel");
@@ -916,9 +1179,7 @@ function renderNetQuiz(side,stage){
   const row=h("div","rowbtns");
   const bYes=h("button","btn big yes",t("yes")), bNo=h("button","btn big no",t("no"));
   row.append(bYes,bNo);
-  const vbox=h("div"); const nextRow=h("div","rowbtns");
-  const bNext=h("button","btn",t("next")); nextRow.appendChild(bNext); nextRow.hidden=true;
-  p.append(q,row,vbox,nextRow);
+  p.append(q,row);
 
   const sc=h("div","panel score");
   const mk=lab=>{const d=h("div");const b=h("b","0");d.append(b,document.createTextNode(t(lab)));return[d,b];};
@@ -927,7 +1188,7 @@ function renderNetQuiz(side,stage){
   side.append(p,sc);
 
   function deal(){
-    answered=false; vbox.innerHTML=""; row.hidden=false; nextRow.hidden=true;
+    answered=false; row.hidden=false;
     const cells=Math.random()<0.5?rand(NETS_CUBE):rand(NOTNETS);
     const net=netFromCells(cells); a=net.analysis;
     view.setNet(net,{clashSides:a.sides});
@@ -936,12 +1197,10 @@ function renderNetQuiz(side,stage){
   function answer(said){
     if(answered) return; answered=true;
     const ok=(said===a.valid);
-    row.hidden=true; nextRow.hidden=false;
-    const v=h("div","verdict "+(ok?"ok":"bad"));
-    v.append(h("b",null,ok?t("right"):t("wrong")));
-    v.append(document.createTextNode(
-      a.valid ? t("okNet")+" "+t("okNetW") : t("badNet")+" "+t("clashW")(a.stacked,a.holes)));
-    vbox.appendChild(v);
+    row.hidden=true;
+    verdict(stage,ok,
+      a.valid ? t("okNet")+" "+t("okNetW") : t("badNet")+" "+t("clashW")(a.stacked,a.holes),
+      deal, t("next"));
     if(ok){streak++;solved++;best=Math.max(best,streak);scraps(stage);} else streak=0;
     vStreak.textContent=streak; vBest.textContent=best; vSolved.textContent=solved;
     view.animateTo(1,1100);
@@ -949,20 +1208,17 @@ function renderNetQuiz(side,stage){
   }
   bYes.onclick=()=>answer(true);
   bNo.onclick=()=>answer(false);
-  bNext.onclick=deal;
   deal();
 }
 
 /* ---------- 9. game 3 — Opposite sides (cubes) ---------- */
 function renderOpposite(side,stage){
+  foldStage(stage);
   let streak=0,best=0,solved=0,answered=false,star=0,a=null;
 
   const p=h("div","panel");
   const q=h("div","q",t("qOpp"));
-  const vbox=h("div");
-  const nextRow=h("div","rowbtns");
-  const bNext=h("button","btn",t("nextO")); nextRow.appendChild(bNext); nextRow.hidden=true;
-  p.append(q,vbox,nextRow);
+  p.appendChild(q);
 
   const sc=h("div","panel score");
   const mk=lab=>{const d=h("div");const b=h("b","0");d.append(b,document.createTextNode(t(lab)));return[d,b];};
@@ -971,7 +1227,7 @@ function renderOpposite(side,stage){
   side.append(p,sc);
 
   function deal(){
-    answered=false; vbox.innerHTML=""; nextRow.hidden=true;
+    answered=false;
     const net=netFromCells(rand(NETS_CUBE)); a=net.analysis;
     star=Math.floor(Math.random()*6);
     view.onFace=pick;
@@ -984,15 +1240,142 @@ function renderOpposite(side,stage){
     const target=a.sides.indexOf(a.sides[star]^1);   // ^1 flips +axis to -axis
     const ok=i===target;
     view.mark(i,true); view.mark(target,true);
-    const v=h("div","verdict "+(ok?"ok":"bad"));
-    v.append(h("b",null,ok?t("right"):t("wrong")));
-    v.append(document.createTextNode(ok?t("oppOk")(star+1,target+1):t("oppBad")(i+1,star+1,target+1)));
-    vbox.appendChild(v); nextRow.hidden=false;
+    verdict(stage,ok, ok?t("oppOk")(star+1,target+1):t("oppBad")(i+1,star+1,target+1),
+      deal, t("nextO"));
     if(ok){streak++;solved++;best=Math.max(best,streak);scraps(stage);} else streak=0;
     vStreak.textContent=streak; vBest.textContent=best; vSolved.textContent=solved;
     view.animateTo(1,1100);
   }
-  bNext.onclick=deal;
+  deal();
+}
+
+/* ---------- 10. game 4 — Protractor ---------- */
+function typeStrip(){
+  const box=h("div"), rows={};
+  ANG_TYPES.forEach(k=>{
+    const r=h("div","typerow");
+    const sw=h("i"); sw.style.background="var(--c"+ANG_COL[k]+")";
+    r.append(sw,h("b",null,t("t"+k)),h("span",null,t("r"+k)));
+    box.appendChild(r); rows[k]=r;
+  });
+  return {el:box,rows:rows,
+    show:type=>{ for(const k in rows) rows[k].classList.toggle("on",k===type); }};
+}
+function renderAngleLab(side,stage){
+  const v=angleStage(stage,true);
+  v.showValue=true; v.ticks=true; v.snap=1;
+
+  const p1=h("div","panel");
+  p1.append(h("h4",null,t("angle").toUpperCase()));
+  const big=h("div","bigval"), nm=h("div","bigname"), rg=h("div","bigrange");
+  p1.append(big,nm,rg);
+  const tg=h("div","toggles");
+  const bSnap=h("button","toggle",t("snap5")), bTick=h("button","toggle",t("ticksT"));
+  bSnap.setAttribute("aria-pressed","false"); bTick.setAttribute("aria-pressed","true");
+  bSnap.onclick=()=>{ v.snap = v.snap===5?1:5; bSnap.setAttribute("aria-pressed",v.snap===5); };
+  bTick.onclick=()=>{ v.ticks=!v.ticks; bTick.setAttribute("aria-pressed",v.ticks); v.draw(); };
+  tg.append(bSnap,bTick); p1.appendChild(tg);
+
+  const p2=h("div","panel");
+  p2.append(h("h4",null,t("jump").toUpperCase()));
+  const jr=h("div","grid2");
+  [30,90,135,180,270].forEach((d,i)=>{
+    const b=h("button","btn alt"+(i===4?" wide":""),d+"°");
+    b.onclick=()=>{ v.set(d); upd(d); };
+    jr.appendChild(b);
+  });
+  p2.appendChild(jr);
+
+  const p3=h("div","panel");
+  p3.append(h("h4",null,t("kinds").toUpperCase()));
+  const strip=typeStrip(); p3.appendChild(strip.el);
+
+  side.append(p1,p2,p3);
+  function upd(d){
+    const type=angType(d);
+    big.textContent=Math.round(d)+"\u00B0";
+    big.style.color="var(--c"+ANG_COL[type]+")";
+    nm.textContent=t("t"+type);
+    rg.textContent=t("r"+type);
+    strip.show(type);
+  }
+  v.onChange=upd;
+  v.set(45,0); upd(45);
+}
+
+/* ---------- 11. game 5 — Name it ---------- */
+function renderAngleName(side,stage){
+  const v=angleStage(stage,false);
+  v.showValue=false; v.ticks=true;
+  let answered=false, deg=0;
+
+  const p=h("div","panel");
+  const q=h("div","q",t("qAngN"));
+  const grid=h("div","grid2");
+  const btns={};
+  ANG_TYPES.forEach((k,i)=>{
+    const b=h("button","btn"+(i===4?" wide":""),t("t"+k));
+    b.onclick=()=>answer(k);
+    grid.appendChild(b); btns[k]=b;
+  });
+  p.append(q,grid);
+  const score=scorePanel();
+  side.append(p,score.el);
+
+  function deal(){
+    answered=false; grid.hidden=false;
+    deg=randAngle();
+    v.showValue=false;
+    v.set(deg, Math.floor(Math.random()*360));   // random orientation, so no reading it off the horizon
+    v.draw();
+  }
+  function answer(said){
+    if(answered) return; answered=true;
+    const truth=angType(deg), ok=said===truth;
+    grid.hidden=true;
+    v.showValue=true; v.draw();
+    verdict(stage,ok,t("why")[truth](deg),deal,t("nextA"));
+    score.hit(ok);
+    if(ok) scraps(stage);
+  }
+  deal();
+}
+
+/* ---------- 12. game 6 — Make it ---------- */
+function renderAngleMake(side,stage){
+  const v=angleStage(stage,true);
+  v.showValue=false; v.snap=1; v.ticks=true;
+  let answered=false, want="acute";
+
+  const p=h("div","panel");
+  const q=h("div","q",t("qAngM"));
+  const target=h("div","bigname"), trange=h("div","bigrange");
+  const row=h("div","rowbtns"); row.style.marginTop="14px";
+  const bCheck=h("button","btn big",t("check")); row.appendChild(bCheck);
+  p.append(q,target,trange,row);
+  const score=scorePanel();
+  side.append(p,score.el);
+
+  function deal(){
+    answered=false; row.hidden=false;
+    want=ANG_TYPES[Math.floor(Math.random()*ANG_TYPES.length)];
+    target.textContent=t("t"+want);
+    target.style.color="var(--c"+ANG_COL[want]+")";
+    trange.textContent=t("r"+want);
+    v.showValue=false; v.ticks=true;
+    v.set(Math.random()<0.5?20:300, 0);
+    v.lock(false);
+  }
+  function check(){
+    if(answered) return; answered=true;
+    const d=Math.round(v.theta), ok=angMatches(d,want);
+    row.hidden=true;
+    v.showValue=true; v.lock(true);
+    verdict(stage,ok,t("youMade")(d,t("t"+angType(d))),deal,t("nextA"));
+    score.hit(ok);
+    if(ok) scraps(stage);
+  }
+  bCheck.onclick=check;
   deal();
 }
 
