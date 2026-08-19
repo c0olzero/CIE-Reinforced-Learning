@@ -6,7 +6,7 @@
 <title>Workbench — mini-games for curious kids</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Be+Vietnam+Pro:wght@400;500;700&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Be+Vietnam+Pro:wght@400;500;700&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
 <style>
 :root{
   --mat:#1E3A35; --mat2:#27524A; --matline:rgba(223,233,227,.09); --matline2:rgba(223,233,227,.16);
@@ -14,6 +14,7 @@
   --amber:#F0A63C; --red:#E2563F;
   --c0:#E2563F; --c1:#F0A63C; --c2:#3FB8A0; --c3:#4C8FD1; --c4:#9B6BB5; --c5:#7FB550;
   --display:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;
+  --fun:"Baloo 2","Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;
   --body:"Be Vietnam Pro","Segoe UI",system-ui,sans-serif;
   --mono:"Space Mono",ui-monospace,monospace;
   --r:14px;
@@ -88,16 +89,24 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
   touch-action:none;cursor:grab;
   user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .stage:active{cursor:grabbing}
+.stage.pickmode,.stage.pickmode:active{cursor:pointer}
 .world{position:absolute;inset:0;transform-style:preserve-3d}
 .netwrap{position:absolute;left:50%;top:50%;transform-style:preserve-3d}
 .face{position:absolute;left:0;top:0;width:0;height:0;transform-style:preserve-3d}
 .face > svg{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
-.face > svg polygon{stroke:rgba(22,36,31,.34);stroke-width:2;stroke-linejoin:round;pointer-events:auto}
-.face.tappable > svg polygon{cursor:pointer}
-.face.tappable:hover > svg polygon{stroke:#fff;stroke-width:5}
-.face.pick > svg polygon{stroke:#fff;stroke-width:6}
-.face.clash > svg polygon{animation:clash .9s infinite}
-@keyframes clash{0%,100%{stroke:rgba(255,255,255,.3);stroke-width:3}50%{stroke:#fff;stroke-width:7}}
+.face > svg polygon.pf{stroke:rgba(22,36,31,.34);stroke-width:2;stroke-linejoin:round;pointer-events:auto}
+.face > svg polygon.hl{fill:none;stroke:#fff;stroke-width:0;stroke-linejoin:round;
+  pointer-events:none;opacity:0;transition:opacity .1s}
+.face.hovered > svg polygon.hl{opacity:1;stroke-width:calc(var(--hw,4px)*1.1);
+  filter:drop-shadow(0 0 5px rgba(255,255,255,.9))}
+.face.hovered > svg polygon.pf{filter:brightness(1.2)}
+.face.pick > svg polygon.hl{opacity:1;stroke-width:calc(var(--hw,4px)*1.2);
+  filter:drop-shadow(0 0 7px rgba(255,255,255,.95));transition:none}
+.face.clash > svg polygon.hl{opacity:1;animation:clash .9s infinite}
+/* once it is folded, faces overlap in depth, so drop the hover cue entirely */
+.stage.folded .face.hovered > svg polygon.hl{opacity:0}
+@keyframes clash{0%,100%{opacity:.35;stroke-width:calc(var(--hw,4px)*.6)}
+  50%{opacity:1;stroke-width:calc(var(--hw,4px)*1.4)}}
 .lab-num{position:absolute;font-family:var(--display);font-weight:800;color:rgba(22,36,31,.6);
   backface-visibility:hidden;pointer-events:none;white-space:nowrap;line-height:1}
 .face.star > .lab-num{color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.4)}
@@ -156,29 +165,50 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .verdict b{display:block;font-family:var(--display);font-size:15px;margin-bottom:2px}
 .score{display:flex;gap:18px;font-size:12.5px;color:#4E5F58}
 .score b{font-family:var(--display);font-size:20px;color:var(--ink);display:block;line-height:1}
-.scrap{position:absolute;width:9px;height:12px;pointer-events:none;z-index:5}
+.scrap{position:absolute;width:9px;height:12px;pointer-events:none;z-index:9}
 @keyframes fly{to{transform:translate(var(--dx),var(--dy)) rotate(var(--rot));opacity:0}}
 
-/* ---------- in-stage verdict + countdown ---------- */
-.toast{position:absolute;left:12px;right:12px;bottom:12px;z-index:6;border-radius:12px;
-  padding:13px 14px;background:var(--paper);color:var(--ink);
-  box-shadow:0 16px 36px -14px rgba(0,0,0,.75);animation:toastIn .26s cubic-bezier(.2,.9,.3,1)}
-.toast.ok{border-left:6px solid #2F7D5F}
-.toast.bad{border-left:6px solid #B4432F}
-.toast b{display:block;font-family:var(--display);font-size:18px;letter-spacing:-.01em;margin-bottom:3px}
-.toast.ok b{color:#1E4A34}
-.toast.bad b{color:#7A2E1D}
-.toast p{font-size:13px;line-height:1.45;color:#4E5F58}
-@keyframes toastIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-.stage.has-toast .hint{display:none}
-.nextbtn{position:relative;overflow:hidden;display:block;width:100%;margin-top:12px;
-  background:var(--ink);color:var(--paper);border-radius:10px;padding:12px;
-  font-size:13.5px;font-weight:700;text-align:center}
-.nextbtn:hover{background:#2B4239}
-.nextbar{position:absolute;left:0;top:0;bottom:0;width:100%;background:rgba(240,166,60,.35);
+/* ---------- full-bleed quiz HUD ---------- */
+.lab.full{grid-template-columns:1fr}
+.lab.full .side{display:none}
+.hud-q{position:absolute;left:22px;top:18px;z-index:4;max-width:min(56%,560px);
+  font-family:var(--display);font-weight:800;font-size:clamp(19px,2.6vw,31px);
+  line-height:1.12;letter-spacing:-.025em;color:var(--chalk);text-shadow:0 2px 12px rgba(0,0,0,.45)}
+.hud-q em{font-style:normal;display:block;margin-top:8px;font-size:.82em;font-family:var(--fun)}
+.hud-q em small{display:block;font-family:var(--mono);font-size:.42em;letter-spacing:.12em;
+  color:var(--chalk-dim);margin-top:5px;font-weight:400}
+.hud-score{position:absolute;right:20px;top:16px;z-index:4;display:flex;gap:18px}
+.hud-score div{text-align:center}
+.hud-score b{display:block;font-family:var(--display);font-weight:800;font-size:27px;line-height:1;
+  color:var(--chalk);text-shadow:0 2px 10px rgba(0,0,0,.45)}
+.hud-score span{font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--chalk-dim);text-transform:uppercase}
+.hud-act{position:absolute;left:50%;bottom:20px;transform:translateX(-50%);z-index:4;
+  display:flex;gap:10px;flex-wrap:wrap;justify-content:center;width:max-content;max-width:calc(100% - 32px)}
+.hud-act[hidden]{display:none}
+.abtn{background:var(--paper);color:var(--ink);border-radius:12px;padding:13px 19px;
+  font-size:15px;font-weight:700;box-shadow:0 12px 24px -12px rgba(0,0,0,.85);transition:.15s}
+.abtn:hover{transform:translateY(-2px)}
+.abtn.yes{background:#2F7D5F;color:#fff}
+.abtn.no{background:#B4432F;color:#fff}
+
+/* ---------- dimmed celebration ---------- */
+.dim{position:absolute;inset:0;z-index:8;display:grid;place-items:center;padding:22px;
+  background:rgba(9,22,19,.74);animation:dimIn .22s ease}
+@keyframes dimIn{from{opacity:0}to{opacity:1}}
+.dimbox{text-align:center;max-width:min(680px,100%)}
+.word{font-family:var(--fun);font-weight:800;line-height:1.02;
+  font-size:clamp(34px,7.6vw,78px);margin-bottom:14px}
+.dim.bad .word{font-size:clamp(27px,5.4vw,54px);color:var(--red)}
+.word span{display:inline-block;animation:pop .5s cubic-bezier(.2,1.7,.4,1) backwards}
+@keyframes pop{from{opacity:0;transform:scale(.3) rotate(var(--rot,0deg))}to{opacity:1;transform:none}}
+.dimtext{font-size:15px;line-height:1.5;color:var(--chalk);max-width:44ch;margin:0 auto 18px}
+.nextbtn{position:relative;overflow:hidden;display:block;width:100%;max-width:290px;margin:0 auto;
+  background:var(--paper);color:var(--ink);border-radius:11px;padding:13px;
+  font-size:14px;font-weight:700;text-align:center}
+.nextbar{position:absolute;left:0;top:0;bottom:0;width:100%;background:rgba(240,166,60,.55);
   transform-origin:left center;pointer-events:none}
 .nextlab{position:relative}
-.nextnum{font-family:var(--mono);opacity:.7;margin-left:7px}
+.nextnum{font-family:var(--mono);opacity:.65;margin-left:8px}
 
 /* ---------- angles ---------- */
 .stage.ang,.stage.ang:active{cursor:crosshair}
@@ -211,6 +241,12 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 @media(max-width:900px){ .lab{grid-template-columns:minmax(0,1fr) 280px} }
 @media(max-width:820px){
   body{overflow:auto}
+  .lab.full .stage{height:64vh;min-height:420px}
+  .hud-q{left:14px;top:13px;max-width:66%}
+  .hud-score{right:12px;top:13px;gap:12px}
+  .hud-score b{font-size:21px}
+  .abtn{padding:11px 14px;font-size:13.5px}
+  .hud-act{bottom:14px;gap:7px}
   .shell{height:auto;min-height:100dvh;padding:12px 14px 20px}
   #main{display:block}
   .lab{display:block}
@@ -218,6 +254,7 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
   .side{overflow:visible}
   .brand small{display:none}
 }
+@media(max-width:600px){ .lab.full .hint{display:none} }
 @media(max-width:420px){
   .stage{height:42vh;min-height:250px}
   .btn.big{padding:13px 10px;font-size:14px}
@@ -348,6 +385,16 @@ const T = {
     },
     youMade:function(d,n){return "Bạn tạo góc "+d+"° — đây là "+n.toLowerCase()+".";}
   }
+};
+const WORDS={
+  en:{ok:["CONGRATULATIONS","AMAZING","YAY!","BRILLIANT","WELL DONE","NICE ONE","SUPERB",
+          "YOU GOT IT","FANTASTIC","WOOHOO!","CLEVER!","PERFECT!","SUPERSTAR","BOOM!"],
+      bad:["ALMOST!","SO CLOSE","NICE TRY","NEARLY!","GOOD THINKING","KEEP GOING",
+           "NOT QUITE YET","ONE MORE GO"]},
+  vi:{ok:["TUYỆT VỜI","GIỎI QUÁ","HOAN HÔ","XUẤT SẮC","CHÍNH XÁC","QUÁ ĐỈNH","LÀM TỐT LẮM",
+          "SIÊU LUÔN","HAY QUÁ","TUYỆT CÚ MÈO","CHUẨN LUÔN"],
+      bad:["SUÝT RỒI","GẦN ĐÚNG","THỬ LẠI NHÉ","SẮP ĐƯỢC RỒI","CỐ LÊN","NGHĨ HAY LẮM",
+           "CHƯA ĐÚNG THÔI"]}
 };
 let L = "en";
 const t = k => T[L][k];
@@ -635,7 +682,7 @@ class FoldView{
     this.world=document.createElement("div"); this.world.className="world";
     this.wrap=document.createElement("div"); this.wrap.className="netwrap";
     this.world.appendChild(this.wrap); stage.appendChild(this.world);
-    this.t=0; this.spin=-24; this.tilt=56; this.onFace=null; this.moved=0;
+    this.t=0; this.spin=-24; this.tilt=56; this.onFace=null; this.moved=0; this.hover=-1;
     this.stage.addEventListener("keydown",e=>{
       if(e.key!=="Enter"&&e.key!==" ") return;
       const s=e.target.closest&&e.target.closest("[data-i]");
@@ -643,7 +690,25 @@ class FoldView{
       e.preventDefault(); this.onFace(+s.dataset.i);
     });
     this._drag();
+    this._hover();
     new ResizeObserver(()=>this.build()).observe(stage);
+  }
+  /* exactly one face highlights: the innermost one the pointer is actually over */
+  _hover(){
+    const set=i=>{
+      if(i===this.hover) return;
+      const n=this.nodes||[];
+      if(n[this.hover]) n[this.hover].classList.remove("hovered");
+      this.hover=i;
+      if(i>=0&&n[i]) n[i].classList.add("hovered");
+    };
+    this.setHover=set;
+    this.stage.addEventListener("pointermove",e=>{
+      if(e.pointerType!=="mouse"||!this.onFace) return;   // no sticky hover on touch
+      const el=e.target.closest("[data-i]");
+      set(el?+el.dataset.i:-1);
+    });
+    this.stage.addEventListener("pointerleave",()=>set(-1));
   }
   _drag(){
     let on=false,px=0,py=0,hit=null;
@@ -711,14 +776,17 @@ class FoldView{
     })();
 
     this.wrap.innerHTML="";
+    this.hover=-1;
     const fs=Math.max(11,Math.min(30,sc*0.3));
     const nodes=polys.map((poly,i)=>{
       const n=document.createElement("div"); n.className="face";
       if(this.opts.star===i) n.classList.add("star");
+      const cx=poly.reduce((s,p)=>s+p[0],0)/poly.length, cy=poly.reduce((s,p)=>s+p[1],0)/poly.length;
       const svg=document.createElementNS(SVGNS,"svg");
       svg.setAttribute("width",PW); svg.setAttribute("height",PH);
       svg.setAttribute("viewBox","0 0 "+PW+" "+PH);
       const pg=document.createElementNS(SVGNS,"polygon");
+      pg.setAttribute("class","pf");
       pg.setAttribute("points",poly.map(p=>p[0].toFixed(2)+","+p[1].toFixed(2)).join(" "));
       pg.setAttribute("fill","var(--c"+(i%6)+")");
       pg.dataset.i=i;
@@ -733,8 +801,21 @@ class FoldView{
         ln.setAttribute("x2",L[1][0]);ln.setAttribute("y2",L[1][1]);
         svg.appendChild(ln);
       }
+      // inset outline: sized from the face's own inradius so it always clears the
+      // shared edge, on a big desktop face or a small one on a phone
+      const inr=Math.min(...poly.map((q,k)=>{
+        const r=poly[(k+1)%poly.length], vx=r[0]-q[0], vy=r[1]-q[1], L=Math.hypot(vx,vy)||1;
+        return Math.abs((cx-q[0])*vy-(cy-q[1])*vx)/L;
+      }));
+      const hw=Math.max(2.5,Math.min(5.5,inr*0.14));
+      const inset=1-Math.min(0.18,(hw*0.75+1.5)/Math.max(inr,1));
+      n.style.setProperty("--hw",hw.toFixed(2)+"px");
+      const hl=document.createElementNS(SVGNS,"polygon");
+      hl.setAttribute("class","hl");
+      hl.setAttribute("points",poly.map(q=>
+        (cx+(q[0]-cx)*inset).toFixed(2)+","+(cy+(q[1]-cy)*inset).toFixed(2)).join(" "));
+      svg.appendChild(hl);
       n.appendChild(svg);
-      const cx=poly.reduce((s,p)=>s+p[0],0)/poly.length, cy=poly.reduce((s,p)=>s+p[1],0)/poly.length;
       const txt=this.opts.star===i ? "★" : String(i+1);
       for(const side of ["f","b"]){
         const sp=document.createElement("span");
@@ -784,6 +865,7 @@ class FoldView{
   update(){
     if(!this.px) return;
     const t=this.t;
+    this.stage.classList.toggle("folded",t>0.02);
     this.world.style.transform="rotateX("+this.tilt+"deg) rotateZ("+this.spin+"deg)";
     const c=[0,1,2].map(k=>this.cFlat[k]+(this.cSolid[k]-this.cFlat[k])*t);
     this.wrap.style.transform="translate3d("+(-c[0])+"px,"+(-c[1])+"px,"+(-c[2])+"px)";
@@ -849,7 +931,7 @@ class AngleView{
     this.svg.setAttribute("class","angsvg");
     stage.appendChild(this.svg);
     this.base=0; this.theta=45; this.snap=1; this.ticks=false;
-    this.locked=false; this.showValue=true; this.onChange=null;
+    this.locked=false; this.showValue=true; this.neutral=false; this.onChange=null;
     this._drag();
     new ResizeObserver(()=>this.draw()).observe(stage);
   }
@@ -890,7 +972,10 @@ class AngleView{
     while(svg.firstChild) svg.removeChild(svg.firstChild);
     const P=(a,r)=>[cx+r*Math.cos(a*Math.PI/180), cy-r*Math.sin(a*Math.PI/180)];
     const mk=(tag,at)=>{const e=document.createElementNS(SVGNS,tag);for(const k in at)e.setAttribute(k,at[k]);svg.appendChild(e);return e;};
-    const th=this.theta, b=this.base, type=angType(th), col="var(--c"+ANG_COL[type]+")";
+    const th=this.theta, b=this.base, type=angType(th);
+    // while a question is live the wedge stays neutral — colouring it by type
+    // would let a kid answer from the colour instead of the angle
+    const col=this.neutral?"var(--amber)":"var(--c"+ANG_COL[type]+")";
     if(this.ticks) for(let d=0;d<360;d+=5){
       const maj=d%45===0;
       const p1=P(b+d,R*(maj?0.86:0.94)), p2=P(b+d,R);
@@ -906,7 +991,7 @@ class AngleView{
     const L=R*1.32, r1=P(b,L), r2=P(b+th,L);
     mk("line",{x1:cx,y1:cy,x2:r1[0],y2:r1[1],class:"ang-ray"});
     mk("line",{x1:cx,y1:cy,x2:r2[0],y2:r2[1],class:"ang-ray"});
-    if(type==="right"){                                  // the usual square corner mark
+    if(type==="right"&&!this.neutral){                   // the usual square corner mark
       const q=R*0.19, a1=P(b,q), a2=P(b+90,q), a3=[a1[0]+a2[0]-cx, a1[1]+a2[1]-cy];
       mk("path",{d:"M"+a1+" L"+a3+" L"+a2,class:"ang-sq",stroke:col});
     }
@@ -936,25 +1021,40 @@ function netThumb(net){
   }
   return svg;
 }
-/* verdict banner shown on the stage itself, with a 5s reverse countdown.
-   Hovering pauses it — kids read slower than five seconds. */
+/* Dimmed celebration over the stage: a big colourful word, the explanation,
+   and a Next button that drains over 8s. */
 let pending=[];
 function stopPending(){ pending.forEach(f=>f()); pending=[]; }
-function verdict(stage,ok,text,onNext,nextLabel){
-  const box=h("div","toast "+(ok?"ok":"bad"));
-  box.append(h("b",null,ok?t("right"):t("wrong")),h("p",null,text));
-  const btn=h("button","nextbtn");
-  const bar=h("span","nextbar"), lab=h("span","nextlab",nextLabel), num=h("span","nextnum","5");
-  lab.appendChild(num); btn.append(bar,lab);
-  box.appendChild(btn); stage.appendChild(box); stage.classList.add("has-toast");
+function celebrate(stage,ok,text,onNext,nextLabel){
+  const dim=h("div","dim "+(ok?"ok":"bad"));
+  const box=h("div","dimbox");
 
-  const MS=5000;
-  let elapsed=0, last=performance.now(), paused=false, raf=0, done=false;
-  const fire=()=>{ if(done) return; done=true; cancelAnimationFrame(raf);
-    box.remove(); stage.classList.remove("has-toast"); onNext(); };
+  const word=h("div","word");
+  const wordText=rand(WORDS[L][ok?"ok":"bad"]);
+  const n=[...wordText].length;                   // size to fit: CONGRATULATIONS is 15 wide
+  word.style.fontSize="clamp(26px,"+Math.min(7.4,112/n).toFixed(2)+"vw,"
+                     +Math.min(ok?74:52,880/n).toFixed(0)+"px)";
+  [...wordText].forEach((ch,i)=>{
+    const sp=h("span",null,ch===" "?"\u00A0":ch);
+    sp.style.animationDelay=(i*38)+"ms";
+    if(ok){
+      sp.style.color="var(--c"+(i%6)+")";
+      sp.style.setProperty("--rot",(Math.random()*30-15).toFixed(1)+"deg");
+    }
+    word.appendChild(sp);
+  });
+  box.append(word,h("p","dimtext",text));
+
+  const btn=h("button","nextbtn");
+  const bar=h("span","nextbar"), lab=h("span","nextlab",nextLabel), num=h("span","nextnum","8");
+  lab.appendChild(num); btn.append(bar,lab); box.appendChild(btn);
+  dim.appendChild(box); stage.appendChild(dim);
+
+  const MS=8000;
+  let elapsed=0, last=performance.now(), raf=0, done=false;
+  const fire=()=>{ if(done) return; done=true; cancelAnimationFrame(raf); dim.remove(); onNext(); };
   const tick=now=>{
-    const dt=now-last; last=now;
-    if(!paused) elapsed+=dt;
+    elapsed+=now-last; last=now;
     const k=Math.min(1,elapsed/MS);
     bar.style.transform="scaleX("+(1-k)+")";
     num.textContent=Math.max(0,Math.ceil((MS-elapsed)/1000));
@@ -962,11 +1062,9 @@ function verdict(stage,ok,text,onNext,nextLabel){
     raf=requestAnimationFrame(tick);
   };
   raf=requestAnimationFrame(tick);
-  box.addEventListener("pointerenter",()=>{paused=true;});
-  box.addEventListener("pointerleave",()=>{paused=false;});
   btn.onclick=e=>{ e.stopPropagation(); fire(); };
-  pending.push(()=>{ done=true; cancelAnimationFrame(raf); stage.classList.remove("has-toast"); });
-  return box;
+  pending.push(()=>{ done=true; cancelAnimationFrame(raf); });
+  return dim;
 }
 function scraps(host){
   if(matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -997,14 +1095,14 @@ const MODULES=[
   { id:"cube", live:true, name:"modCube", blurb:"modCubeP", colors:[0,1,2,3,4,5],
     games:[
       {id:"fold", name:"gFold", blurb:"gFoldP", render:renderFoldLab},
-      {id:"net",  name:"gNet",  blurb:"gNetP",  render:renderNetQuiz},
-      {id:"opp",  name:"gOpp",  blurb:"gOppP",  render:renderOpposite}
+      {id:"net",  name:"gNet",  blurb:"gNetP",  render:renderNetQuiz, full:true},
+      {id:"opp",  name:"gOpp",  blurb:"gOppP",  render:renderOpposite, full:true}
     ]},
   { id:"ang", live:true, name:"modAng", blurb:"modAngP", colors:[2,1,3,5,4],
     games:[
       {id:"lab",  name:"gAngL", blurb:"gAngLP", render:renderAngleLab},
-      {id:"name", name:"gAngN", blurb:"gAngNP", render:renderAngleName},
-      {id:"make", name:"gAngM", blurb:"gAngMP", render:renderAngleMake}
+      {id:"name", name:"gAngN", blurb:"gAngNP", render:renderAngleName, full:true},
+      {id:"make", name:"gAngM", blurb:"gAngMP", render:renderAngleMake, full:true}
     ]},
   // ——— add new modules here ———
   { id:"times", name:"modTimes", blurb:"modTimesP" },
@@ -1071,7 +1169,9 @@ function renderModule(){
   const side=h("div","side");
   lab.append(stage,side);
   main.appendChild(lab);
-  mod.games.find(g=>g.id===route.game).render(side,stage);
+  const g=mod.games.find(x=>x.id===route.game);
+  if(g.full) lab.classList.add("full");
+  g.render(side,stage);
 }
 
 /* each game dresses the stage with the view it needs */
@@ -1090,18 +1190,26 @@ function angleStage(stage,draggable){
   view.lock(!draggable);
   return view;
 }
-function scorePanel(){
-  const sc=h("div","panel score"), out={};
+/* score read-out pinned to the top right of the stage */
+function hudScore(stage){
+  const el=h("div","hud-score"), out={s:0,b:0,n:0};
   ["streak","best","solved"].forEach(k=>{
     const d=h("div"), b=h("b","0");
-    d.append(b,document.createTextNode(t(k))); sc.appendChild(d); out[k]=b;
+    d.append(b,h("span",null,t(k))); el.appendChild(d); out[k+"El"]=b;
   });
-  out.el=sc; out.s=0; out.b=0; out.n=0;
+  stage.appendChild(el);
   out.hit=ok=>{
     if(ok){out.s++;out.n++;out.b=Math.max(out.b,out.s);} else out.s=0;
-    out.streak.textContent=out.s; out.best.textContent=out.b; out.solved.textContent=out.n;
+    out.streakEl.textContent=out.s; out.bestEl.textContent=out.b; out.solvedEl.textContent=out.n;
   };
   return out;
+}
+/* question pinned to the top left */
+function hudQuestion(stage,text){
+  const q=h("div","hud-q",text); stage.appendChild(q); return q;
+}
+function hudActions(stage){
+  const a=h("div","hud-act"); stage.appendChild(a); return a;
 }
 
 /* ---------- 7. game 1 — Fold Lab ---------- */
@@ -1172,23 +1280,15 @@ function renderFoldLab(side,stage){
 /* ---------- 8. game 2 — Folds or not? (cubes) ---------- */
 function renderNetQuiz(side,stage){
   foldStage(stage);
-  let streak=0,best=0,solved=0,answered=false,a=null;
-
-  const p=h("div","panel");
-  const q=h("div","q",t("qNet"));
-  const row=h("div","rowbtns");
-  const bYes=h("button","btn big yes",t("yes")), bNo=h("button","btn big no",t("no"));
-  row.append(bYes,bNo);
-  p.append(q,row);
-
-  const sc=h("div","panel score");
-  const mk=lab=>{const d=h("div");const b=h("b","0");d.append(b,document.createTextNode(t(lab)));return[d,b];};
-  const [d1,vStreak]=mk("streak"),[d2,vBest]=mk("best"),[d3,vSolved]=mk("solved");
-  sc.append(d1,d2,d3);
-  side.append(p,sc);
+  hudQuestion(stage,t("qNet"));
+  const score=hudScore(stage);
+  const act=hudActions(stage);
+  const bYes=h("button","abtn yes",t("yes")), bNo=h("button","abtn no",t("no"));
+  act.append(bYes,bNo);
+  let answered=false, a=null;
 
   function deal(){
-    answered=false; row.hidden=false;
+    answered=false; act.hidden=false;
     const cells=Math.random()<0.5?rand(NETS_CUBE):rand(NOTNETS);
     const net=netFromCells(cells); a=net.analysis;
     view.setNet(net,{clashSides:a.sides});
@@ -1197,14 +1297,14 @@ function renderNetQuiz(side,stage){
   function answer(said){
     if(answered) return; answered=true;
     const ok=(said===a.valid);
-    row.hidden=true;
-    verdict(stage,ok,
-      a.valid ? t("okNet")+" "+t("okNetW") : t("badNet")+" "+t("clashW")(a.stacked,a.holes),
-      deal, t("next"));
-    if(ok){streak++;solved++;best=Math.max(best,streak);scraps(stage);} else streak=0;
-    vStreak.textContent=streak; vBest.textContent=best; vSolved.textContent=solved;
+    act.hidden=true;
+    score.hit(ok);
     view.animateTo(1,1100);
     if(!a.valid) setTimeout(()=>view.showClash(true),1100);
+    if(ok) scraps(stage);
+    celebrate(stage,ok,
+      a.valid ? t("okNet")+" "+t("okNetW") : t("badNet")+" "+t("clashW")(a.stacked,a.holes),
+      deal, t("next"));
   }
   bYes.onclick=()=>answer(true);
   bNo.onclick=()=>answer(false);
@@ -1214,17 +1314,10 @@ function renderNetQuiz(side,stage){
 /* ---------- 9. game 3 — Opposite sides (cubes) ---------- */
 function renderOpposite(side,stage){
   foldStage(stage);
-  let streak=0,best=0,solved=0,answered=false,star=0,a=null;
-
-  const p=h("div","panel");
-  const q=h("div","q",t("qOpp"));
-  p.appendChild(q);
-
-  const sc=h("div","panel score");
-  const mk=lab=>{const d=h("div");const b=h("b","0");d.append(b,document.createTextNode(t(lab)));return[d,b];};
-  const [d1,vStreak]=mk("streak"),[d2,vBest]=mk("best"),[d3,vSolved]=mk("solved");
-  sc.append(d1,d2,d3);
-  side.append(p,sc);
+  stage.classList.add("pickmode");     // picking is the main action here, so one cursor throughout
+  hudQuestion(stage,t("qOpp"));
+  const score=hudScore(stage);
+  let answered=false, star=0, a=null;
 
   function deal(){
     answered=false;
@@ -1240,11 +1333,11 @@ function renderOpposite(side,stage){
     const target=a.sides.indexOf(a.sides[star]^1);   // ^1 flips +axis to -axis
     const ok=i===target;
     view.mark(i,true); view.mark(target,true);
-    verdict(stage,ok, ok?t("oppOk")(star+1,target+1):t("oppBad")(i+1,star+1,target+1),
-      deal, t("nextO"));
-    if(ok){streak++;solved++;best=Math.max(best,streak);scraps(stage);} else streak=0;
-    vStreak.textContent=streak; vBest.textContent=best; vSolved.textContent=solved;
+    score.hit(ok);
     view.animateTo(1,1100);
+    if(ok) scraps(stage);
+    celebrate(stage,ok, ok?t("oppOk")(star+1,target+1):t("oppBad")(i+1,star+1,target+1),
+      deal, t("nextO"));
   }
   deal();
 }
@@ -1306,37 +1399,31 @@ function renderAngleLab(side,stage){
 /* ---------- 11. game 5 — Name it ---------- */
 function renderAngleName(side,stage){
   const v=angleStage(stage,false);
-  v.showValue=false; v.ticks=true;
+  v.showValue=false; v.ticks=true; v.neutral=true;
+  hudQuestion(stage,t("qAngN"));
+  const score=hudScore(stage);
+  const act=hudActions(stage);
+  ANG_TYPES.forEach(k=>{
+    const b=h("button","abtn",t("t"+k));
+    b.onclick=()=>answer(k);
+    act.appendChild(b);
+  });
   let answered=false, deg=0;
 
-  const p=h("div","panel");
-  const q=h("div","q",t("qAngN"));
-  const grid=h("div","grid2");
-  const btns={};
-  ANG_TYPES.forEach((k,i)=>{
-    const b=h("button","btn"+(i===4?" wide":""),t("t"+k));
-    b.onclick=()=>answer(k);
-    grid.appendChild(b); btns[k]=b;
-  });
-  p.append(q,grid);
-  const score=scorePanel();
-  side.append(p,score.el);
-
   function deal(){
-    answered=false; grid.hidden=false;
+    answered=false; act.hidden=false;
     deg=randAngle();
-    v.showValue=false;
+    v.showValue=false; v.neutral=true;
     v.set(deg, Math.floor(Math.random()*360));   // random orientation, so no reading it off the horizon
-    v.draw();
   }
   function answer(said){
     if(answered) return; answered=true;
     const truth=angType(deg), ok=said===truth;
-    grid.hidden=true;
-    v.showValue=true; v.draw();
-    verdict(stage,ok,t("why")[truth](deg),deal,t("nextA"));
+    act.hidden=true;
+    v.showValue=true; v.neutral=false; v.draw();
     score.hit(ok);
     if(ok) scraps(stage);
+    celebrate(stage,ok,t("why")[truth](deg),deal,t("nextA"));
   }
   deal();
 }
@@ -1344,36 +1431,33 @@ function renderAngleName(side,stage){
 /* ---------- 12. game 6 — Make it ---------- */
 function renderAngleMake(side,stage){
   const v=angleStage(stage,true);
-  v.showValue=false; v.snap=1; v.ticks=true;
+  v.showValue=false; v.snap=1; v.ticks=true; v.neutral=true;
+  const q=hudQuestion(stage,t("qAngM"));
+  const em=h("em"); q.appendChild(em);
+  const score=hudScore(stage);
+  const act=hudActions(stage);
+  const bCheck=h("button","abtn",t("check"));
+  act.appendChild(bCheck);
   let answered=false, want="acute";
 
-  const p=h("div","panel");
-  const q=h("div","q",t("qAngM"));
-  const target=h("div","bigname"), trange=h("div","bigrange");
-  const row=h("div","rowbtns"); row.style.marginTop="14px";
-  const bCheck=h("button","btn big",t("check")); row.appendChild(bCheck);
-  p.append(q,target,trange,row);
-  const score=scorePanel();
-  side.append(p,score.el);
-
   function deal(){
-    answered=false; row.hidden=false;
+    answered=false; act.hidden=false;
     want=ANG_TYPES[Math.floor(Math.random()*ANG_TYPES.length)];
-    target.textContent=t("t"+want);
-    target.style.color="var(--c"+ANG_COL[want]+")";
-    trange.textContent=t("r"+want);
-    v.showValue=false; v.ticks=true;
+    em.textContent=t("t"+want);
+    em.style.color="var(--c"+ANG_COL[want]+")";
+    em.appendChild(h("small",null,t("r"+want)));
+    v.showValue=false; v.neutral=true; v.ticks=true;
     v.set(Math.random()<0.5?20:300, 0);
     v.lock(false);
   }
   function check(){
     if(answered) return; answered=true;
     const d=Math.round(v.theta), ok=angMatches(d,want);
-    row.hidden=true;
-    v.showValue=true; v.lock(true);
-    verdict(stage,ok,t("youMade")(d,t("t"+angType(d))),deal,t("nextA"));
+    act.hidden=true;
+    v.showValue=true; v.neutral=false; v.lock(true);
     score.hit(ok);
     if(ok) scraps(stage);
+    celebrate(stage,ok,t("youMade")(d,t("t"+angType(d))),deal,t("nextA"));
   }
   bCheck.onclick=check;
   deal();
