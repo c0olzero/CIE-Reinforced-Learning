@@ -171,25 +171,80 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 /* ---------- full-bleed quiz HUD ---------- */
 .lab.full{grid-template-columns:1fr}
 .lab.full .side{display:none}
-.hud-q{position:absolute;left:22px;top:18px;z-index:4;max-width:min(56%,560px);
+.hud-q{position:absolute;left:22px;top:18px;z-index:4;pointer-events:none;max-width:min(56%,560px);
   font-family:var(--display);font-weight:800;font-size:clamp(19px,2.6vw,31px);
   line-height:1.12;letter-spacing:-.025em;color:var(--chalk);text-shadow:0 2px 12px rgba(0,0,0,.45)}
 .hud-q em{font-style:normal;display:block;margin-top:8px;font-size:.82em;font-family:var(--fun)}
 .hud-q em small{display:block;font-family:var(--mono);font-size:.42em;letter-spacing:.12em;
   color:var(--chalk-dim);margin-top:5px;font-weight:400}
-.hud-score{position:absolute;right:20px;top:16px;z-index:4;display:flex;gap:18px}
+.hud-score{position:absolute;right:20px;top:16px;z-index:4;pointer-events:none;display:flex;gap:18px}
 .hud-score div{text-align:center}
 .hud-score b{display:block;font-family:var(--display);font-weight:800;font-size:27px;line-height:1;
   color:var(--chalk);text-shadow:0 2px 10px rgba(0,0,0,.45)}
 .hud-score span{font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--chalk-dim);text-transform:uppercase}
 .hud-act{position:absolute;left:50%;bottom:20px;transform:translateX(-50%);z-index:4;
-  display:flex;gap:10px;flex-wrap:wrap;justify-content:center;width:max-content;max-width:calc(100% - 32px)}
+  display:flex;gap:10px;flex-wrap:wrap;justify-content:center;width:max-content;max-width:calc(100% - 32px);
+  pointer-events:none}
+.abtn{pointer-events:auto}
 .hud-act[hidden]{display:none}
 .abtn{background:var(--paper);color:var(--ink);border-radius:12px;padding:13px 19px;
   font-size:15px;font-weight:700;box-shadow:0 12px 24px -12px rgba(0,0,0,.85);transition:.15s}
 .abtn:hover{transform:translateY(-2px)}
 .abtn.yes{background:#2F7D5F;color:#fff}
 .abtn.no{background:#B4432F;color:#fff}
+
+/* ---------- arcade ---------- */
+.arc-top{position:absolute;left:50%;top:14px;transform:translateX(-50%);z-index:5;
+  text-align:center;pointer-events:none}
+.arc-clock{font-family:var(--mono);font-size:clamp(30px,5vw,54px);line-height:1;color:var(--chalk);
+  text-shadow:0 3px 16px rgba(0,0,0,.6);letter-spacing:-.02em}
+.arc-target{font-family:var(--fun);font-weight:800;line-height:1.02;margin-top:8px;
+  font-size:clamp(38px,6.6vw,72px);text-shadow:0 3px 16px rgba(0,0,0,.6)}
+.arc-clock.low{color:var(--red)}
+.arc-mute{position:absolute;left:16px;bottom:14px;z-index:6;width:38px;height:38px;
+  border-radius:50%;border:1.5px solid rgba(223,233,227,.22);color:var(--chalk-dim);
+  font-size:15px;line-height:1;transition:.15s}
+.arc-mute:hover{color:var(--amber);border-color:var(--amber)}
+.stage.arcade,.stage.arcade:active{cursor:pointer}
+.arc-shape{position:absolute;z-index:3;opacity:0;
+  animation:arcIn .28s cubic-bezier(.2,1.4,.4,1) forwards;
+  filter:drop-shadow(0 7px 16px rgba(0,0,0,.5))}
+.arc-shape.out{animation:arcOut .5s ease forwards}
+.arc-shape.hit{animation:arcHit .22s ease forwards}
+@keyframes arcIn{from{opacity:0;transform:scale(.78)}to{opacity:1;transform:none}}
+@keyframes arcOut{from{opacity:1;transform:none}to{opacity:0;transform:scale(.9)}}
+@keyframes arcHit{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(1.35)}}
+.arc-pop{position:absolute;z-index:7;font-family:var(--fun);font-weight:800;font-size:27px;
+  pointer-events:none;white-space:nowrap;animation:popUp .85s cubic-bezier(.2,.8,.3,1) forwards;
+  text-shadow:0 2px 8px rgba(0,0,0,.6)}
+@keyframes popUp{from{opacity:1;transform:translate(-50%,-50%) scale(.7)}
+  35%{opacity:1;transform:translate(-50%,-90%) scale(1.1)}
+  to{opacity:0;transform:translate(-50%,-165%) scale(1)}}
+.arc-bar{position:absolute;left:0;top:0;height:5px;z-index:5;background:var(--amber);
+  border-radius:0 3px 3px 0}
+.arc-bar.low{background:var(--red)}
+.arc-big{font-family:var(--fun);font-weight:800;font-size:clamp(30px,6vw,58px);
+  color:var(--amber);margin-bottom:6px}
+.arc-final{font-family:var(--fun);font-weight:800;font-size:clamp(44px,10vw,92px);
+  color:#fff;line-height:1;margin:6px 0 4px}
+.arc-sub{font-size:14px;color:var(--chalk-dim);margin-bottom:16px;line-height:1.6}
+.arc-how{font-size:15.5px;line-height:1.5;color:var(--chalk);max-width:38ch;margin:0 auto 18px}
+.arc-new{display:inline-block;font-family:var(--fun);font-weight:800;color:var(--c2);
+  font-size:20px;margin-bottom:8px;animation:pop .5s cubic-bezier(.2,1.7,.4,1) backwards}
+.arc-rule{font-size:13.5px;color:var(--chalk);line-height:1.75;margin-bottom:18px;text-align:left;
+  display:inline-block}
+.arc-rule i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:7px;
+  vertical-align:middle}
+
+/* ---------- angle arcade dial ---------- */
+.ang-dial{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:3}
+.dial-tick{stroke:rgba(223,233,227,.3);stroke-width:2}
+.dial-base{stroke:var(--chalk-dim);stroke-width:5;stroke-linecap:round}
+.dial-ray{stroke:#fff;stroke-width:6;stroke-linecap:round}
+.dial-wedge{opacity:.2;fill:#fff}
+.dial-band{opacity:.34}
+.dial-target{stroke-width:3;stroke-dasharray:8 5;fill:none}
+.dial-hub{fill:var(--chalk)}
 
 /* ---------- dimmed celebration ---------- */
 .dim{position:absolute;inset:0;z-index:8;display:grid;place-items:center;padding:22px;
@@ -335,7 +390,22 @@ const T = {
       reflex:function(d){return d+"° is more than 180°, so it's reflex.";},
       zero:function(d){return "The arms are on top of each other.";}
     },
-    youMade:function(d,n){return "You made "+d+"° — that's "+n.toLowerCase()+".";}
+    youMade:function(d,n){return "You made "+d+"° — that's "+n.toLowerCase()+".";},
+
+    gArc:"Arcade", gArcP:"Beat the clock. Chase a high score.",
+    arcHow:"Tap the shapes that fold into a cube. The faster you tap one, the more it's worth.",
+    scoreL:"Score", bestL:"Best",
+    ready:"Ready?", start:"Start", again:"Play again", timeUp:"Time's up!",
+    newBest:"NEW BEST!", playedFor:function(s){return "You lasted "+s+" seconds.";},
+    finalBest:function(b){return "Best so far: "+b;},
+    arcHowA:"A line sweeps around the protractor. Tap the instant the angle matches the number shown.",
+    ruleAim:"Bang on — 1000 points, minus 100 for every degree off",
+    ruleBlueA:"Blue target — the same points, plus 1 extra second on the clock",
+    ruleMiss:"Tapping outside the shaded band — 500 points off",
+    ruleGold:"Gold shape — up to 200 points, if you are quick",
+    ruleBlue:"Blue shape — the same points, plus 1 extra second on the clock",
+    ruleWrong:"Wrong shape — 100 points off",
+    bonusSec:"+1s"
   },
   vi:{
     brand:"Bàn Thợ", tagline:"trò chơi nhỏ cho bạn nhỏ tò mò", back:"Quay lại", lang:"English",
@@ -383,7 +453,22 @@ const T = {
       reflex:function(d){return d+"° lớn hơn 180°, nên là góc phản.";},
       zero:function(d){return "Hai cạnh đang chồng lên nhau.";}
     },
-    youMade:function(d,n){return "Bạn tạo góc "+d+"° — đây là "+n.toLowerCase()+".";}
+    youMade:function(d,n){return "Bạn tạo góc "+d+"° — đây là "+n.toLowerCase()+".";},
+
+    gArc:"Đua điểm", gArcP:"Chạy đua với đồng hồ. Săn kỷ lục.",
+    arcHow:"Chạm vào những hình gấp được thành khối lập phương. Chạm càng nhanh thì điểm càng cao.",
+    scoreL:"Điểm", bestL:"Kỷ lục",
+    ready:"Sẵn sàng chưa?", start:"Bắt đầu", again:"Chơi lại", timeUp:"Hết giờ!",
+    newBest:"KỶ LỤC MỚI!", playedFor:function(s){return "Bạn đã chơi "+s+" giây.";},
+    finalBest:function(b){return "Kỷ lục: "+b;},
+    arcHowA:"Một cạnh quét quanh thước đo góc. Chạm đúng lúc góc bằng số đã cho.",
+    ruleAim:"Thật chuẩn — 1000 điểm, lệch mỗi độ trừ 100 điểm",
+    ruleBlueA:"Mục tiêu xanh — điểm y như vậy, cộng thêm 1 giây",
+    ruleMiss:"Chạm ngoài vùng tô đậm — trừ 500 điểm",
+    ruleGold:"Hình vàng — tối đa 200 điểm nếu nhanh tay",
+    ruleBlue:"Hình xanh — điểm y như hình vàng, cộng thêm 1 giây",
+    ruleWrong:"Hình sai — trừ 100 điểm",
+    bonusSec:"+1 giây"
   }
 };
 const WORDS={
@@ -711,30 +796,33 @@ class FoldView{
     this.stage.addEventListener("pointerleave",()=>set(-1));
   }
   _drag(){
-    let on=false,px=0,py=0,hit=null;
+    let on=false,px=0,py=0,sx=0,sy=0,slop=9,hit=null;
     this.stage.addEventListener("pointerdown",e=>{
       if(e.target.closest("button")) return;
       e.preventDefault();                 // no native text selection or drag-image
-      on=true;px=e.clientX;py=e.clientY;this.moved=0;
+      on=true;px=sx=e.clientX;py=sy=e.clientY;this.moved=0;
+      slop=e.pointerType==="touch"?16:9;  // fingers wobble more than mice
       hit=e.target.closest("[data-i]");   // captured before pointer capture retargets
       this.stage.setPointerCapture(e.pointerId);
     });
     this.stage.addEventListener("dragstart",e=>e.preventDefault());
     this.stage.addEventListener("pointermove",e=>{
       if(!on) return;
-      this.moved+=Math.abs(e.clientX-px)+Math.abs(e.clientY-py);
+      this.moved=Math.max(this.moved,Math.hypot(e.clientX-sx,e.clientY-sy));
       this.spin+=(e.clientX-px)*0.42;
       // 0° = straight-down plan view, 90° = edge on, past 90° = looking up at the underside
       this.tilt=Math.max(-20,Math.min(170,this.tilt-(e.clientY-py)*0.32));
       px=e.clientX;py=e.clientY;this.update();
     });
     this.stage.addEventListener("pointerup",()=>{
-      if(on&&hit&&this.moved<=7&&this.onFace) this.onFace(+hit.dataset.i);
+      if(on&&hit&&this.moved<=slop&&this.onFace) this.onFace(+hit.dataset.i);
       on=false;hit=null;
     });
     this.stage.addEventListener("pointercancel",()=>{on=false;hit=null;});
   }
+  stopAnim(){ cancelAnimationFrame(this._raf); this._raf=0; }
   setNet(net,opts){
+    this.stopAnim();
     this.net=net;
     this.opts=Object.assign({star:-1,marks:{},clash:false,clashSides:null},opts||{});
     this.build();
@@ -1052,7 +1140,13 @@ function celebrate(stage,ok,text,onNext,nextLabel){
 
   const MS=8000;
   let elapsed=0, last=performance.now(), raf=0, done=false;
-  const fire=()=>{ if(done) return; done=true; cancelAnimationFrame(raf); dim.remove(); onNext(); };
+  const cancel=()=>{ done=true; cancelAnimationFrame(raf); };
+  const fire=()=>{
+    if(done) return;
+    cancel();
+    const k=pending.indexOf(cancel); if(k>=0) pending.splice(k,1);
+    dim.remove(); onNext();
+  };
   const tick=now=>{
     elapsed+=now-last; last=now;
     const k=Math.min(1,elapsed/MS);
@@ -1063,7 +1157,7 @@ function celebrate(stage,ok,text,onNext,nextLabel){
   };
   raf=requestAnimationFrame(tick);
   btn.onclick=e=>{ e.stopPropagation(); fire(); };
-  pending.push(()=>{ done=true; cancelAnimationFrame(raf); });
+  pending.push(cancel);
   return dim;
 }
 function scraps(host){
@@ -1096,13 +1190,15 @@ const MODULES=[
     games:[
       {id:"fold", name:"gFold", blurb:"gFoldP", render:renderFoldLab},
       {id:"net",  name:"gNet",  blurb:"gNetP",  render:renderNetQuiz, full:true},
-      {id:"opp",  name:"gOpp",  blurb:"gOppP",  render:renderOpposite, full:true}
+      {id:"opp",  name:"gOpp",  blurb:"gOppP",  render:renderOpposite, full:true},
+      {id:"arc",  name:"gArc",  blurb:"gArcP",  render:renderCubeArcade, full:true}
     ]},
   { id:"ang", live:true, name:"modAng", blurb:"modAngP", colors:[2,1,3,5,4],
     games:[
       {id:"lab",  name:"gAngL", blurb:"gAngLP", render:renderAngleLab},
       {id:"name", name:"gAngN", blurb:"gAngNP", render:renderAngleName, full:true},
-      {id:"make", name:"gAngM", blurb:"gAngMP", render:renderAngleMake, full:true}
+      {id:"make", name:"gAngM", blurb:"gAngMP", render:renderAngleMake, full:true},
+      {id:"arc",  name:"gArc",  blurb:"gArcP",  render:renderAngleArcade, full:true}
     ]},
   // ——— add new modules here ———
   { id:"times", name:"modTimes", blurb:"modTimesP" },
@@ -1251,7 +1347,7 @@ function renderFoldLab(side,stage){
   p2.append(h4,strip,note);
 
   side.append(p0,p1,p2);
-  lever.oninput=()=>view.setFold(lever.value/1000);
+  lever.oninput=()=>{ view.stopAnim(); view.setFold(lever.value/1000); };
   onFoldTick=v=>lever.value=Math.round(v*1000);
   bFold.onclick=()=>view.animateTo(1);
   bFlat.onclick=()=>view.animateTo(0);
@@ -1285,9 +1381,11 @@ function renderNetQuiz(side,stage){
   const act=hudActions(stage);
   const bYes=h("button","abtn yes",t("yes")), bNo=h("button","abtn no",t("no"));
   act.append(bYes,bNo);
-  let answered=false, a=null;
+  let answered=false, a=null, clashTimer=0;
+  pending.push(()=>clearTimeout(clashTimer));
 
   function deal(){
+    clearTimeout(clashTimer);
     answered=false; act.hidden=false;
     const cells=Math.random()<0.5?rand(NETS_CUBE):rand(NOTNETS);
     const net=netFromCells(cells); a=net.analysis;
@@ -1300,7 +1398,7 @@ function renderNetQuiz(side,stage){
     act.hidden=true;
     score.hit(ok);
     view.animateTo(1,1100);
-    if(!a.valid) setTimeout(()=>view.showClash(true),1100);
+    if(!a.valid) clashTimer=setTimeout(()=>view.showClash(true),1100);
     if(ok) scraps(stage);
     celebrate(stage,ok,
       a.valid ? t("okNet")+" "+t("okNetW") : t("badNet")+" "+t("clashW")(a.stacked,a.holes),
@@ -1461,6 +1559,394 @@ function renderAngleMake(side,stage){
   }
   bCheck.onclick=check;
   deal();
+}
+
+/* ============================================================
+   13. ARCADE — shared engine, one adapter per module
+
+   Rules (as specified):
+     30s clock. Shapes fade in for 2s each.
+     70% gold / 30% blue, independent of whether the shape is a right answer.
+     Correct: 200 pts under 0.5s, 150 to 1s, 100 to 1.5s, 50 after.
+              Blue also adds 1 second to the clock.
+     Wrong tap: -100.
+     A hidden play-time counter drives the difficulty ramp: one more shape
+     allowed on screen every 10s, up to 5. At the start a new shape only
+     appears once the previous one begins fading. Shapes never overlap.
+   ============================================================ */
+/* --- sound: synthesised so the file stays standalone, no assets --- */
+let AC=null, sfxOn=true;
+function audioWake(){
+  try{
+    if(!AC) AC=new (window.AudioContext||window.webkitAudioContext)();
+    if(AC.state==="suspended") AC.resume();
+  }catch(e){ AC=null; }
+}
+function tone(freq,delay,dur,type,vol,glide){
+  if(!AC||!sfxOn) return;
+  const t0=AC.currentTime+delay;
+  const o=AC.createOscillator(), g=AC.createGain();
+  o.type=type; o.frequency.setValueAtTime(freq,t0);
+  if(glide) o.frequency.exponentialRampToValueAtTime(glide,t0+dur);
+  g.gain.setValueAtTime(0.0001,t0);
+  g.gain.exponentialRampToValueAtTime(vol,t0+0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+  o.connect(g); g.connect(AC.destination);
+  o.start(t0); o.stop(t0+dur+0.03);
+}
+/* gold: a bright two-note lift */
+function sfxGold(){
+  tone(1046.5,0,   .20,"triangle",.20);      // C6
+  tone(1567.98,.07,.26,"triangle",.17);      // G6
+}
+/* blue: a fuller four-note arpeggio with a bell tail — clearly the better prize */
+function sfxBlue(){
+  [1046.5,1318.51,1567.98,2093].forEach((f,i)=>tone(f,i*.055,.30,"triangle",.17));
+  tone(2093,.24,.55,"sine",.10);
+  tone(3136,.26,.45,"sine",.05);
+}
+/* wrong: a short detuned buzz that slides down */
+function sfxWrong(){
+  tone(196,0,.20,"sawtooth",.15,104);
+  tone(207,0,.20,"square",  .09,110);
+}
+
+const ARC_LIFE=2000, ARC_FADE=1500;      // shape total life, and when fade-out begins
+const arcMem={};
+function arcBest(k){ try{ return +localStorage.getItem("wb_"+k)||0; }catch(e){ return arcMem[k]||0; } }
+function arcSaveBest(k,v){ try{ localStorage.setItem("wb_"+k,v); }catch(e){ arcMem[k]=v; } }
+
+/* ---- shared shell: clock, score, best, title screen, end screen ---- */
+function arcadeShell(stage,cfg){
+  stage.classList.add("arcade");
+  const top=h("div","arc-top");
+  const elClock=h("div","arc-clock","30.00s");
+  top.appendChild(elClock);
+  if(cfg.topExtra) top.appendChild(cfg.topExtra);   // e.g. the angle game's target
+  stage.appendChild(top);
+  const hud=h("div","hud-score");
+  const mk=lab=>{ const d=h("div"), b=h("b","0"); d.append(b,h("span",null,t(lab))); hud.appendChild(d); return b; };
+  const elScore=mk("scoreL"), elBest=mk("bestL");
+  stage.appendChild(hud);
+  const bar=h("div","arc-bar"); bar.style.width="100%"; stage.appendChild(bar);
+  const mute=h("button","arc-mute",sfxOn?"🔊":"🔇");
+  mute.onclick=()=>{ sfxOn=!sfxOn; mute.textContent=sfxOn?"🔊":"🔇"; };
+  stage.appendChild(mute);
+
+  let best=arcBest(cfg.key); elBest.textContent=best;
+  let running=false, raf=0, last=0, score=0, timeLeft=30000, played=0;
+
+  const api={
+    stage:stage,
+    get running(){ return running; },
+    get played(){ return played; },
+    addScore(n){ score=Math.max(0,score+n); elScore.textContent=score; },
+    addTime(ms){ timeLeft+=ms; },
+    pop(x,y,text,color){
+      const el=h("div","arc-pop",text);
+      el.style.left=x+"px"; el.style.top=y+"px"; el.style.color=color;
+      stage.appendChild(el);
+      setTimeout(()=>el.remove(),900);
+    }
+  };
+  function stop(){ running=false; cancelAnimationFrame(raf); raf=0; }
+  pending.push(()=>{ stop(); cfg.cleanup&&cfg.cleanup(); });
+
+  function paint(){
+    // pad from the ROUNDED string: 9.999 rounds to "10.00", and testing the raw
+    // value first would prepend a zero and print 010.00s
+    let cs=(Math.max(0,timeLeft)/1000).toFixed(2);
+    if(cs.indexOf(".")===1) cs="0"+cs;
+    elClock.textContent=cs+"s";
+    elClock.classList.toggle("low",timeLeft<=5000);
+    bar.style.width=Math.min(100,timeLeft/30000*100)+"%";
+    bar.classList.toggle("low",timeLeft<=5000);
+  }
+  function frame(now){
+    if(!running) return;
+    const dt=Math.min(120,now-last); last=now;
+    played+=dt; timeLeft-=dt;
+    if(timeLeft<=0){ timeLeft=0; paint(); return end(); }
+    cfg.frame(dt,played,api);
+    paint();
+    raf=requestAnimationFrame(frame);
+  }
+  function screen(build){
+    const dim=h("div","dim"); const box=h("div","dimbox");
+    build(box,dim); dim.appendChild(box); stage.appendChild(dim);
+    return dim;
+  }
+  function begin(){
+    score=0; timeLeft=30000; played=0;
+    elScore.textContent="0"; paint();
+    cfg.reset(api);
+    running=true; last=performance.now();
+    raf=requestAnimationFrame(frame);
+  }
+  function end(){
+    stop();
+    cfg.cleanup&&cfg.cleanup();
+    const record=score>best;
+    if(record){ best=score; arcSaveBest(cfg.key,best); elBest.textContent=best; }
+    screen((box,dim)=>{
+      box.appendChild(h("div","arc-big",t("timeUp")));
+      if(record) box.appendChild(h("div","arc-new",t("newBest")));
+      box.appendChild(h("div","arc-final",String(score)));
+      const sub=h("div","arc-sub");
+      sub.append(h("div",null,t("playedFor")((played/1000).toFixed(1))),
+                 h("div",null,t("finalBest")(best)));
+      box.appendChild(sub);
+      const b=h("button","nextbtn",t("again"));
+      b.onclick=()=>{ audioWake(); dim.remove(); begin(); };
+      box.appendChild(b);
+    });
+  }
+  screen((box,dim)=>{
+    box.appendChild(h("div","arc-big",t("ready")));
+    box.appendChild(h("p","arc-how",t(cfg.how)));
+    const rules=h("div","arc-rule");
+    cfg.rules.forEach(([c,k])=>{
+      const line=h("div"); const sw=h("i"); sw.style.background=c;
+      line.append(sw,document.createTextNode(t(k))); rules.appendChild(line);
+    });
+    box.appendChild(rules);
+    const b=h("button","nextbtn",t("start"));
+    b.onclick=()=>{ audioWake(); dim.remove(); begin(); };
+    box.appendChild(b);
+  });
+  return api;
+}
+
+/* ============================================================
+   ARCADE 1 — Solid Lab: tap the nets that fold into a cube
+   30s. Shapes live 2s. 70% gold / 30% blue. 200/150/100/50 by
+   speed; blue adds a second; wrong tap -100. One more shape
+   allowed on screen every 10s of hidden play time, up to 5.
+   ============================================================ */
+function arcPoints(ageMs){
+  if(ageMs<500)  return 200;
+  if(ageMs<1000) return 150;
+  if(ageMs<1500) return 100;
+  return 50;
+}
+function arcCubeShape(stage){
+  const correct=Math.random()<0.5;
+  const cells=correct?rand(NETS_CUBE):rand(NOTNETS);
+  const blue=Math.random()<0.3;                       // 70% gold / 30% blue
+  const rows=cells.map(p=>p[0]), cols=cells.map(p=>p[1]);
+  const r0=Math.min(...rows), c0=Math.min(...cols);
+  const nr=Math.max(...rows)-r0+1, nc=Math.max(...cols)-c0+1;
+  const cell=Math.max(20,Math.min(38,Math.min(stage.clientWidth,stage.clientHeight)/17));
+  const svg=document.createElementNS(SVGNS,"svg");
+  const w=nc*cell, hgt=nr*cell;
+  svg.setAttribute("width",w); svg.setAttribute("height",hgt);
+  svg.setAttribute("viewBox","0 0 "+w+" "+hgt);
+  for(const [r,c] of cells){
+    const rc=document.createElementNS(SVGNS,"rect");
+    rc.setAttribute("x",(c-c0)*cell); rc.setAttribute("y",(r-r0)*cell);
+    rc.setAttribute("width",cell); rc.setAttribute("height",cell);
+    rc.setAttribute("rx",3);
+    rc.setAttribute("fill",blue?"var(--c3)":"var(--c1)");
+    rc.setAttribute("stroke","rgba(255,255,255,.85)");
+    rc.setAttribute("stroke-width",2);
+    svg.appendChild(rc);
+  }
+  return {el:svg,w:w,h:hgt,correct:correct,blue:blue};
+}
+function renderCubeArcade(side,stage){
+  let shapes=[];
+  const clear=()=>{ shapes.forEach(s=>s.el.remove()); shapes=[]; };
+
+  function freeSpot(w,h){                     // a rectangle touching nothing already up
+    const W=stage.clientWidth, H=stage.clientHeight;
+    const top=96, bottom=26, sideM=18, gap=14;
+    const spanX=W-w-sideM*2, spanY=H-h-top-bottom;
+    if(spanX<0||spanY<0) return null;
+    for(let i=0;i<80;i++){
+      const x=sideM+Math.random()*spanX, y=top+Math.random()*spanY;
+      if(shapes.every(s=>x+w+gap<=s.x||s.x+s.w+gap<=x||y+h+gap<=s.y||s.y+s.h+gap<=y)) return [x,y];
+    }
+    return null;
+  }
+  function spawn(api,played){
+    const made=arcCubeShape(stage);
+    const spot=freeSpot(made.w,made.h);
+    if(!spot) return;
+    const el=h("div","arc-shape");
+    el.style.left=spot[0]+"px"; el.style.top=spot[1]+"px";
+    el.style.width=made.w+"px"; el.style.height=made.h+"px";
+    el.appendChild(made.el);
+    const rec={el,x:spot[0],y:spot[1],w:made.w,h:made.h,born:played,
+               correct:made.correct,blue:made.blue,dead:false};
+    el.addEventListener("pointerdown",e=>{ e.stopPropagation(); tap(rec,api,played); });
+    stage.appendChild(el);
+    shapes.push(rec);
+  }
+  function tap(rec,api){
+    if(!api.running||rec.dead) return;
+    rec.dead=true;
+    const cx=rec.x+rec.w/2, cy=rec.y+rec.h/2;
+    if(rec.correct){
+      const pts=arcPoints(api.played-rec.born);
+      api.addScore(pts);
+      api.pop(cx,cy,"+"+pts,"var(--c1)");
+      if(rec.blue){ api.addTime(1000); api.pop(cx,cy-34,t("bonusSec"),"var(--c2)"); sfxBlue(); }
+      else sfxGold();
+    }else{
+      api.addScore(-100);
+      api.pop(cx,cy,"-100","var(--red)");
+      sfxWrong();
+    }
+    rec.el.classList.add("hit");
+    setTimeout(()=>rec.el.remove(),220);
+    shapes=shapes.filter(s=>s!==rec);
+  }
+  arcadeShell(stage,{
+    key:"cube", how:"arcHow",
+    rules:[["var(--c1)","ruleGold"],["var(--c3)","ruleBlue"],["var(--red)","ruleWrong"]],
+    reset:clear, cleanup:clear,
+    frame(dt,played,api){
+      for(const s of shapes) if(played-s.born>=ARC_FADE) s.el.classList.add("out");
+      const gone=shapes.filter(s=>played-s.born>=ARC_LIFE);
+      if(gone.length){ gone.forEach(s=>s.el.remove()); shapes=shapes.filter(s=>played-s.born<ARC_LIFE); }
+      // difficulty ramp on the hidden play clock. `holding` ignores shapes that are
+      // already fading, so at level 1 the next appears as the last fades — the hard
+      // cap keeps 5 on screen from ever being exceeded.
+      const allowed=Math.min(5,1+Math.floor(played/10000));
+      const holding=shapes.filter(s=>played-s.born<ARC_FADE).length;
+      if(holding<allowed && shapes.length<5) spawn(api,played);
+    }
+  });
+}
+
+/* ============================================================
+   ARCADE 2 — Angle Lab: stop the sweeping arm on the target
+
+   A line sweeps from the base at 0.5 rev/s (180°/s). Tap when the
+   angle matches the target (always a multiple of 15). Dead on is
+   1000, less 100 per degree off. Outside the 10° band costs 500.
+   On a hit the base jumps to the arm and the sweep reverses.
+   ============================================================ */
+const ANG_SPEED=144;      // deg per second = 1 revolution every 2.5s
+const ANG_SAFE=10;        // the shaded band, half-width in degrees
+const ANG_STEP=5;         // one tick mark every 5 degrees, all the same length
+
+function renderAngleArcade(side,stage){
+  const svg=document.createElementNS(SVGNS,"svg");
+  svg.setAttribute("class","ang-dial");
+  stage.appendChild(svg);
+  const gDial=document.createElementNS(SVGNS,"g");   // protractor + target band
+  const gDyn =document.createElementNS(SVGNS,"g");   // arm and wedge, redrawn each frame
+  svg.append(gDial,gDyn);
+
+  const el={};
+  const elTgt=h("div","arc-target");
+  let base=0, dir=1, sweep=0, target=90, blue=false, geo=null;
+  function showTarget(){
+    elTgt.textContent=target+"\u00B0";
+    elTgt.style.color=blue?"var(--c3)":"var(--c1)";
+  }
+
+  const P=(deg,r)=>[geo.cx+r*Math.cos(deg*Math.PI/180), geo.cy-r*Math.sin(deg*Math.PI/180)];
+  const ptAt=(a,r)=>P(base+dir*a,r);                 // angle a measured from the base, along the sweep
+  const arcTo=(r,a1,large)=>{ const B=ptAt(a1,r);
+    return "A"+r+","+r+" 0 "+large+" "+(dir>0?0:1)+" "+B[0].toFixed(2)+","+B[1].toFixed(2); };
+  const node=(par,tag,cls)=>{ const e=document.createElementNS(SVGNS,tag);
+    if(cls) e.setAttribute("class",cls); par.appendChild(e); return e; };
+  const setA=(e,o)=>{ for(const k in o) e.setAttribute(k,o[k]); };
+  const clear=g=>{ while(g.firstChild) g.removeChild(g.firstChild); };
+
+  function measure(){
+    const W=stage.clientWidth, H=stage.clientHeight;
+    geo={W,H,cx:W/2,cy:H/2+14,R:Math.max(70,Math.min(W,H)*0.31)};
+    svg.setAttribute("viewBox","0 0 "+W+" "+H);
+  }
+  function layout(){
+    measure();
+    clear(gDial); clear(gDyn);
+    const R=geo.R;
+    for(let a=0;a<360;a+=ANG_STEP){    // one uniform marker every 5 degrees
+      const p1=ptAt(a,R*0.93), p2=ptAt(a,R);
+      setA(node(gDial,"line","dial-tick"),{x1:p1[0],y1:p1[1],x2:p2[0],y2:p2[1]});
+    }
+    const col=blue?"var(--c3)":"var(--c1)", rb=R*0.90;
+    const lo=Math.max(0,target-ANG_SAFE), hi=Math.min(360,target+ANG_SAFE);
+    const s0=ptAt(lo,rb);
+    setA(node(gDial,"path","dial-band"),{fill:col,
+      d:"M"+geo.cx+","+geo.cy+" L"+s0[0].toFixed(2)+","+s0[1].toFixed(2)+" "+arcTo(rb,hi,0)+" Z"});
+    const tp=ptAt(target,rb);
+    setA(node(gDial,"path","dial-target"),{stroke:col,
+      d:"M"+geo.cx+","+geo.cy+" L"+tp[0].toFixed(2)+","+tp[1].toFixed(2)});
+    const b1=ptAt(0,R*1.14);
+    setA(node(gDial,"line","dial-base"),{x1:geo.cx,y1:geo.cy,x2:b1[0],y2:b1[1]});
+
+    el.wedge=node(gDyn,"path","dial-wedge");
+    el.ray=node(gDyn,"line","dial-ray");
+    el.tip=node(gDyn,"circle","dial-hub"); setA(el.tip,{r:6});
+    el.hub=node(gDyn,"circle","dial-hub"); setA(el.hub,{r:7,cx:geo.cx,cy:geo.cy});
+    draw();
+  }
+  function draw(){
+    if(!geo||!el.ray) return;
+    const R=geo.R, tipP=ptAt(sweep,R*1.14);
+    setA(el.ray,{x1:geo.cx,y1:geo.cy,x2:tipP[0],y2:tipP[1]});
+    setA(el.tip,{cx:tipP[0],cy:tipP[1]});
+    if(sweep>0.6){
+      const rw=R*0.55, s0=ptAt(0,rw);
+      el.wedge.setAttribute("d","M"+geo.cx+","+geo.cy+" L"+s0[0].toFixed(2)+","+s0[1].toFixed(2)+" "
+        +arcTo(rw,sweep,sweep>180?1:0)+" Z");
+    } else el.wedge.setAttribute("d","");
+  }
+  function newTarget(){ return 45+15*Math.floor(Math.random()*21); }   // 45-345, every 15 deg
+
+  /* on a hit the base takes the arm's place and the sweep turns around */
+  function nextRound(){
+    base=base+dir*sweep;               // the base takes the arm's place
+    dir=-dir;                          // and the sweep turns around
+    sweep=0;
+    target=newTarget();
+    blue=Math.random()<0.3;
+    showTarget();
+    layout();                          // the arm carries straight on, no pause
+  }
+
+  const ro=new ResizeObserver(()=>{ if(geo) layout(); });
+  ro.observe(stage);
+  layout();                            // draw the dial behind the title screen
+
+  const api=arcadeShell(stage,{
+    key:"ang", how:"arcHowA", topExtra:elTgt,
+    rules:[["var(--c1)","ruleAim"],["var(--c3)","ruleBlueA"],["var(--red)","ruleMiss"]],
+    reset(){
+      base=0; dir=1; sweep=0;
+      target=newTarget(); blue=Math.random()<0.3;
+      showTarget(); layout();
+    },
+    cleanup(){ ro.disconnect(); },
+    frame(dt,played,a){
+      sweep+=ANG_SPEED*dt/1000;
+      if(sweep>=360) sweep-=360;
+      draw();
+    }
+  });
+
+  stage.addEventListener("pointerdown",e=>{
+    if(!api.running||e.target.closest("button")) return;
+    const dev=Math.abs(sweep-target);
+    const x=geo.cx, y=geo.cy-geo.R*0.42;
+    if(dev<=ANG_SAFE){
+      const pts=Math.max(0,Math.round(1000-100*dev));
+      api.addScore(pts);
+      api.pop(x,y,"+"+pts,blue?"var(--c3)":"var(--c1)");
+      if(blue){ api.addTime(1000); api.pop(x,y-38,t("bonusSec"),"var(--c2)"); sfxBlue(); }
+      else sfxGold();
+      nextRound();
+    }else{
+      api.addScore(-500);
+      api.pop(x,y,"-500","var(--red)");
+      sfxWrong();
+    }
+  });
 }
 
 /* ---------- go ---------- */
