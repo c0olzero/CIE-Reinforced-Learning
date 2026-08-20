@@ -246,6 +246,28 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .dial-target{stroke-width:3;stroke-dasharray:8 5;fill:none}
 .dial-hub{fill:var(--chalk)}
 
+/* ---------- difficulty + combo ---------- */
+.diffrow{display:flex;gap:8px;justify-content:center;margin-bottom:8px}
+.diffbtn{border:1.5px solid rgba(223,233,227,.3);border-radius:999px;padding:8px 20px;
+  font-size:13.5px;font-weight:700;color:var(--chalk);transition:.15s}
+.diffbtn:hover{border-color:var(--amber)}
+.diffbtn[aria-pressed="true"]{background:var(--amber);color:var(--ink);border-color:var(--amber)}
+.diffnote{font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--chalk-dim);
+  margin-bottom:16px}
+.combo{position:absolute;z-index:5;pointer-events:none;white-space:nowrap;
+  font-family:var(--fun);font-weight:800;font-size:clamp(19px,2.5vw,31px);color:var(--c1);
+  text-shadow:0 2px 12px rgba(0,0,0,.6)}
+.combo.tl{left:22px;top:18px}
+.combo.bc{left:50%;bottom:24px;transform:translateX(-50%)}
+.combo span{display:inline-block}
+.combo.bump span{animation:comboBump .34s cubic-bezier(.2,1.7,.4,1) backwards}
+@keyframes comboBump{from{transform:translateY(-10px) scale(1.6);opacity:0}to{transform:none;opacity:1}}
+.combo.broke{color:var(--red)}
+.combo.broke span{animation:comboFall .8s cubic-bezier(.45,0,.9,.45) forwards}
+@keyframes comboFall{
+  15%{transform:translateY(-6px) rotate(calc(var(--r,15deg)*.2))}
+  to{transform:translateY(130px) rotate(var(--r,15deg));opacity:0}}
+
 /* ---------- dimmed celebration ---------- */
 .dim{position:absolute;inset:0;z-index:8;display:grid;place-items:center;padding:22px;
   background:rgba(9,22,19,.74);animation:dimIn .22s ease}
@@ -398,6 +420,8 @@ const T = {
     ready:"Ready?", start:"Start", again:"Play again", timeUp:"Time's up!",
     newBest:"NEW BEST!", playedFor:function(s){return "You lasted "+s+" seconds.";},
     finalBest:function(b){return "Best so far: "+b;},
+    diffN:"Normal", diffH:"Hard", diffNote:"Normal runs everything 1.5× slower.",
+    comboLbl:"Combo",
     arcHowA:"A line sweeps around the protractor. Tap the instant the angle matches the number shown.",
     ruleAim:"Bang on — 1000 points, minus 100 for every degree off",
     ruleBlueA:"Blue target — the same points, plus 1 extra second on the clock",
@@ -461,6 +485,8 @@ const T = {
     ready:"Sẵn sàng chưa?", start:"Bắt đầu", again:"Chơi lại", timeUp:"Hết giờ!",
     newBest:"KỶ LỤC MỚI!", playedFor:function(s){return "Bạn đã chơi "+s+" giây.";},
     finalBest:function(b){return "Kỷ lục: "+b;},
+    diffN:"Bình thường", diffH:"Khó", diffNote:"Chế độ Bình thường chậm hơn 1,5 lần.",
+    comboLbl:"Chuỗi",
     arcHowA:"Một cạnh quét quanh thước đo góc. Chạm đúng lúc góc bằng số đã cho.",
     ruleAim:"Thật chuẩn — 1000 điểm, lệch mỗi độ trừ 100 điểm",
     ruleBlueA:"Mục tiêu xanh — điểm y như vậy, cộng thêm 1 giây",
@@ -1616,7 +1642,15 @@ const arcMem={};
 function arcBest(k){ try{ return +localStorage.getItem("wb_"+k)||0; }catch(e){ return arcMem[k]||0; } }
 function arcSaveBest(k,v){ try{ localStorage.setItem("wb_"+k,v); }catch(e){ arcMem[k]=v; } }
 
-/* ---- shared shell: clock, score, best, title screen, end screen ---- */
+/* ---- shared shell: clock, score, best, combo, title and end screens ----
+
+   Every duration in both arcades is expressed as a base value times `tm`,
+   so difficulty is one number. Hard is the original pacing (tm 1); Normal
+   stretches everything by 1.5. Tweak TM_NORMAL and nothing else drifts.     */
+const TM_HARD=1, TM_NORMAL=1.5;
+function loadDiff(){ try{ return localStorage.getItem("wb_diff")||"normal"; }catch(e){ return arcMem.diff||"normal"; } }
+function saveDiff(v){ try{ localStorage.setItem("wb_diff",v); }catch(e){ arcMem.diff=v; } }
+
 function arcadeShell(stage,cfg){
   stage.classList.add("arcade");
   const top=h("div","arc-top");
@@ -1632,15 +1666,61 @@ function arcadeShell(stage,cfg){
   const mute=h("button","arc-mute",sfxOn?"🔊":"🔇");
   mute.onclick=()=>{ sfxOn=!sfxOn; mute.textContent=sfxOn?"🔊":"🔇"; };
   stage.appendChild(mute);
+  const comboPos=cfg.comboPos||"tl";
+  const comboEl=h("div","combo "+comboPos); stage.appendChild(comboEl);
 
-  let best=arcBest(cfg.key); elBest.textContent=best;
-  let running=false, raf=0, last=0, score=0, timeLeft=30000, played=0;
+  let diff=loadDiff();
+  let tm=diff==="hard"?TM_HARD:TM_NORMAL;
+  const bestKey=()=>cfg.key+"_"+diff;
+  let best=arcBest(bestKey()); elBest.textContent=best;
+
+  let running=false, raf=0, last=0, score=0, timeLeft=0, total=0, played=0;
+  let combo=0, mult=1;
+
+  function paintCombo(bump){
+    comboEl.className="combo "+comboPos+(bump?" bump":"");
+    comboEl.innerHTML="";
+    if(combo<2) return;                             // only shows from combo 2
+    const txt=t("comboLbl")+" "+combo+": "+mult.toFixed(1)+"x";
+    [...txt].forEach((ch,i)=>{
+      const sp=h("span",null,ch===" "?"\u00A0":ch);
+      sp.style.animationDelay=(i*18)+"ms";
+      comboEl.appendChild(sp);
+    });
+  }
+  function breakCombo(){
+    if(combo>=2){                                   // let the old counter fall away
+      const ghost=comboEl.cloneNode(true);
+      ghost.className="combo "+comboPos+" broke";
+      [...ghost.children].forEach((sp,i)=>{
+        sp.style.animationDelay=(i*26)+"ms";
+        sp.style.setProperty("--r",(Math.random()*70-35).toFixed(0)+"deg");
+      });
+      stage.appendChild(ghost);
+      setTimeout(()=>ghost.remove(),1200);
+    }
+    combo=0; mult=1; paintCombo(false);
+  }
 
   const api={
     stage:stage,
     get running(){ return running; },
     get played(){ return played; },
-    addScore(n){ score=Math.max(0,score+n); elScore.textContent=score; },
+    get tm(){ return tm; },
+    get mult(){ return mult; },
+    /* a hit: extend the combo, scale the points, hand back the total to display */
+    award(pts){
+      combo++; mult=1+0.1*(combo-1);
+      const totalPts=Math.round(pts*mult);
+      score+=totalPts; elScore.textContent=score;
+      paintCombo(true);
+      return totalPts;
+    },
+    /* a miss: flat penalty, combo collapses */
+    penalise(pts){
+      score=Math.max(0,score-pts); elScore.textContent=score;
+      breakCombo();
+    },
     addTime(ms){ timeLeft+=ms; },
     pop(x,y,text,color){
       const el=h("div","arc-pop",text);
@@ -1658,9 +1738,9 @@ function arcadeShell(stage,cfg){
     let cs=(Math.max(0,timeLeft)/1000).toFixed(2);
     if(cs.indexOf(".")===1) cs="0"+cs;
     elClock.textContent=cs+"s";
-    elClock.classList.toggle("low",timeLeft<=5000);
-    bar.style.width=Math.min(100,timeLeft/30000*100)+"%";
-    bar.classList.toggle("low",timeLeft<=5000);
+    elClock.classList.toggle("low",timeLeft<=5000*tm);
+    bar.style.width=Math.min(100,timeLeft/total*100)+"%";
+    bar.classList.toggle("low",timeLeft<=5000*tm);
   }
   function frame(now){
     if(!running) return;
@@ -1677,7 +1757,8 @@ function arcadeShell(stage,cfg){
     return dim;
   }
   function begin(){
-    score=0; timeLeft=30000; played=0;
+    score=0; played=0; combo=0; mult=1; paintCombo(false);
+    total=30000*tm; timeLeft=total;
     elScore.textContent="0"; paint();
     cfg.reset(api);
     running=true; last=performance.now();
@@ -1686,8 +1767,9 @@ function arcadeShell(stage,cfg){
   function end(){
     stop();
     cfg.cleanup&&cfg.cleanup();
+    combo=0; mult=1; paintCombo(false);
     const record=score>best;
-    if(record){ best=score; arcSaveBest(cfg.key,best); elBest.textContent=best; }
+    if(record){ best=score; arcSaveBest(bestKey(),best); elBest.textContent=best; }
     screen((box,dim)=>{
       box.appendChild(h("div","arc-big",t("timeUp")));
       if(record) box.appendChild(h("div","arc-new",t("newBest")));
@@ -1704,6 +1786,19 @@ function arcadeShell(stage,cfg){
   screen((box,dim)=>{
     box.appendChild(h("div","arc-big",t("ready")));
     box.appendChild(h("p","arc-how",t(cfg.how)));
+    const row=h("div","diffrow");
+    [["normal","diffN"],["hard","diffH"]].forEach(([d,k])=>{
+      const b=h("button","diffbtn",t(k));
+      b.setAttribute("aria-pressed",d===diff);
+      b.onclick=()=>{
+        diff=d; saveDiff(d); tm=d==="hard"?TM_HARD:TM_NORMAL;
+        best=arcBest(bestKey()); elBest.textContent=best;
+        [...row.children].forEach((x,i)=>x.setAttribute("aria-pressed",i===(d==="normal"?0:1)));
+      };
+      row.appendChild(b);
+    });
+    box.appendChild(row);
+    box.appendChild(h("div","diffnote",t("diffNote")));
     const rules=h("div","arc-rule");
     cfg.rules.forEach(([c,k])=>{
       const line=h("div"); const sw=h("i"); sw.style.background=c;
@@ -1723,20 +1818,49 @@ function arcadeShell(stage,cfg){
    speed; blue adds a second; wrong tap -100. One more shape
    allowed on screen every 10s of hidden play time, up to 5.
    ============================================================ */
-function arcPoints(ageMs){
-  if(ageMs<500)  return 200;
-  if(ageMs<1000) return 150;
-  if(ageMs<1500) return 100;
+function arcPoints(ageMs,tm){
+  const a=ageMs/tm;                        // bands stretch with the pacing
+  if(a<500)  return 200;
+  if(a<1000) return 150;
+  if(a<1500) return 100;
   return 50;
 }
-function arcCubeShape(stage){
+/* the largest bounding box any of the 35 shapes occupies, in cells */
+const HEX_BOX=(()=>{
+  let w=0,h=0;
+  for(const c of [...NETS_CUBE,...NOTNETS]){
+    const rs=c.map(p=>p[0]), cs=c.map(p=>p[1]);
+    w=Math.max(w,Math.max(...cs)-Math.min(...cs)+1);
+    h=Math.max(h,Math.max(...rs)-Math.min(...rs)+1);
+  }
+  return {w,h};
+})();
+/* Lay the play area out as a grid of slots, one shape per slot. Overlap then
+   becomes impossible by construction rather than something rejection sampling
+   has to stumble on, which also lets the shapes be far bigger. Pick whichever
+   grid gives the largest cell while still offering at least 5 slots. */
+const ARC_TOP=92, ARC_BOT=28, ARC_SIDE=16, ARC_GAP=16;
+function slotPlan(stage){
+  const pw=Math.max(80,stage.clientWidth-ARC_SIDE*2);
+  const ph=Math.max(80,stage.clientHeight-ARC_TOP-ARC_BOT);
+  let best=null;
+  for(let cols=1;cols<=7;cols++) for(let rows=1;rows<=4;rows++){
+    if(cols*rows<5) continue;                       // never fewer slots than shapes
+    const sw=pw/cols, sh=ph/rows;
+    const cell=Math.min((sw-ARC_GAP)/HEX_BOX.w,(sh-ARC_GAP)/HEX_BOX.h);
+    if(!best||cell>best.cell) best={cell,cols,rows,sw,sh};
+  }
+  best.cell=Math.max(13,Math.min(62,Math.floor(best.cell)));
+  best.pw=pw; best.ph=ph;
+  return best;
+}
+function arcCubeShape(cell){
   const correct=Math.random()<0.5;
   const cells=correct?rand(NETS_CUBE):rand(NOTNETS);
   const blue=Math.random()<0.3;                       // 70% gold / 30% blue
   const rows=cells.map(p=>p[0]), cols=cells.map(p=>p[1]);
   const r0=Math.min(...rows), c0=Math.min(...cols);
   const nr=Math.max(...rows)-r0+1, nc=Math.max(...cols)-c0+1;
-  const cell=Math.max(20,Math.min(38,Math.min(stage.clientWidth,stage.clientHeight)/17));
   const svg=document.createElementNS(SVGNS,"svg");
   const w=nc*cell, hgt=nr*cell;
   svg.setAttribute("width",w); svg.setAttribute("height",hgt);
@@ -1754,29 +1878,29 @@ function arcCubeShape(stage){
   return {el:svg,w:w,h:hgt,correct:correct,blue:blue};
 }
 function renderCubeArcade(side,stage){
-  let shapes=[];
+  let shapes=[], plan=slotPlan(stage);
   const clear=()=>{ shapes.forEach(s=>s.el.remove()); shapes=[]; };
+  const ro=new ResizeObserver(()=>{ plan=slotPlan(stage); });
+  ro.observe(stage);
 
-  function freeSpot(w,h){                     // a rectangle touching nothing already up
-    const W=stage.clientWidth, H=stage.clientHeight;
-    const top=96, bottom=26, sideM=18, gap=14;
-    const spanX=W-w-sideM*2, spanY=H-h-top-bottom;
-    if(spanX<0||spanY<0) return null;
-    for(let i=0;i<80;i++){
-      const x=sideM+Math.random()*spanX, y=top+Math.random()*spanY;
-      if(shapes.every(s=>x+w+gap<=s.x||s.x+s.w+gap<=x||y+h+gap<=s.y||s.y+s.h+gap<=y)) return [x,y];
-    }
-    return null;
-  }
   function spawn(api,played){
-    const made=arcCubeShape(stage);
-    const spot=freeSpot(made.w,made.h);
-    if(!spot) return;
+    const taken=new Set(shapes.map(s=>s.slot));
+    const free=[];
+    for(let i=0;i<plan.cols*plan.rows;i++) if(!taken.has(i)) free.push(i);
+    if(!free.length) return;                  // cannot happen while the cap is 5
+    const slot=rand(free);
+    const made=arcCubeShape(plan.cell);
+    // sit the shape anywhere inside its own slot, inset by half the gap on each
+    // side — neighbouring slots therefore stay a full gap apart
+    const sx=ARC_SIDE+(slot%plan.cols)*plan.sw, sy=ARC_TOP+Math.floor(slot/plan.cols)*plan.sh;
+    const rx=Math.max(0,plan.sw-ARC_GAP-made.w), ry=Math.max(0,plan.sh-ARC_GAP-made.h);
+    const x=sx+ARC_GAP/2+Math.random()*rx, y=sy+ARC_GAP/2+Math.random()*ry;
     const el=h("div","arc-shape");
-    el.style.left=spot[0]+"px"; el.style.top=spot[1]+"px";
+    el.style.animationDuration=(280*api.tm)+"ms";   // fade-in stretches with the pacing too
+    el.style.left=x+"px"; el.style.top=y+"px";
     el.style.width=made.w+"px"; el.style.height=made.h+"px";
     el.appendChild(made.el);
-    const rec={el,x:spot[0],y:spot[1],w:made.w,h:made.h,born:played,
+    const rec={el,x:x,y:y,w:made.w,h:made.h,slot:slot,born:played,
                correct:made.correct,blue:made.blue,dead:false};
     el.addEventListener("pointerdown",e=>{ e.stopPropagation(); tap(rec,api,played); });
     stage.appendChild(el);
@@ -1787,13 +1911,12 @@ function renderCubeArcade(side,stage){
     rec.dead=true;
     const cx=rec.x+rec.w/2, cy=rec.y+rec.h/2;
     if(rec.correct){
-      const pts=arcPoints(api.played-rec.born);
-      api.addScore(pts);
-      api.pop(cx,cy,"+"+pts,"var(--c1)");
-      if(rec.blue){ api.addTime(1000); api.pop(cx,cy-34,t("bonusSec"),"var(--c2)"); sfxBlue(); }
+      const got=api.award(arcPoints(api.played-rec.born,api.tm));
+      api.pop(cx,cy,"+"+got,"var(--c1)");
+      if(rec.blue){ api.addTime(1000*api.tm); api.pop(cx,cy-34,t("bonusSec"),"var(--c2)"); sfxBlue(); }
       else sfxGold();
     }else{
-      api.addScore(-100);
+      api.penalise(100);
       api.pop(cx,cy,"-100","var(--red)");
       sfxWrong();
     }
@@ -1804,16 +1927,22 @@ function renderCubeArcade(side,stage){
   arcadeShell(stage,{
     key:"cube", how:"arcHow",
     rules:[["var(--c1)","ruleGold"],["var(--c3)","ruleBlue"],["var(--red)","ruleWrong"]],
-    reset:clear, cleanup:clear,
+    reset(){ plan=slotPlan(stage); clear(); },
+    cleanup(){ clear(); ro.disconnect(); },
+    comboPos:"tl",
     frame(dt,played,api){
-      for(const s of shapes) if(played-s.born>=ARC_FADE) s.el.classList.add("out");
-      const gone=shapes.filter(s=>played-s.born>=ARC_LIFE);
-      if(gone.length){ gone.forEach(s=>s.el.remove()); shapes=shapes.filter(s=>played-s.born<ARC_LIFE); }
+      const life=ARC_LIFE*api.tm, fade=ARC_FADE*api.tm;
+      for(const s of shapes) if(played-s.born>=fade&&!s.el.classList.contains("out")){
+        s.el.style.animationDuration=((ARC_LIFE-ARC_FADE)*api.tm)+"ms";
+        s.el.classList.add("out");
+      }
+      const gone=shapes.filter(s=>played-s.born>=life);
+      if(gone.length){ gone.forEach(s=>s.el.remove()); shapes=shapes.filter(s=>played-s.born<life); }
       // difficulty ramp on the hidden play clock. `holding` ignores shapes that are
       // already fading, so at level 1 the next appears as the last fades — the hard
       // cap keeps 5 on screen from ever being exceeded.
-      const allowed=Math.min(5,1+Math.floor(played/10000));
-      const holding=shapes.filter(s=>played-s.born<ARC_FADE).length;
+      const allowed=Math.min(5,1+Math.floor(played/(10000*api.tm)));
+      const holding=shapes.filter(s=>played-s.born<fade).length;
       if(holding<allowed && shapes.length<5) spawn(api,played);
     }
   });
@@ -1915,7 +2044,7 @@ function renderAngleArcade(side,stage){
   layout();                            // draw the dial behind the title screen
 
   const api=arcadeShell(stage,{
-    key:"ang", how:"arcHowA", topExtra:elTgt,
+    key:"ang", how:"arcHowA", topExtra:elTgt, comboPos:"bc",
     rules:[["var(--c1)","ruleAim"],["var(--c3)","ruleBlueA"],["var(--red)","ruleMiss"]],
     reset(){
       base=0; dir=1; sweep=0;
@@ -1924,7 +2053,7 @@ function renderAngleArcade(side,stage){
     },
     cleanup(){ ro.disconnect(); },
     frame(dt,played,a){
-      sweep+=ANG_SPEED*dt/1000;
+      sweep+=(ANG_SPEED/a.tm)*dt/1000;   // slower arm on Normal
       if(sweep>=360) sweep-=360;
       draw();
     }
@@ -1935,14 +2064,13 @@ function renderAngleArcade(side,stage){
     const dev=Math.abs(sweep-target);
     const x=geo.cx, y=geo.cy-geo.R*0.42;
     if(dev<=ANG_SAFE){
-      const pts=Math.max(0,Math.round(1000-100*dev));
-      api.addScore(pts);
-      api.pop(x,y,"+"+pts,blue?"var(--c3)":"var(--c1)");
-      if(blue){ api.addTime(1000); api.pop(x,y-38,t("bonusSec"),"var(--c2)"); sfxBlue(); }
+      const got=api.award(Math.max(0,Math.round(1000-100*dev)));
+      api.pop(x,y,"+"+got,blue?"var(--c3)":"var(--c1)");
+      if(blue){ api.addTime(1000*api.tm); api.pop(x,y-38,t("bonusSec"),"var(--c2)"); sfxBlue(); }
       else sfxGold();
       nextRound();
     }else{
-      api.addScore(-500);
+      api.penalise(500);
       api.pop(x,y,"-500","var(--red)");
       sfxWrong();
     }
