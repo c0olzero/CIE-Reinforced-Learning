@@ -75,6 +75,17 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;flex:none}
 .tab{border:1.5px solid rgba(223,233,227,.22);border-radius:999px;padding:8px 15px;font-size:13px;font-weight:500;transition:.15s}
 .tab[aria-selected="true"]{background:var(--paper);color:var(--ink);border-color:var(--paper);font-weight:700}
+.tab.rainbow{
+  color:var(--ink);font-weight:800;border-color:transparent;
+  /* white wash on top keeps the dark label legible over the blue and purple stops */
+  background-image:linear-gradient(rgba(255,255,255,.28),rgba(255,255,255,.28)),
+    linear-gradient(90deg,var(--c0),var(--c1),var(--c5),var(--c2),var(--c3),var(--c4),var(--c0));
+  background-size:100% 100%, 300% 100%;
+  animation:rainbowSlide 7s linear infinite;
+  box-shadow:0 6px 16px -8px rgba(0,0,0,.75)}
+.tab.rainbow:hover{transform:translateY(-1px)}
+.tab.rainbow[aria-selected="true"]{box-shadow:0 0 0 2.5px var(--chalk),0 8px 20px -8px rgba(0,0,0,.8)}
+@keyframes rainbowSlide{from{background-position:0 0,0% 0}to{background-position:0 0,-300% 0}}
 .lab{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px;align-items:stretch;flex:1;min-height:0}
 .side{min-height:0;overflow-y:auto;scrollbar-width:thin}
 
@@ -247,11 +258,16 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .dial-hub{fill:var(--chalk)}
 
 /* ---------- difficulty + combo ---------- */
-.diffrow{display:flex;gap:8px;justify-content:center;margin-bottom:8px}
-.diffbtn{border:1.5px solid rgba(223,233,227,.3);border-radius:999px;padding:8px 20px;
-  font-size:13.5px;font-weight:700;color:var(--chalk);transition:.15s}
-.diffbtn:hover{border-color:var(--amber)}
-.diffbtn[aria-pressed="true"]{background:var(--amber);color:var(--ink);border-color:var(--amber)}
+.difflabel{font-family:var(--display);font-weight:700;font-size:15.5px;color:var(--chalk);
+  margin-bottom:10px;letter-spacing:-.01em}
+.diffrow{display:flex;gap:12px;justify-content:center;margin-bottom:10px;flex-wrap:wrap}
+.diffbtn{border:2px solid rgba(223,233,227,.32);border-radius:14px;padding:15px 38px;
+  min-width:148px;font-family:var(--fun);font-size:20px;font-weight:800;
+  color:var(--chalk);transition:.15s}
+.diffbtn:hover{border-color:var(--amber);color:var(--amber);transform:translateY(-2px)}
+.diffbtn[aria-pressed="true"]{background:var(--amber);color:var(--ink);border-color:var(--amber);
+  transform:none;box-shadow:0 8px 20px -8px rgba(240,166,60,.7)}
+@media(max-width:520px){ .diffbtn{padding:13px 26px;min-width:120px;font-size:17px} }
 .diffnote{font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--chalk-dim);
   margin-bottom:16px}
 .combo{position:absolute;z-index:5;pointer-events:none;white-space:nowrap;
@@ -420,7 +436,8 @@ const T = {
     ready:"Ready?", start:"Start", again:"Play again", timeUp:"Time's up!",
     newBest:"NEW BEST!", playedFor:function(s){return "You lasted "+s+" seconds.";},
     finalBest:function(b){return "Best so far: "+b;},
-    diffN:"Normal", diffH:"Hard", diffNote:"Normal runs everything 1.5× slower.",
+    diffPick:"Select your difficulty", diffN:"Normal", diffH:"Hard",
+    diffNote:"Normal runs everything 1.5× slower.",
     comboLbl:"Combo",
     arcHowA:"A line sweeps around the protractor. Tap the instant the angle matches the number shown.",
     ruleAim:"Bang on — 1000 points, minus 100 for every degree off",
@@ -485,7 +502,8 @@ const T = {
     ready:"Sẵn sàng chưa?", start:"Bắt đầu", again:"Chơi lại", timeUp:"Hết giờ!",
     newBest:"KỶ LỤC MỚI!", playedFor:function(s){return "Bạn đã chơi "+s+" giây.";},
     finalBest:function(b){return "Kỷ lục: "+b;},
-    diffN:"Bình thường", diffH:"Khó", diffNote:"Chế độ Bình thường chậm hơn 1,5 lần.",
+    diffPick:"Chọn độ khó", diffN:"Bình thường", diffH:"Khó",
+    diffNote:"Chế độ Bình thường chậm hơn 1,5 lần.",
     comboLbl:"Chuỗi",
     arcHowA:"Một cạnh quét quanh thước đo góc. Chạm đúng lúc góc bằng số đã cho.",
     ruleAim:"Thật chuẩn — 1000 điểm, lệch mỗi độ trừ 100 điểm",
@@ -1217,14 +1235,14 @@ const MODULES=[
       {id:"fold", name:"gFold", blurb:"gFoldP", render:renderFoldLab},
       {id:"net",  name:"gNet",  blurb:"gNetP",  render:renderNetQuiz, full:true},
       {id:"opp",  name:"gOpp",  blurb:"gOppP",  render:renderOpposite, full:true},
-      {id:"arc",  name:"gArc",  blurb:"gArcP",  render:renderCubeArcade, full:true}
+      {id:"arc",  name:"gArc",  blurb:"gArcP",  render:renderCubeArcade, full:true, rainbow:true}
     ]},
   { id:"ang", live:true, name:"modAng", blurb:"modAngP", colors:[2,1,3,5,4],
     games:[
       {id:"lab",  name:"gAngL", blurb:"gAngLP", render:renderAngleLab},
       {id:"name", name:"gAngN", blurb:"gAngNP", render:renderAngleName, full:true},
       {id:"make", name:"gAngM", blurb:"gAngMP", render:renderAngleMake, full:true},
-      {id:"arc",  name:"gArc",  blurb:"gArcP",  render:renderAngleArcade, full:true}
+      {id:"arc",  name:"gArc",  blurb:"gArcP",  render:renderAngleArcade, full:true, rainbow:true}
     ]},
   // ——— add new modules here ———
   { id:"times", name:"modTimes", blurb:"modTimesP" },
@@ -1279,7 +1297,7 @@ function renderModule(){
   const mod=MODULES.find(m=>m.id===route.mod);
   const tabs=h("div","tabs");
   mod.games.forEach(g=>{
-    const b=h("button","tab",t(g.name));
+    const b=h("button","tab"+(g.rainbow?" rainbow":""),t(g.name));
     b.setAttribute("role","tab");
     b.setAttribute("aria-selected",g.id===route.game);
     b.onclick=()=>{route.game=g.id;render();};
@@ -1786,6 +1804,7 @@ function arcadeShell(stage,cfg){
   screen((box,dim)=>{
     box.appendChild(h("div","arc-big",t("ready")));
     box.appendChild(h("p","arc-how",t(cfg.how)));
+    box.appendChild(h("div","difflabel",t("diffPick")));
     const row=h("div","diffrow");
     [["normal","diffN"],["hard","diffH"]].forEach(([d,k])=>{
       const b=h("button","diffbtn",t(k));
