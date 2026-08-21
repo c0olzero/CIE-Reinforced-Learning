@@ -38,7 +38,7 @@ function renderHub(){
       c.appendChild(strip);
     }
     c.append(h("span","tag",m.live?String(i+1).padStart(2,"0"):t("soon")),
-             h("h3",null,t(m.name)),h("p",null,t(m.blurb)));
+             h("h3",null,m.title[getLang()]),h("p",null,m.blurb[getLang()]));
     if(m.live) c.onclick=()=>{ route={mod:m.id,game:null}; render(); };
     else c.disabled=true;
     cards.appendChild(c);

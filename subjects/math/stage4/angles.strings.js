@@ -2,8 +2,6 @@
    Strings only. Add a language by adding a block here. */
 export default {
   en:{
-    modAng:"Angle Lab",
-    modAngP:"Tell acute from right from obtuse — and catch a reflex.",
     gAngL:"Protractor",
     gAngLP:"Swing the arm, watch the name change.",
     gAngN:"Name it",
@@ -47,8 +45,6 @@ export default {
     ruleMiss:"Tapping outside the shaded band — 500 points off"
   },
   vi:{
-    modAng:"Xưởng Góc",
-    modAngP:"Phân biệt góc nhọn, góc vuông, góc tù — và bắt được góc phản.",
     gAngL:"Thước đo góc",
     gAngLP:"Xoay cạnh góc, xem tên góc đổi theo.",
     gAngN:"Gọi tên góc",

@@ -2,8 +2,6 @@
    Strings only. Add a language by adding a block here. */
 export default {
   en:{
-    modFrac2:"Fraction Lab",
-    modFrac2P:"Cut it, shade it, compare it. Fractions and percentages.",
     gBench:"Fraction Bench",
     gBenchP:"Cut a strip and shade the parts.",
     gCmp:"Compare it",
@@ -37,8 +35,6 @@ export default {
     smallerWhy:"The more parts a whole is cut into, the smaller each part is."
   },
   vi:{
-    modFrac2:"Xưởng Phân Số",
-    modFrac2P:"Cắt, tô, so sánh. Phân số và phần trăm.",
     gBench:"Bàn Phân Số",
     gBenchP:"Cắt một băng giấy rồi tô các phần.",
     gCmp:"So sánh",

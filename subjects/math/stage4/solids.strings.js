@@ -2,8 +2,6 @@
    Strings only. Add a language by adding a block here. */
 export default {
   en:{
-    modCube:"Solid Lab",
-    modCubeP:"Flatten a solid into paper — then fold it back up.",
     gFold:"Fold Lab",
     gNet:"Folds or not?",
     gOpp:"Opposite sides",
@@ -43,8 +41,6 @@ export default {
     ruleWrong:"Wrong shape — 100 points off"
   },
   vi:{
-    modCube:"Xưởng Hình Khối",
-    modCubeP:"Trải một khối thành giấy phẳng, rồi gấp lại.",
     gFold:"Gấp thử",
     gNet:"Gấp được không?",
     gOpp:"Mặt đối diện",
