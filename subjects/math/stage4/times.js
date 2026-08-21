@@ -16,25 +16,85 @@ addStrings(STRINGS);
    ============================================================ */
 const TM_MAX=12;
 
-/* a rows x b cols array of unit cells, fixed max box so it never overflows */
-function tmArray(a,b){
+/* Cell/gap sizing shared by both grids below. The gap is picked from the
+   available width BEFORE the cell size, then subtracted out of that same
+   space — sizing the gap off the final cell instead (as a fraction of it)
+   let a wide grid's total width silently exceed the box, since gap*(b-1)
+   was never accounted for. Gaps are deliberately generous: each square must
+   read as its own countable item, not blur into one solid block. */
+function tmSize(a,b){
   const maxW=260,maxH=200;
-  const cell=Math.max(12,Math.min(38,Math.floor(Math.min(maxW/b,maxH/a))));
-  const gap=Math.max(1,Math.min(4,Math.round(cell/10)));
+  const gap=Math.max(3,Math.min(10,Math.round(maxW/(b*9))));
+  const cell=Math.max(12,Math.min(38,
+    Math.floor(Math.min((maxW-gap*(b-1))/b,(maxH-gap*(a-1))/a))));
+  return {cell,gap};
+}
+
+/* a rows x b cols array of unit cells, fixed max box so it never overflows.
+   Plain and static — used for the Missing Factor proof, which never needs
+   interactivity. */
+function tmArray(a,b){
+  const {cell,gap}=tmSize(a,b);
+  const wrap=h("div","tm-gridwrap");
+  wrap.style.width=(cell*b+gap*(b-1))+"px"; wrap.style.height=(cell*a+gap*(a-1))+"px";
   const el=h("div","tm-grid");
   el.style.gridTemplateColumns="repeat("+b+","+cell+"px)";
   el.style.gridTemplateRows="repeat("+a+","+cell+"px)";
   el.style.gap=gap+"px";
   for(let i=0;i<a*b;i++) el.appendChild(h("div","tm-cell"));
-  return el;
+  wrap.appendChild(el);
+  return wrap;
+}
+
+/* Same grid, but for the bench: never resizes on its own. A column overlay
+   (one full-height hit target per column, not per cell) reports which
+   column was hovered/focused/clicked so the caller can dim the rest without
+   touching a or b. Returns the cells in row-major order for dimming. */
+function tmBenchGrid(a,b,onColHover,onColLeave,onColClick){
+  const {cell,gap}=tmSize(a,b);
+  const wrap=h("div","tm-gridwrap");
+  wrap.style.width=(cell*b+gap*(b-1))+"px"; wrap.style.height=(cell*a+gap*(a-1))+"px";
+  const el=h("div","tm-grid");
+  el.style.gridTemplateColumns="repeat("+b+","+cell+"px)";
+  el.style.gridTemplateRows="repeat("+a+","+cell+"px)";
+  el.style.gap=gap+"px";
+  const cells=[];
+  for(let i=0;i<a*b;i++){ const c=h("div","tm-cell"); el.appendChild(c); cells.push(c); }
+  wrap.appendChild(el);
+  const hits=h("div","tm-colhits");
+  hits.style.gridTemplateColumns="repeat("+b+","+cell+"px)";
+  hits.style.gap=gap+"px";
+  for(let col=0;col<b;col++){
+    const btn=h("button","tm-colhit");
+    btn.setAttribute("aria-label",t("showCol")(col+1));
+    btn.addEventListener("pointerenter",()=>onColHover(col+1));
+    btn.addEventListener("focus",()=>onColHover(col+1));
+    btn.addEventListener("pointerleave",onColLeave);
+    btn.addEventListener("blur",onColLeave);
+    btn.onclick=()=>onColClick(col+1);
+    hits.appendChild(btn);
+  }
+  wrap.appendChild(hits);
+  return {wrap,cells};
 }
 const numNode=v=>h("div","tm-num",String(v));
 const opNode=s=>h("div","tm-op",s);
 const symNode=()=>h("div","tm-num tm-sym","?");
 
 /* ---------- tab 1 — Times Bench (4Ni.04) ---------- */
+/* Rows (a) and columns (b) only ever change via the levers. The chips and
+   the grid's own columns are two views of the SAME single axis — a chip is
+   "a x j" for column count j, exactly what hovering/clicking column j shows
+   — so both drive one shared column-dim boundary rather than each other's
+   independent state. Rows are never dimmed; only columns past the picked
+   one are. Hovering (or focusing, for keyboard users) previews it live;
+   clicking/pressing fixes it so it survives the pointer leaving. Clicking
+   the very last column clears back to the full array, since dimming
+   nothing past the last one is a no-op. */
 function renderBench(side,stage){
   let a=3,b=4;
+  let fixedCol=null;   // fixed boundary: show columns 1..N, dim the rest
+  let hoverCol=null;   // transient preview, wins over the fixed boundary
   const wrap=h("div","tm-wrap bench"), stack=h("div","tm-stack");
   wrap.appendChild(stack); stage.appendChild(wrap);
   const gridBox=h("div","tm-gridbox");
@@ -42,6 +102,7 @@ function renderBench(side,stage){
   const chips=h("div","tm-chips");
   const facts=h("div","tm-facts");
   stack.append(gridBox,eq,chips,facts);
+  let cells=[], chipEls=[];
 
   function lever(label,val){
     const p=h("div","panel");
@@ -61,16 +122,40 @@ function renderBench(side,stage){
   side.append(r1.panel,r2.panel);
 
   r1.input.oninput=()=>{ a=+r1.input.value; draw(); };
-  r2.input.oninput=()=>{ b=+r2.input.value; draw(); };
+  r2.input.oninput=()=>{ b=+r2.input.value; fixedCol=null; hoverCol=null; draw(); };
+
+  const setPreview=col=>{ hoverCol=col; applyDim(); };
+  const clearPreview=()=>{ hoverCol=null; applyDim(); };
+  const fix=col=>{ fixedCol=col; hoverCol=null; applyDim(); };
+
+  /* repaint the dim state and the equation without rebuilding the DOM */
+  function applyDim(){
+    const vc=hoverCol??fixedCol??b;
+    cells.forEach((cell,idx)=>cell.classList.toggle("tm-off",idx%b>=vc));
+    const c=a*vc;
+    eq.textContent=a+" × "+vc+" = "+c;
+    chipEls.forEach((chip,j)=>chip.classList.toggle("on",(j+1)===vc));
+    facts.innerHTML="";
+    facts.append(h("div",null,c+" ÷ "+a+" = "+vc), h("div",null,c+" ÷ "+vc+" = "+a));
+  }
 
   function draw(){
-    gridBox.innerHTML=""; gridBox.appendChild(tmArray(a,b));
-    const c=a*b;
-    eq.textContent=a+" × "+b+" = "+c;
-    chips.innerHTML="";
-    for(let i=1;i<=a;i++) chips.appendChild(h("span","tm-chip"+(i===a?" on":""),String(i*b)));
-    facts.innerHTML="";
-    facts.append(h("div",null,c+" ÷ "+a+" = "+b), h("div",null,c+" ÷ "+b+" = "+a));
+    gridBox.innerHTML="";
+    const grid=tmBenchGrid(a,b,setPreview,clearPreview,fix);
+    cells=grid.cells;
+    gridBox.appendChild(grid.wrap);
+    chips.innerHTML=""; chipEls=[];
+    for(let j=1;j<=b;j++){
+      const chip=h("button","tm-chip",String(a*j));
+      chip.addEventListener("pointerenter",()=>setPreview(j));
+      chip.addEventListener("focus",()=>setPreview(j));
+      chip.addEventListener("pointerleave",clearPreview);
+      chip.addEventListener("blur",clearPreview);
+      chip.onclick=()=>fix(j);
+      chips.appendChild(chip);
+      chipEls.push(chip);
+    }
+    applyDim();
   }
   draw();
 }

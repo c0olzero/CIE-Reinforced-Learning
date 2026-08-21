@@ -82,6 +82,23 @@ it — most bugs in this project were found that way, not by reading.
 
 ## Traps already hit — do not reintroduce
 
+- **Class names are global, not module-scoped — check `games.css` before
+  reusing a short/generic one.** A grid-cell class named `.tm-cell.dim` in
+  Times Table Lab silently collided with the pre-existing global `.dim`
+  (the celebration scrim, `position:absolute;inset:0;z-index:8`, in
+  `engine/ui.js`'s `celebrate()`). A class selector matches on that class
+  alone, so every "dimmed" cell also became a full-stage-covering absolutely
+  positioned layer and dropped out of the grid's layout flow — which
+  reshuffled the *other*, unrelated cells' visual positions too, since a
+  CSS Grid recomputes placement once some children leave flow. The result
+  looked like an inconsistent, shifting "wrong shape" bug that took several
+  rounds to diagnose, because every automated check used
+  `classList.contains("dim")` — which was always correct — instead of the
+  actual rendered position/color, which was not. `grep` a candidate class
+  name across `styles/*.css` first, and when verifying JS-driven visual
+  state, assert on `getBoundingClientRect()`/`getComputedStyle()`, not just
+  on which classes got toggled — the class list can be perfectly correct
+  while the render is still broken.
 - **Unbounded generation loops.** `while (options.size < 4)` froze the tab
   permanently when fewer than four valid values existed. Use `pickOptions()`,
   which draws from a real pool and returns fewer buttons rather than hanging.

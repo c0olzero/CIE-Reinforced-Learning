@@ -6,8 +6,10 @@
    faster on repeat visits but would serve stale code after every deploy, which
    is a miserable way to iterate.
 
-   Bump CACHE below if you ever need to force every visitor to start clean. */
-const CACHE = "workbench-v1";
+   Bump CACHE below if you ever need to force every visitor to start clean —
+   also the only way to purge anything a stale fetch already wrote into the
+   old cache entry before this file's own {cache:"no-store"} fix landed. */
+const CACHE = "workbench-v2";
 const CORE = [
   "./", "index.html", "manifest.webmanifest",
   "styles/base.css", "styles/games.css", "styles/responsive.css",
@@ -32,7 +34,7 @@ self.addEventListener("fetch", e => {
   if (e.request.method !== "GET") return;
   if (new URL(e.request.url).origin !== location.origin) return;   // fonts etc: leave alone
   e.respondWith(
-    fetch(e.request)
+    fetch(e.request, {cache:"no-store"})   // bypass the browser's own HTTP cache, not just this worker's
       .then(res => {
         if (res.ok) {
           const copy = res.clone();

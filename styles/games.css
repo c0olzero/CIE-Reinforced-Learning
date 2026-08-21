@@ -407,12 +407,26 @@
 .tm-wrap.bench .tm-stack{min-height:330px;justify-content:center}
 .tm-row{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap}
 .tm-gridbox{display:grid;place-items:center;min-height:210px}
+.tm-gridwrap{position:relative}
 .tm-grid{display:grid;pointer-events:none}
-.tm-cell{background:var(--c1);border-radius:2px;box-shadow:inset 0 0 0 1px rgba(12,22,18,.55)}
+.tm-cell{background:var(--c1);border-radius:4px}
+/* NOT ".dim" — that class name is already claimed globally by the
+   celebration scrim (position:absolute;inset:0;z-index:8), and a plain
+   class selector matches any element carrying it regardless of what else
+   is on the element. A cell that picked up ".dim" was silently expanding
+   to cover the whole stage and dropping out of the grid's layout flow,
+   which is what actually produced every "wrong shape" bug report this
+   session — reused names in a shared stylesheet are never truly scoped. */
+.tm-cell.tm-off{background:rgba(247,242,231,.16)}
+/* one full-height hit target per column, invisible until hovered/focused */
+.tm-colhits{position:absolute;inset:0;display:grid;grid-auto-rows:1fr;pointer-events:none}
+.tm-colhit{pointer-events:auto;background:transparent;border-radius:4px;transition:background .12s}
+.tm-colhit:hover,.tm-colhit:focus-visible{background:rgba(247,242,231,.16)}
 .tm-eq{font-family:var(--fun);font-weight:800;font-size:clamp(24px,4vw,38px);color:var(--chalk)}
-.tm-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:460px}
+.tm-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:460px;pointer-events:auto}
 .tm-chip{font-family:var(--mono);font-size:12.5px;letter-spacing:.04em;color:var(--chalk-dim);
-  background:rgba(247,242,231,.1);border-radius:999px;padding:5px 12px}
+  background:rgba(247,242,231,.1);border-radius:999px;padding:5px 12px;transition:background .12s}
+.tm-chip:not(.on):hover{background:rgba(247,242,231,.22)}
 .tm-chip.on{background:var(--c2);color:var(--ink);font-weight:700}
 .tm-facts{font-family:var(--mono);font-size:12px;letter-spacing:.04em;color:var(--chalk-dim);
   display:flex;gap:18px;flex-wrap:wrap;justify-content:center}
