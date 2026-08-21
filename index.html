@@ -212,7 +212,7 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .arc-target{font-family:var(--fun);font-weight:800;line-height:1.02;margin-top:8px;
   font-size:clamp(38px,6.6vw,72px);text-shadow:0 3px 16px rgba(0,0,0,.6)}
 .arc-clock.low{color:var(--red)}
-.arc-mute{position:absolute;left:16px;bottom:14px;z-index:6;width:38px;height:38px;
+.arc-mute{position:absolute;right:20px;top:76px;z-index:6;width:38px;height:38px;
   border-radius:50%;border:1.5px solid rgba(223,233,227,.22);color:var(--chalk-dim);
   font-size:15px;line-height:1;transition:.15s}
 .arc-mute:hover{color:var(--amber);border-color:var(--amber)}
@@ -346,7 +346,7 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .fr-slice.grp{stroke:var(--chalk);stroke-width:3.5}
 
 /* ---------- fraction runner ---------- */
-.run-road{position:absolute;left:50%;transform:translateX(-50%);top:172px;bottom:104px;
+.run-road{position:absolute;left:50%;transform:translateX(-50%);top:172px;bottom:22px;
   width:min(80%,620px);border-radius:20px;overflow:hidden;
   background:linear-gradient(180deg,rgba(9,22,19,.6),rgba(9,22,19,.2));
   box-shadow:inset 0 0 0 2px rgba(223,233,227,.15)}
@@ -365,14 +365,17 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .run-gate.bad .run-gate-in{background:rgba(226,86,63,.34);
   box-shadow:inset 0 0 0 3px var(--red),0 0 26px -2px var(--red)}
 .run-val{font-family:var(--fun);font-weight:800;font-size:clamp(20px,2.6vw,30px)}
-.run-runner{position:absolute;width:33.3333%;height:64px;bottom:20px;left:0;
+.run-runner{position:absolute;width:33.3333%;height:64px;bottom:72px;left:0;
   display:grid;place-items:center;pointer-events:none;
   transition:left .13s cubic-bezier(.2,.9,.3,1);filter:drop-shadow(0 6px 12px rgba(0,0,0,.6))}
-.run-ctrl{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);
-  display:flex;gap:20px;z-index:5}
-.run-arrow{width:74px;height:58px;border-radius:15px;background:var(--paper);color:var(--ink);
-  font-size:26px;font-weight:800;box-shadow:0 10px 22px -12px rgba(0,0,0,.9);transition:.12s}
-.run-arrow:active{transform:translateY(2px)}
+.run-ctrl{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);
+  display:flex;gap:14px;z-index:6}
+.run-arrow{width:66px;height:48px;border-radius:14px;font-size:22px;font-weight:800;
+  color:var(--chalk);background:rgba(247,242,231,.14);
+  box-shadow:inset 0 0 0 2px rgba(223,233,227,.38);
+  -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);transition:.12s}
+.run-arrow:hover{background:rgba(247,242,231,.26)}
+.run-arrow:active{background:rgba(240,166,60,.45);color:var(--ink);transform:translateY(2px)}
 .run-q{font-family:var(--fun);font-weight:800;font-size:clamp(18px,2.5vw,29px);
   display:inline-flex;align-items:center;justify-content:center;gap:10px;color:var(--chalk);
   margin-top:10px;
@@ -381,8 +384,8 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .run-runner.boost svg{transform:scale(1.12)}
 .run-runner.boost{filter:drop-shadow(0 0 14px var(--c1))}
 @media(max-width:820px){
-  .run-road{top:150px;bottom:96px;width:88%}
-  .run-arrow{width:62px;height:52px}
+  .run-road{top:150px;bottom:20px;width:88%}
+  .run-arrow{width:58px;height:46px}
 }
 
 /* ---------- difficulty + combo ---------- */
@@ -592,10 +595,10 @@ const T = {
     ofWord:"of", nextQ:"Next question",
     gRun:"Arcade", gRunP:"Steer into the right lane. Don't slow down.",
     arcHowR:"You run faster with every gate. Steer into the lane whose answer is right.",
-    ruleRunGood:"Right lane \u2014 100 points and 1 extra second",
+    ruleRunGood:"Right lane \u2014 500 points and 1 extra second",
     ruleRunBad:"Wrong lane \u2014 200 points off",
     ruleRunFast:"Every gate makes you 5% faster",
-    ruleRunBoost:"Hold \u25B2 (or the up arrow key) to dash 70% faster",
+    ruleRunBoost:"Hold \u25B2 (or the up arrow key) to go faster",
     qEq:"Equal to", qGt:"Bigger than", qLt:"Smaller than",
     qAdd:"What is the answer?",
     ofWhy:function(n,d,w,a){return "Split "+w+" into "+d+" equal groups of "+(w/d)+". "+
@@ -605,7 +608,7 @@ const T = {
     smallerWhy:"The more parts a whole is cut into, the smaller each part is.",
     diffPick:"Select your difficulty",
     toHard:"Switch to hard mode", toNormal:"Switch to normal mode", diffN:"Normal", diffH:"Hard",
-    diffNote:"Normal runs everything 1.5× slower.",
+    diffNote:"Normal slows the pacing. The clock is 30s either way.",
     comboLbl:"Combo",
     arcHowA:"A line sweeps around the protractor. Tap the instant the angle matches the number shown.",
     ruleAim:"Bang on — 1000 points, minus 100 for every degree off",
@@ -683,10 +686,10 @@ const T = {
     ofWord:"của", nextQ:"Câu tiếp theo",
     gRun:"Đua điểm", gRunP:"Lái vào đúng làn. Đừng chậm lại.",
     arcHowR:"Mỗi cổng đi qua bạn chạy nhanh hơn. Hãy lái vào làn có đáp án đúng.",
-    ruleRunGood:"Đúng làn \u2014 100 điểm và thêm 1 giây",
+    ruleRunGood:"Đúng làn \u2014 500 điểm và thêm 1 giây",
     ruleRunBad:"Sai làn \u2014 trừ 200 điểm",
     ruleRunFast:"Mỗi cổng đi qua tăng tốc 5%",
-    ruleRunBoost:"Giữ \u25B2 (hoặc phím mũi tên lên) để tăng tốc 70%",
+    ruleRunBoost:"Giữ \u25B2 (hoặc phím mũi tên lên) để chạy nhanh hơn",
     qEq:"Bằng", qGt:"Lớn hơn", qLt:"Nhỏ hơn",
     qAdd:"Kết quả là bao nhiêu?",
     ofWhy:function(n,d,w,a){return "Chia "+w+" thành "+d+" nhóm bằng nhau, mỗi nhóm "+(w/d)+". "+
@@ -696,7 +699,7 @@ const T = {
     smallerWhy:"Chia một cái thành càng nhiều phần thì mỗi phần càng nhỏ.",
     diffPick:"Chọn độ khó",
     toHard:"Chuyển sang chế độ Khó", toNormal:"Chuyển sang chế độ Bình thường", diffN:"Bình thường", diffH:"Khó",
-    diffNote:"Chế độ Bình thường chậm hơn 1,5 lần.",
+    diffNote:"Chế độ Bình thường chậm hơn. Đồng hồ vẫn 30 giây.",
     comboLbl:"Chuỗi",
     arcHowA:"Một cạnh quét quanh thước đo góc. Chạm đúng lúc góc bằng số đã cho.",
     ruleAim:"Thật chuẩn — 1000 điểm, lệch mỗi độ trừ 100 điểm",
@@ -1914,6 +1917,9 @@ function sfxWrong(){
   tone(207,0,.20,"square",  .09,110);
 }
 
+/* Shape timings are written as the Hard values; Normal multiplies by tm (1.5),
+   so a shape shows for 3.0s on Normal and 2.0s on Hard, fading over the last
+   quarter of that either way. */
 const ARC_LIFE=2000, ARC_FADE=1500;      // shape total life, and when fade-out begins
 const arcMem={};
 function arcBest(k){ try{ return +localStorage.getItem("wb_"+k)||0; }catch(e){ return arcMem[k]||0; } }
@@ -2016,7 +2022,7 @@ function arcadeShell(stage,cfg){
     let cs=(Math.max(0,timeLeft)/1000).toFixed(2);
     if(cs.indexOf(".")===1) cs="0"+cs;
     elClock.textContent=cs+"s";
-    const low=cfg.clockMs?5000:5000*tm;
+    const low=5000;
     elClock.classList.toggle("low",timeLeft<=low);
     bar.style.width=Math.min(100,timeLeft/total*100)+"%";
     bar.classList.toggle("low",timeLeft<=low);
@@ -2037,7 +2043,7 @@ function arcadeShell(stage,cfg){
   }
   function begin(){
     score=0; played=0; combo=0; mult=1; paintCombo(false);
-    total=cfg.clockMs||30000*tm; timeLeft=total;
+    total=cfg.clockMs||30000; timeLeft=total;   // same 30s on Normal and Hard
     elScore.textContent="0"; paint();
     cfg.reset(api);
     running=true; last=performance.now();
@@ -2204,7 +2210,7 @@ function renderCubeArcade(side,stage){
     if(rec.correct){
       const got=api.award(arcPoints(api.played-rec.born,api.tm));
       api.pop(cx,cy,"+"+got,"var(--c1)");
-      if(rec.blue){ api.addTime(1000*api.tm); api.pop(cx,cy-34,t("bonusSec"),"var(--c2)"); sfxBlue(); }
+      if(rec.blue){ api.addTime(1000); api.pop(cx,cy-34,t("bonusSec"),"var(--c2)"); sfxBlue(); }
       else sfxGold();
     }else{
       api.penalise(100);
@@ -2356,7 +2362,7 @@ function renderAngleArcade(side,stage){
     if(dev<=ANG_SAFE){
       const got=api.award(Math.max(0,Math.round(1000-100*dev)));
       api.pop(x,y,"+"+got,blue?"var(--c3)":"var(--c1)");
-      if(blue){ api.addTime(1000*api.tm); api.pop(x,y-38,t("bonusSec"),"var(--c2)"); sfxBlue(); }
+      if(blue){ api.addTime(1000); api.pop(x,y-38,t("bonusSec"),"var(--c2)"); sfxBlue(); }
       else sfxGold();
       nextRound();
     }else{
@@ -2784,12 +2790,14 @@ function renderAddSub(side,stage){
    RUN_GATE_SECS at the starting pace. Deriving px/s from the actual road height
    keeps that cadence identical on a phone and on a wide monitor — a fixed px/s
    ran slower on tall screens and faster on short ones. */
-const RUN_GATE_SECS=4.0; // seconds per gate on Normal before any speed-ups
+const RUN_GATE_SECS=5.0; // seconds per gate on Normal before any speed-ups
+const RUN_POINTS=500;    // per correct gate, before the combo multiplier
 const RUN_HARD=1.5;      // Hard runs 50% faster
 const RUN_BOOST=1.7;     // while the up arrow is held
 const RUN_STEP=1.035;    // per gate crossed — gentler, so the ramp stays readable
 const RUN_CAP=1.9;       // never faster than ~1.6s a gate on Normal
 const RUN_GATE_H=94;
+const RUN_HIT=140;       // the runner's nose, measured up from the road's bottom edge
 const RUN_TARGETS=[[1,2],[1,3],[1,4],[2,3],[3,4],[1,5],[2,5],[1,6],[3,10]];
 const FR_POOL=(()=>{ const o=[];
   for(const d of FR_DENOMS) for(let n=1;n<d;n++) o.push({t:"frac",n:n,d:d}); return o; })();
@@ -2873,7 +2881,9 @@ function runQuestion(){
 }
 
 function renderRunArcade(side,stage){
-  const elQ=h("div","run-q");
+  // plain wrapper: the framed box is the question node itself, and giving this
+  // one the same class drew a second frame around it
+  const elQ=h("div");
   const road=h("div","run-road");
   const l1=h("div","run-line"), l2=h("div","run-line");
   l1.style.left="33.3333%"; l2.style.left="66.6666%";
@@ -2894,7 +2904,7 @@ function renderRunArcade(side,stage){
   const bl=h("button","run-arrow","\u25C0"),
         bu=h("button","run-arrow","\u25B2"),
         br=h("button","run-arrow","\u25B6");
-  ctrl.append(bl,bu,br); stage.appendChild(ctrl);
+  ctrl.append(bl,bu,br); road.appendChild(ctrl);   // overlaid on the road, not below it
 
   let lane=1, mult=1, scroll=0, live=[], apiRef=null, boost=false;
   const setLane=v=>{ lane=Math.max(0,Math.min(2,v)); runner.style.left=(lane*33.3333)+"%"; };
@@ -2903,6 +2913,7 @@ function renderRunArcade(side,stage){
   br.onclick=()=>nudge(1);
   road.addEventListener("pointerdown",e=>{            // tapping a lane also works
     if(!apiRef||!apiRef.running) return;
+    if(e.target.closest("button")) return;           // the pads handle their own taps
     const r=road.getBoundingClientRect();
     setLane(Math.floor((e.clientX-r.left)/(r.width/3)));
   });
@@ -2949,9 +2960,9 @@ function renderRunArcade(side,stage){
     if(!ok) g.cells[lane].classList.add("bad");
     const rr=road.getBoundingClientRect(), sr=stage.getBoundingClientRect();
     const px=rr.left-sr.left+rr.width*(lane*0.33333+0.1667);
-    const py=rr.top-sr.top+rr.height-120;
+    const py=rr.top-sr.top+rr.height-RUN_HIT-30;
     if(ok){
-      const got=api.award(100);
+      const got=api.award(RUN_POINTS);
       api.addTime(1000);                       // flat second: the clock is fixed at 30
       api.pop(px,py,"+"+got,"var(--c2)");
       sfxGold();
@@ -2965,7 +2976,7 @@ function renderRunArcade(side,stage){
   }
 
   arcadeShell(stage,{
-    key:"run", how:"arcHowR", topExtra:elQ, clockMs:30000, comboPos:"tl",
+    key:"run", how:"arcHowR", topExtra:elQ, comboPos:"tl",
     rules:[["var(--c2)","ruleRunGood"],["var(--red)","ruleRunBad"],
            ["var(--c1)","ruleRunFast"],["var(--chalk)","ruleRunBoost"]],
     reset(api){ apiRef=api; mult=1; scroll=0; setBoost(false); clearGates(); setLane(1); spawn(); },
@@ -2973,9 +2984,9 @@ function renderRunArcade(side,stage){
     frame(dt,played,api){
       apiRef=api;
       const H=road.clientHeight||420;
-      const hitY=H-86;                          // where the runner sits
+      const hitY=H-RUN_HIT;                     // where the runner sits
       // distance a gate covers between spawning and reaching the runner
-      const travel=H-39;
+      const travel=hitY+RUN_GATE_H/2;
       const base=travel/RUN_GATE_SECS*(api.hard?RUN_HARD:1);
       const step=base*mult*(boost?RUN_BOOST:1)*dt/1000;
       scroll+=step;
