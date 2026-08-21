@@ -401,3 +401,30 @@
 .toggle{border:1.5px solid rgba(22,36,31,.2);border-radius:999px;padding:6px 12px;font-size:12px;color:var(--ink);transition:.15s}
 .toggle[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink);font-weight:700}
 
+/* ---------- times table lab ---------- */
+.tm-wrap{position:absolute;inset:0;display:grid;place-items:center;padding:16px;pointer-events:none}
+.tm-stack{display:flex;flex-direction:column;align-items:center;gap:16px;width:100%;max-width:560px}
+.tm-wrap.bench .tm-stack{min-height:330px;justify-content:center}
+.tm-row{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap}
+.tm-gridbox{display:grid;place-items:center;min-height:210px}
+.tm-grid{display:grid;pointer-events:none}
+.tm-cell{background:var(--c1);border-radius:2px;box-shadow:inset 0 0 0 1px rgba(12,22,18,.55)}
+.tm-eq{font-family:var(--fun);font-weight:800;font-size:clamp(24px,4vw,38px);color:var(--chalk)}
+.tm-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:460px}
+.tm-chip{font-family:var(--mono);font-size:12.5px;letter-spacing:.04em;color:var(--chalk-dim);
+  background:rgba(247,242,231,.1);border-radius:999px;padding:5px 12px}
+.tm-chip.on{background:var(--c2);color:var(--ink);font-weight:700}
+.tm-facts{font-family:var(--mono);font-size:12px;letter-spacing:.04em;color:var(--chalk-dim);
+  display:flex;gap:18px;flex-wrap:wrap;justify-content:center}
+.tm-num{font-family:var(--fun);font-weight:800;font-size:clamp(28px,4.6vw,46px);
+  color:inherit;min-width:1.1em;text-align:center}
+.tm-sym{color:var(--amber)}
+.tm-op{font-family:var(--fun);font-weight:800;font-size:clamp(22px,3.6vw,36px);color:var(--chalk)}
+.tm-shift{display:flex;align-items:center;gap:18px;justify-content:center;flex-wrap:wrap}
+.tm-digits{display:flex;gap:4px}
+.tm-digit{font-family:var(--mono);font-weight:700;font-size:22px;color:var(--chalk);
+  background:rgba(247,242,231,.1);border-radius:6px;min-width:1.3em;text-align:center;padding:6px 2px}
+.tm-digit-new{background:var(--c2);color:var(--ink)}
+.tm-digit-drop{opacity:.4;text-decoration:line-through}
+.tm-arrow{font-family:var(--mono);font-size:13px;letter-spacing:.06em;color:var(--amber);font-weight:700}
+

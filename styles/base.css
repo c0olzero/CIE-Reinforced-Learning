@@ -61,4 +61,9 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .card.soon h3{color:var(--chalk);font-size:17px}
 .card.soon p{color:var(--chalk-dim)}
 .card.soon .tag{color:var(--chalk-dim);margin-bottom:26px}
+.card.strand{padding-top:20px}
+.card.strand .strand-icon{color:var(--ink);margin-bottom:16px;display:block}
+.card.strand:hover .strand-icon{color:var(--amber)}
+.card.strand.soon .strand-icon{color:var(--chalk-dim)}
+.card.strand h3{font-size:20px}
 

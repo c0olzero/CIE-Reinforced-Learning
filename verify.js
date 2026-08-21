@@ -26,18 +26,28 @@ const dom=new JSDOM(html,{runScripts:"dangerously",pretendToBeVisual:true,before
 const w=dom.window,d=w.document;
 const click=e=>{ if(e) e.dispatchEvent(new w.MouseEvent("click",{bubbles:true})); };
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+/* Hub is now two levels: strand picker, then that strand's module list. */
 (async()=>{
-  await sleep(700); let n=0;
-  const live=d.querySelectorAll(".card:not(.soon)").length;
-  for(let m=0;m<live;m++){
-    click(d.querySelector("#backBtn")); await sleep(60);
-    click([...d.querySelectorAll(".card:not(.soon)")][m]); await sleep(500);
-    const tabs=[...d.querySelectorAll(".tab")];
-    if(!tabs.length){ errs.push("module "+m+" did not load"); continue; }
-    for(let i=0;i<tabs.length;i++){
-      click([...d.querySelectorAll(".tab")][i]); await sleep(120);
-      for(const b of [...d.querySelectorAll(".abtn,.btn,.thumb,.shape,.diffbtn")].slice(0,5)) click(b);
-      await sleep(60); n++;
+  await sleep(700); let n=0, live=0;
+  const strands=d.querySelectorAll(".card.strand:not(.soon)").length;
+  for(let s=0;s<strands;s++){
+    let guard=0;
+    while(!d.querySelector("#backBtn").hidden && guard++<5){ click(d.querySelector("#backBtn")); await sleep(60); }
+    click([...d.querySelectorAll(".card.strand:not(.soon)")][s]); await sleep(300);
+    const modCount=d.querySelectorAll(".card:not(.strand):not(.soon)").length;
+    for(let m=0;m<modCount;m++){
+      click([...d.querySelectorAll(".card:not(.strand):not(.soon)")][m]); await sleep(500);
+      const tabs=[...d.querySelectorAll(".tab")];
+      if(!tabs.length){ errs.push("strand "+s+" module "+m+" did not load"); }
+      else{
+        live++;
+        for(let i=0;i<tabs.length;i++){
+          click([...d.querySelectorAll(".tab")][i]); await sleep(120);
+          for(const b of [...d.querySelectorAll(".abtn,.btn,.thumb,.shape,.diffbtn")].slice(0,5)) click(b);
+          await sleep(60); n++;
+        }
+      }
+      click(d.querySelector("#backBtn")); await sleep(60);   // back to this strand's module list
     }
   }
   console.log(`\n${n} tabs across ${live} modules — ${errs.length} error(s)`);

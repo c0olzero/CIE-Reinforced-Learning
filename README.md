@@ -20,7 +20,8 @@ blocked on `file://` for security reasons. GitHub Pages serves it as-is.
 index.html                  markup shell only
 engine/                     shared, loaded once
   main.js                   boot + routing; fetches modules on demand
-  catalogue.js              what exists: subject, stage, objectives, loader
+  catalogue.js              what exists: subject, stage, strand, objectives, loader
+  icons.js                  inline SVG icons for the strand-picker cards
   i18n.js                   core strings + addStrings() for module strings
   dom.js                    h(), timers, resize observer, shared utilities
   ui.js                     HUD, celebration overlay
@@ -42,8 +43,8 @@ sw.js                       service worker: offline + installable
    `default { games:[{id,name,blurb,render,full,rainbow}] }`.
 2. Write `<name>.strings.js` exporting `{ en:{...}, vi:{...} }` and call
    `addStrings()` at the top of the module.
-3. Add an entry to `engine/catalogue.js` with its stage, objectives and a
-   `load:()=>import(...)`.
+3. Add an entry to `engine/catalogue.js` with its stage, `strand` (one of
+   `STRANDS` in that file), objectives and a `load:()=>import(...)`.
 
 Nothing else changes. Only the modules a visitor opens are ever downloaded.
 
@@ -58,7 +59,8 @@ Each catalogue entry lists the Cambridge objective codes it covers, so gaps are
 visible and a teacher can find the game for a given objective. Stage 4
 Mathematics (0096) has 46 objectives; see the coverage map in the project notes.
 
-Built: 4Nf.01–.07 (Fraction Lab), 4Gg.05–.06 (Solid Lab), 4Gg.08–.09 (Angle Lab).
+Built: 4Nf.01–.07 (Fraction Lab), 4Gg.05–.06 (Solid Lab), 4Gg.08–.09 (Angle Lab),
+4Ni.04/.07/.08 (Times Table Lab).
 
 Objective codes are referenced for navigation. The framework text itself is
 Cambridge's copyright and is not reproduced here.

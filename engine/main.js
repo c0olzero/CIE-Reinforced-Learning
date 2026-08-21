@@ -2,35 +2,69 @@
 
 import {h, stopPending} from "./dom.js";
 import {t, getLang, setLang} from "./i18n.js";
-import {CATALOGUE} from "./catalogue.js";
+import {CATALOGUE, STRANDS} from "./catalogue.js";
+import {strandIcon} from "./icons.js";
 
-/* ---------- 6. routing + screens ---------- */
+/* ---------- 6. routing + screens ----------
+   Three levels: strand picker -> module list (filtered by strand) -> module.
+   route.strand/route.mod null in turn as you go back up. */
 const main=document.getElementById("main");
 const backBtn=document.getElementById("backBtn");
 const langBtn=document.getElementById("langBtn");
-let route={mod:null,game:null};
+let route={strand:null,mod:null,game:null};
 let loaded={};      // module id -> its games, once fetched
 
 function render(){
   document.getElementById("brand").firstChild.textContent=t("brand");
   document.getElementById("tagline").textContent=t("tagline");
   langBtn.textContent=t("lang");
-  backBtn.hidden=!route.mod;
+  backBtn.hidden=!route.strand&&!route.mod;
   backBtn.querySelector("span").textContent=t("back");
   stopPending();
   main.innerHTML="";
-  route.mod ? renderModule() : renderHub();
+  if(route.mod) renderModule();
+  else if(route.strand) renderModuleList();
+  else renderStrandPicker();
 }
-backBtn.onclick=()=>{route.mod=null;render();};
+backBtn.onclick=()=>{
+  if(route.mod) route.mod=null;
+  else route.strand=null;
+  render();
+};
 langBtn.onclick=()=>{ setLang(getLang()==="en"?"vi":"en"); render(); };
 
-function renderHub(){
+function renderStrandPicker(){
   const wrap=h("div","hub");
   const p=t("lede");
   const lede=h("h1","lede"); lede.append(p[0],h("em",null,p[1]),p[2]);
-  wrap.append(lede,h("p","sub",t("sub")));
+  wrap.append(lede,h("p","sub",t("subStrand")));
   const cards=h("div","cards");
-  CATALOGUE.forEach((m,i)=>{
+  STRANDS.forEach(s=>{
+    const has=CATALOGUE.some(m=>m.strand===s.id);
+    const c=h("button","card strand"+(has?"":" soon"));
+    c.appendChild(strandIcon(s.id));
+    c.append(h("h3",null,s.name[getLang()]),
+             h("p",null,has?s.blurb[getLang()]:t("soon")));
+    if(has) c.onclick=()=>{ route.strand=s.id; render(); };
+    else c.disabled=true;
+    cards.appendChild(c);
+  });
+  wrap.appendChild(cards);
+  main.appendChild(wrap);
+}
+
+function renderModuleList(){
+  const strand=STRANDS.find(s=>s.id===route.strand);
+  const mods=CATALOGUE.filter(m=>m.strand===route.strand);
+  const wrap=h("div","hub");
+  wrap.append(h("h1","lede",strand.name[getLang()]),h("p","sub",t("sub")));
+  if(!mods.length){
+    wrap.appendChild(h("p","sub",t("noneYet")));
+    main.appendChild(wrap);
+    return;
+  }
+  const cards=h("div","cards");
+  mods.forEach((m,i)=>{
     const c=h("button","card"+(m.live?"":" soon"));
     if(m.live){
       const strip=h("div","strip");
@@ -39,7 +73,7 @@ function renderHub(){
     }
     c.append(h("span","tag",m.live?String(i+1).padStart(2,"0"):t("soon")),
              h("h3",null,m.title[getLang()]),h("p",null,m.blurb[getLang()]));
-    if(m.live) c.onclick=()=>{ route={mod:m.id,game:null}; render(); };
+    if(m.live) c.onclick=()=>{ route.mod=m.id; route.game=null; render(); };
     else c.disabled=true;
     cards.appendChild(c);
   });
