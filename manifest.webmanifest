@@ -1,0 +1,10 @@
+{
+  "name": "Workbench — mini-games for curious kids",
+  "short_name": "Workbench",
+  "start_url": ".",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#1E3A35",
+  "theme_color": "#1E3A35",
+  "description": "Free interactive mini-games for the Cambridge Primary curriculum."
+}
