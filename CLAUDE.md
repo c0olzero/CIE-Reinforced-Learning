@@ -18,6 +18,13 @@ subjects across Stages 1–12.
   dev-only, for verification.
 - **Free and accessible.** Every game playable with a keyboard, text contrast
   ≥ 4.5:1, honour `prefers-reduced-motion`, never encode an answer in colour alone.
+- **Desktop and tablet-landscape only.** A phone-sized viewport gets the
+  blocking message in `index.html`'s `.phoneblock`, not a squeezed layout —
+  the arcade roads and side panels genuinely don't fit. The gate is pure CSS
+  (`styles/responsive.css`, keyed off the viewport's shorter side) so it
+  shows instantly with no flash of the real app first. Don't reintroduce a
+  cramped phone layout to "fix" this; the fix was deciding phones aren't a
+  target, not squeezing harder.
 
 ## Rules that are easy to get wrong
 
