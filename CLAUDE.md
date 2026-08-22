@@ -53,6 +53,20 @@ module and reports runtime errors. It has caught real bugs the eye missed. If a
 change touches game logic, also write a throwaway simulation of the maths and run
 it — most bugs in this project were found that way, not by reading.
 
+## Versioning
+
+Every commit pushed to GitHub gets a version bump and a `CHANGELOG.md`
+entry, plus a matching `git tag` (e.g. `v1.0.2`). [Semantic Versioning](https://semver.org/) —
+`MAJOR.MINOR.PATCH`:
+
+- **MAJOR** — a breaking redesign (rare): e.g. restructuring how progress or
+  high scores are stored, or a fundamental engine change.
+- **MINOR** — a new module, a new game/tab, or a genuinely new feature added
+  to an existing game.
+- **PATCH** — fixes, tuning, and polish to something that already exists.
+
+Keep `package.json`'s `version` field in sync with the latest tag.
+
 ## Curriculum stance
 
 - Content is aligned to the Cambridge framework and tagged with objective codes
