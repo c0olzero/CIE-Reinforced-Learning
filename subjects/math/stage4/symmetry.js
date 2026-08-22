@@ -268,14 +268,49 @@ function mgShuffle(arr){
     [arr[i],arr[j]]=[arr[j],arr[i]]; }
   return arr;
 }
+const mgGcd=(a,b)=>{ a=Math.abs(a); b=Math.abs(b); while(b){ [a,b]=[b,a%b]; } return a; };
+/* two grid points are "clean" together when the straight segment between
+   them passes through no other grid point — true exactly when their row
+   and column differences share no common factor (a gcd of 1). Any other
+   pair leaves a dot sitting exactly on the drawn edge, which reads as an
+   extra, ambiguous vertex. Only the polygon's own edges (consecutive
+   vertices once sorted by angle around the centroid, wrapping last-to-
+   first) need to be clean — checking every pair is provably impossible
+   for 5+ points (only 4 row/col parity classes exist), which is why an
+   earlier all-pairs version always fell back to the same triangle.
+   A primitive edge only rules out an *uninvolved* dot sitting on it —
+   three of the chosen vertices themselves can still line up straight
+   (a 180° "vertex" in the middle of its two neighbours), so every
+   consecutive triple is also checked for a zero cross product. */
+function mgCollinearTriple(cand){
+  const k=cand.length;
+  return cand.some((q,i)=>{
+    const p=cand[(i-1+k)%k], r=cand[(i+1)%k];
+    return (q[1]-p[1])*(r[0]-p[0])-(q[0]-p[0])*(r[1]-p[1])===0;
+  });
+}
+function mgPickVerts(pool,k){
+  for(let attempt=0;attempt<200;attempt++){
+    const cand=mgShuffle(pool.slice()).slice(0,k);
+    const ccx=cand.reduce((s,p)=>s+p[1],0)/k, ccy=cand.reduce((s,p)=>s+p[0],0)/k;
+    cand.sort((a,b)=>Math.atan2(a[0]-ccy,a[1]-ccx)-Math.atan2(b[0]-ccy,b[1]-ccx));
+    const edgesClean=cand.every((p,i)=>{
+      const q=cand[(i+1)%cand.length];
+      return mgGcd(p[0]-q[0],p[1]-q[1])===1;
+    });
+    if(edgesClean && !mgCollinearTriple(cand)) return cand;
+  }
+  return null;
+}
 function mgGenSeed(){
-  const quad=rand(MG_QUADS);
-  const k=3+Math.floor(Math.random()*4);           // 3-6 vertices
   const pool=[]; for(let r=0;r<5;r++) for(let c=0;c<5;c++) pool.push([r,c]);
-  const chosen=mgShuffle(pool).slice(0,k);
-  // sorting by angle around the centroid keeps the outline simple (no self-crossing)
-  const ccx=chosen.reduce((s,p)=>s+p[1],0)/k, ccy=chosen.reduce((s,p)=>s+p[0],0)/k;
-  chosen.sort((a,b)=>Math.atan2(a[0]-ccy,a[1]-ccx)-Math.atan2(b[0]-ccy,b[1]-ccx));
+  let quad,chosen,k;
+  for(let tries=0;tries<10&&!chosen;tries++){
+    quad=rand(MG_QUADS);
+    k=3+Math.floor(Math.random()*3);                 // 3-5 vertices
+    chosen=mgPickVerts(pool,k);
+  }
+  if(!chosen) chosen=[[0,0],[0,2],[2,0]];            // pathological fallback, never expected to trigger
   const verts=chosen.map(([lr,lc])=>mgIdx(quad.rh*6+lr, quad.ch*6+lc));
   return {quad,verts};
 }

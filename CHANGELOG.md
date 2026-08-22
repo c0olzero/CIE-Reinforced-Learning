@@ -12,6 +12,25 @@ All notable changes to this project are documented here, newest first.
 
 Each version bump gets an entry here and a matching `git tag` (e.g. `v1.0.0`).
 
+## [1.0.1] - 2026-08-22
+
+### Fixed
+- **Mirror It**: the seed shape's own edges could pass exactly through a
+  background grid dot (a straight line between two lattice points crosses
+  a third whenever their row/column offsets share a common factor), which
+  read as a spare, ambiguous vertex. Edges are now checked for this and
+  regenerated until every one is clean. This also caught a second bug it
+  exposed: the previous constraint checked every pair of vertices instead
+  of just the polygon's edges, which is mathematically impossible to
+  satisfy for 5+ points — so 5- and 6-point shapes silently always fell
+  back to the same hardcoded triangle. Shapes are now capped at 5 points
+  (6 didn't leave enough room to reliably avoid the bug) and randomize
+  properly again. A related case slipped through the first pass: three of
+  the shape's *own* vertices could land exactly in a straight line, which
+  looks identical to a stray dot sitting in the middle of an edge even
+  though no background dot was involved — candidates with a collinear
+  triple are now rejected too.
+
 ## [1.0.0] - 2026-08-22
 
 Versioning starts here. This entry covers everything the project could do
