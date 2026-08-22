@@ -19,6 +19,9 @@ addStrings(STRINGS);
    Proper fractions only — improper fractions and mixed numbers are Stage 5.
    ============================================================ */
 const FR_DENOMS=[2,3,4,5,6,8,10,12];
+const FR_MAXD=20;         // Compare it and Add & take away: denominator ceiling when showing numbers
+const FR_MAXD_PIC=10;     // ...and when showing a pie or bar instead — past 10 slices/segments blur together
+const randDenom=(lo,hi)=>lo+Math.floor(Math.random()*((hi||FR_MAXD)-lo+1));
 const gcd=(a,b)=>b?gcd(b,a%b):a;
 const frKey=(n,d)=>{const g=gcd(n,d);return (n/g)+"/"+(d/g);};
 const frEq=(a,b,c,e)=>a*e===c*b;                 // a/b === c/e
@@ -40,11 +43,26 @@ function frStrip(n,d,opts){
   }
   return el;
 }
+/* the same strip standing up, filled from the bottom like a thermometer —
+   cell 0 is the top, so the bottom n cells (d-1-i < n) are the ones lit */
+function frStripV(n,d,opts){
+  opts=opts||{};
+  const el=h("div","fr-strip fr-strip-v locked"+(opts.small?" sm":""));   // never clickable, unlike frStrip
+  if(opts.heightPx){                    // keep the same width:height ratio as the CSS default (78:220)
+    el.style.height=opts.heightPx+"px";
+    el.style.width=Math.round(opts.heightPx*0.354)+"px";
+    el.style.maxWidth="none";
+  }
+  for(let i=0;i<d;i++)
+    el.appendChild(h("div","fr-cell"+((d-1-i<n)?" on":"")+(opts.blue?" b":"")));
+  return el;
+}
 /* the same fraction as a pie */
-function frPie(n,d,size){
+function frPie(n,d,size,blue){
   const svg=document.createElementNS(SVGNS,"svg");
   svg.setAttribute("width",size); svg.setAttribute("height",size);
   svg.setAttribute("viewBox","0 0 "+size+" "+size);
+  svg.setAttribute("class","fr-pie");   // block, not inline — no baseline descender gap to throw off .fr-col's height
   const c=size/2, r=size/2-3;
   const P=a=>[c+r*Math.cos((a-90)*Math.PI/180), c+r*Math.sin((a-90)*Math.PI/180)];
   for(let i=0;i<d;i++){
@@ -52,11 +70,33 @@ function frPie(n,d,size){
     const pa=document.createElementNS(SVGNS,"path");
     pa.setAttribute("d","M"+c+","+c+" L"+A[0].toFixed(2)+","+A[1].toFixed(2)+
       " A"+r+","+r+" 0 "+((a1-a0)>180?1:0)+" 1 "+B[0].toFixed(2)+","+B[1].toFixed(2)+" Z");
-    pa.setAttribute("fill",i<n?"var(--c1)":"rgba(247,242,231,.13)");
+    pa.setAttribute("fill",i<n?(blue?"var(--c3)":"var(--c1)"):"rgba(247,242,231,.13)");
     pa.setAttribute("stroke","var(--mat)"); pa.setAttribute("stroke-width",2);
     svg.appendChild(pa);
   }
   return svg;
+}
+/* one fraction, drawn as whichever of the three pictures `viz` names —
+   "num" (the stacked numeral), "barV" (a vertical strip) or "pie". Compare
+   it and Add & take away both use this so a question shows numbers one
+   round, bars the next, pies after that — same fraction, different picture. */
+const FR_VIZ=["num","barV","pie"];
+/* `blue` is Add & take away's own convention: the 2nd fraction turns blue
+   when it's the part leaving (subtraction), same colour frWorkBar's proof
+   already uses, and stays gold — every viz's default — when it's joining.
+
+   `sizePx`, when given, overrides the fixed "big" preset with a size the
+   caller measured from the actual stage — a bar fixed at one pixel height
+   regardless of the screen left most of a tall tablet's stage empty above
+   and below it; a size taken from stage.clientHeight fills that space on
+   every viz instead of just the ones CSS clamp()s already scale by width. */
+function frViz(n,d,viz,big,blue,sizePx){
+  if(viz==="pie") return frPie(n,d,sizePx||(big?170:80),blue);
+  if(viz==="barV") return frStripV(n,d,{small:!big,blue,heightPx:sizePx});
+  const el=frNumeral(n,d,big?"big":"mid");
+  if(blue) el.style.color="var(--c3)";
+  if(sizePx) el.style.fontSize=Math.round(sizePx*0.34)+"px";
+  return el;
 }
 /* 4Nf.06 — parts in each hundred */
 function frGrid(n,d){
@@ -80,45 +120,67 @@ function frEquivalents(n,d){
 /* ---------- tab 1 — Fraction Bench (4Nf.01, .04, .06) ---------- */
 function renderBench(side,stage){
   let d=4, n=1;
+  // the numeral is pinned at the top of the stage, outside the wrap it centres —
+  // .fr-wrap.bench reserves the room for it with padding-top
+  const numHead=h("div","fr-bench-num");
+  stage.appendChild(numHead);
   const wrap=h("div","fr-wrap bench"), stack=h("div","fr-stack");
   wrap.appendChild(stack); stage.appendChild(wrap);
-  const stripBox=h("div",null); stripBox.style.width="100%";
-  const row=h("div","fr-row");
-  const numBox=h("div"), pieBox=h("div"), gridBox=h("div"), pctBox=h("div","fr-pct");
-  row.append(numBox,pieBox,gridBox,pctBox);
+  const stripBox=h("div",null); stripBox.style.width="100%"; stripBox.style.maxWidth="680px";  // top row: the bar — capped the same as .fr-row.spread below, so both are centred by .fr-stack identically instead of the strip hugging the left edge
+  const row2=h("div","fr-row spread"); row2.style.marginTop="26px";  // extra room below the bar
+  // pie and grid columns are built the same way — pie + a same-height, invisible
+  // spacer standing in for the grid's "25%" label — so .fr-row's own centring
+  // lines the pie and the grid itself up, instead of the taller grid+label
+  // column pulling the whole grid upward relative to the shorter pie
+  const pieBox=h("div","fr-col"), pieInner=h("div"), pieSpacer=h("div","fr-pct","0%");
+  pieSpacer.style.visibility="hidden";
+  pieBox.append(pieInner,pieSpacer);
+  const gridCol=h("div","fr-col"), gridBox=h("div"), pctBox=h("div","fr-pct");
+  gridCol.append(gridBox,pctBox);
+  row2.append(pieBox,gridCol);
   const eq=h("div","fr-eq");
-  stack.append(stripBox,row,eq);
+  stack.append(stripBox,row2,eq);
 
   const p1=h("div","panel");
-  p1.append(h("h4",null,t("cutter").toUpperCase()));
-  const lw=h("div","lever-wrap");
-  lw.appendChild(h("div","ticks"));
-  const lever=document.createElement("input");
-  lever.type="range"; lever.min=0; lever.max=FR_DENOMS.length-1;
-  lever.value=FR_DENOMS.indexOf(d); lever.className="lever";
-  lever.setAttribute("aria-label",t("cutter"));
-  lw.appendChild(lever);
-  const ll=h("div","leverlab"); ll.append(h("span",null,t("fewer")),h("span",null,t("more")));
-  lw.appendChild(ll); p1.appendChild(lw);
-  const cnt=h("p","note"); p1.appendChild(cnt);
+  p1.append(h("h4",null,t("numerator").toUpperCase()));
+  const nlw=h("div","lever-wrap");
+  nlw.appendChild(h("div","ticks"));
+  const nLever=document.createElement("input");
+  nLever.type="range"; nLever.min=0; nLever.max=d;
+  nLever.value=n; nLever.className="lever";
+  nLever.setAttribute("aria-label",t("numerator"));
+  nlw.appendChild(nLever);
+  const nll=h("div","leverlab"); nll.append(h("span",null,t("numNone")),h("span",null,t("numAll")));
+  nlw.appendChild(nll); p1.appendChild(nlw);
+  p1.appendChild(Object.assign(h("p","note",t("benchHelp")),{}));
 
   const p2=h("div","panel");
-  p2.append(h("h4",null,t("shaded").toUpperCase()));
-  const rowb=h("div","rowbtns");
-  const bLess=h("button","btn alt","\u2212"), bMore=h("button","btn alt","+");
-  rowb.append(bLess,bMore); p2.appendChild(rowb);
-  p2.appendChild(Object.assign(h("p","note",t("benchHelp")),{}));
+  p2.append(h("h4",null,t("denominator").toUpperCase()));
+  const dlw=h("div","lever-wrap");
+  dlw.appendChild(h("div","ticks"));
+  const dLever=document.createElement("input");
+  dLever.type="range"; dLever.min=2; dLever.max=20;
+  dLever.value=d; dLever.className="lever";
+  dLever.setAttribute("aria-label",t("denominator"));
+  dlw.appendChild(dLever);
+  const dll=h("div","leverlab"); dll.append(h("span",null,t("fewer")),h("span",null,t("more")));
+  dlw.appendChild(dll); p2.appendChild(dlw);
+  const cnt=h("p","note"); p2.appendChild(cnt);
   side.append(p1,p2);
 
-  lever.oninput=()=>{ d=FR_DENOMS[+lever.value]; if(n>d) n=d; draw(); };
-  bLess.onclick=()=>{ n=Math.max(0,n-1); draw(); };
-  bMore.onclick=()=>{ n=Math.min(d,n+1); draw(); };
+  nLever.oninput=()=>{ n=+nLever.value; draw(); };
+  dLever.oninput=()=>{
+    d=+dLever.value;
+    nLever.max=d;
+    if(n>d){ n=d; nLever.value=n; }
+    draw();
+  };
 
   function draw(){
-    stripBox.innerHTML=""; numBox.innerHTML=""; pieBox.innerHTML=""; gridBox.innerHTML="";
-    stripBox.appendChild(frStrip(n,d,{onCell:i=>{ n=(i<n)?i:i+1; draw(); }}));
-    numBox.appendChild(frNumeral(n,d,"big"));
-    pieBox.appendChild(frPie(n,d,132));
+    stripBox.innerHTML=""; numHead.innerHTML=""; pieInner.innerHTML=""; gridBox.innerHTML="";
+    stripBox.appendChild(frStrip(n,d,{onCell:i=>{ n=(i<n)?i:i+1; nLever.value=n; draw(); }}));
+    numHead.appendChild(frNumeral(n,d,"big"));
+    pieInner.appendChild(frPie(n,d,190));
     gridBox.appendChild(frGrid(n,d));
     pctBox.textContent=frPct(n,d);
     const e=frEquivalents(n,d);
@@ -146,24 +208,29 @@ function renderCompare(side,stage){
     b.onclick=()=>answer(k); act.appendChild(b);
   });
 
-  function pick(){
+  /* allowTrap: only "numbers" rounds get the same-numerator, different-
+     denominator trap — reading which of two pies/bars has fewer TOTAL
+     slices is a different (and here, unwanted) skill from reading the
+     shaded amount. Pie and bar still get both same-denominator pairs
+     and equivalent-fractions-written-differently pairs, just not the trap. */
+  function pick(maxD,allowTrap){
     for(let tries=0;tries<50;tries++){
       const r=Math.random();
       let X,Y;
-      if(r<0.45){                       // the trap: same numerator, different denominator
+      if(allowTrap&&r<0.45){            // the trap: same numerator, different denominator
         const n=1+Math.floor(Math.random()*2);
-        const d1=rand(FR_DENOMS), d2=rand(FR_DENOMS);
+        const d1=randDenom(2,maxD), d2=randDenom(2,maxD);
         if(d1===d2) continue;
         X=[Math.min(n,d1-1)||1,d1]; Y=[Math.min(n,d2-1)||1,d2];
-      }else if(r<0.75){                 // same denominator, different numerators
-        const d=rand(FR_DENOMS.filter(x=>x>2));
+      }else if((allowTrap&&r<0.75)||(!allowTrap&&r<0.55)){   // same denominator, different numerators
+        const d=randDenom(3,maxD);
         const a=1+Math.floor(Math.random()*(d-1));
         const b=1+Math.floor(Math.random()*(d-1));
         if(a===b) continue;             // 3/4 against 3/4 asks nothing
         X=[a,d]; Y=[b,d];
       }else{                            // equal in value, written differently -> the "=" answer
-        const d1=rand([2,3,4,5,6]), k=rand([2,3]);
-        if(d1*k>12) continue;
+        const d1=rand([2,3,4,5,6]), k=rand([2,3,4]);
+        if(d1*k>maxD) continue;
         const n1=1+Math.floor(Math.random()*(d1-1));
         X=[n1,d1]; Y=[n1*k,d1*k];
         if(Math.random()<0.5){ const t=X; X=Y; Y=t; }
@@ -175,10 +242,19 @@ function renderCompare(side,stage){
   }
   function deal(){
     answered=false; act.hidden=false; sym.textContent="?"; sym.style.color="";
-    [A,B]=pick();
+    const viz=rand(FR_VIZ);                       // numbers, bars or pies — never mixed within a round
+    [A,B]=pick(viz==="num" ? FR_MAXD : FR_MAXD_PIC, viz==="num");
+    // sized off the real stage, not a fixed pixel guess — a tall tablet
+    // gets a picture that actually fills the height instead of a small
+    // one stranded in the middle of a lot of empty space. Bounded by width
+    // too, for two side by side plus the symbol between them — otherwise a
+    // narrow-but-tall screen sizes them to wrap, stranding the "?" above.
+    // The row's own width (capped by .fr-stack's max-width), not the wider
+    // stage behind it, is what actually constrains that side-by-side fit.
+    const sizePx=Math.max(160,Math.min(440,stage.clientHeight*0.55,(stack.clientWidth-140)/2));
     aBox.innerHTML=""; bBox.innerHTML="";
-    aBox.appendChild(frNumeral(A[0],A[1],"big"));
-    bBox.appendChild(frNumeral(B[0],B[1],"big"));
+    aBox.appendChild(frViz(A[0],A[1],viz,true,false,sizePx));
+    bBox.appendChild(frViz(B[0],B[1],viz,true,false,sizePx));
   }
   function answer(said){
     if(answered) return; answered=true;
@@ -386,15 +462,23 @@ function renderAddSub(side,stage){
 
   function deal(){
     answered=false; act.hidden=false; act.innerHTML="";
-    d=rand([4,5,6,8,10]);
+    const viz=rand(FR_VIZ);             // numbers, bars or pies \u2014 same picture for a, b and every option
+    const maxD=viz==="num" ? FR_MAXD : FR_MAXD_PIC;
+    d=4+Math.floor(Math.random()*(maxD-3));   // 4..maxD
     plus=Math.random()<0.6;
     if(plus){ a=1+Math.floor(Math.random()*(d-2)); b=1+Math.floor(Math.random()*(d-a-1)); ans=a+b; }
     else { a=2+Math.floor(Math.random()*(d-2)); b=1+Math.floor(Math.random()*(a-1)); ans=a-b; }
     line.innerHTML="";
-    line.append(frNumeral(a,d,"big"),h("div","fr-op",plus?"+":"\u2212"),
-                frNumeral(b,d,"big"),h("div","fr-op","="),h("div","fr-sym","?"));
+    // sized off the real stage \u2014 see the matching comment in Compare it.
+    // Add's row has 3 more (narrower) elements between the two shapes, so
+    // it reserves more width for them before splitting what's left in two.
+    const sizePx=Math.max(140,Math.min(380,stage.clientHeight*0.42,(stack.clientWidth-260)/2));
+    // 2nd shape (b) turns blue when it's the piece leaving (subtraction), stays
+    // gold when it's joining (addition) \u2014 same convention as frWorkBar's proof
+    line.append(frViz(a,d,viz,true,false,sizePx),h("div","fr-op",plus?"+":"\u2212"),
+                frViz(b,d,viz,true,!plus,sizePx),h("div","fr-op","="),h("div","fr-sym","?"));
     pickOptions(ans,1,d-1,Math.min(4,d-1),3).forEach(v=>{
-      const btn=h("button","abtn"); btn.appendChild(frNumeral(v,d,"mid"));
+      const btn=h("button","abtn"); btn.appendChild(frViz(v,d,viz,false));
       btn.onclick=()=>answer(v); act.appendChild(btn);
     });
   }

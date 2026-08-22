@@ -163,7 +163,11 @@ export function arcadeShell(stage,cfg){
   }
   screen((box,dim)=>{
     box.appendChild(h("div","arc-big",t("ready")));
-    box.appendChild(h("p","arc-how",t(cfg.how)));
+    const howEl=h("p","arc-how",t(cfg.how));
+    box.appendChild(howEl);
+    // e.g. Symmetry Arcade's sweeper/revolver choice; refreshBest re-reads
+    // the BEST stat for whatever key the game's mode change just switched to
+    if(cfg.modePicker) cfg.modePicker(box,howEl,()=>{ best=bestScore(bestKey()); elBest.textContent=best; });
     box.appendChild(h("div","difflabel",t("diffPick")));
     const row=h("div","diffrow");
     [["normal","diffN"],["hard","diffH"]].forEach(([d,k])=>{

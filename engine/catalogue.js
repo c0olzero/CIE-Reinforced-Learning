@@ -43,6 +43,12 @@ export const CATALOGUE=[
     objectives:["4Gg.08","4Gg.09"],
     load:()=>import("../subjects/math/stage4/angles.js") },
 
+  { id:"sym", subject:"math", stage:4, strand:"geometry", live:true,
+    title:{en:"Symmetry Lab", vi:"Xưởng Đối Xứng"},
+    blurb:{en:"Spot the lines that split a shape into matching halves.", vi:"Tìm đường chia hình thành hai nửa giống hệt nhau."}, colors:[3,5,2],
+    objectives:["4Gg.07","4Gp.03"],
+    load:()=>import("../subjects/math/stage4/symmetry.js") },
+
   { id:"frac", subject:"math", stage:4, strand:"number", live:true,
     title:{en:"Fraction Lab", vi:"Xưởng Phân Số"},
     blurb:{en:"Cut it, shade it, compare it. Fractions and percentages.", vi:"Cắt, tô, so sánh. Phân số và phần trăm."}, colors:[1,2,3,1,2,3],

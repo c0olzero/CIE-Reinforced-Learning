@@ -46,12 +46,22 @@ function tmArray(a,b){
   return wrap;
 }
 
+/* The bench is its tab's only content, not a small proof snippet inside a
+   width-limited celebration overlay like tmArray's callers — so it gets a
+   bigger box than tmSize allows, via the same shape-preserving formula. */
+function tmBenchSize(a,b){
+  const maxW=380,maxH=300;
+  const gap=Math.max(3,Math.min(10,Math.round(maxW/(b*9))));
+  const cell=Math.max(12,Math.min(56,
+    Math.floor(Math.min((maxW-gap*(b-1))/b,(maxH-gap*(a-1))/a))));
+  return {cell,gap};
+}
 /* Same grid, but for the bench: never resizes on its own. A column overlay
    (one full-height hit target per column, not per cell) reports which
    column was hovered/focused/clicked so the caller can dim the rest without
    touching a or b. Returns the cells in row-major order for dimming. */
 function tmBenchGrid(a,b,onColHover,onColLeave,onColClick){
-  const {cell,gap}=tmSize(a,b);
+  const {cell,gap}=tmBenchSize(a,b);
   const wrap=h("div","tm-gridwrap");
   wrap.style.width=(cell*b+gap*(b-1))+"px"; wrap.style.height=(cell*a+gap*(a-1))+"px";
   const el=h("div","tm-grid");
