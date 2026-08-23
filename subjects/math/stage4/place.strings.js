@@ -2,10 +2,10 @@
    Strings only. Add a language by adding a block here. */
 export default {
   en:{
-    gBench:"Place Bench",
-    gBenchP:"Build a number, block by block.",
+    gPvBench:"Number Bench",
+    gPvBenchP:"Build a number, block by block.",
     thLabel:"Th", hLabel:"H", tLabel:"T", oLabel:"O",
-    benchHelp:"Each column can only hold 0 to 9. Ten of one column makes one of the next.",
+    pvBenchHelp:"Each column can only hold 0 to 9. Ten of one column makes one of the next.",
     expandLbl:"Expanded form",
     altLbl:"Another way to say it",
     hundredsWord:"hundreds", onesWord:"ones",
@@ -30,10 +30,10 @@ export default {
     nextQ:"Next question"
   },
   vi:{
-    gBench:"Bàn Giá Trị",
-    gBenchP:"Xây một con số, từng khối một.",
+    gPvBench:"Bàn Giá Trị",
+    gPvBenchP:"Xây một con số, từng khối một.",
     thLabel:"N", hLabel:"T", tLabel:"C", oLabel:"Đ",
-    benchHelp:"Mỗi cột chỉ chứa được từ 0 đến 9. Mười của cột này thành một của cột kế tiếp.",
+    pvBenchHelp:"Mỗi cột chỉ chứa được từ 0 đến 9. Mười của cột này thành một của cột kế tiếp.",
     expandLbl:"Dạng khai triển",
     altLbl:"Một cách nói khác",
     hundredsWord:"trăm", onesWord:"đơn vị",

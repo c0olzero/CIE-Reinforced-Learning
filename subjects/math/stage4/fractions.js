@@ -152,7 +152,7 @@ function renderBench(side,stage){
   nlw.appendChild(nLever);
   const nll=h("div","leverlab"); nll.append(h("span",null,t("numNone")),h("span",null,t("numAll")));
   nlw.appendChild(nll); p1.appendChild(nlw);
-  p1.appendChild(Object.assign(h("p","note",t("benchHelp")),{}));
+  p1.appendChild(Object.assign(h("p","note",t("frBenchHelp")),{}));
 
   const p2=h("div","panel");
   p2.append(h("h4",null,t("denominator").toUpperCase()));
@@ -486,7 +486,8 @@ function renderAddSub(side,stage){
     if(answered) return; answered=true;
     const ok=said===ans;
     act.hidden=true;
-    line.lastChild.textContent=ans+"/"+d;
+    line.lastChild.textContent="";
+    line.lastChild.appendChild(frNumeral(ans,d,"mid"));
     line.lastChild.style.color=ok?"var(--c2)":"var(--red)";
     score.hit(ok);
     if(ok) scraps(stage);
@@ -494,8 +495,14 @@ function renderAddSub(side,stage){
     // taking away: ans stays, b is the piece leaving, a is the total on top
     const keep = plus ? a : ans;
     const proof = frWorkBar(d, keep, b, !plus, plus ? ans : a);
-    celebrate(stage,ok,t("addWhy")(a+"/"+d,plus?"+":"\u2212",b+"/"+d,ans+"/"+d),
-              deal,t("nextQ"),proof);
+    // every fraction here is the real stacked numeral, never "3/19" text \u2014
+    // celebrate() accepts a built node in place of a plain sentence for this
+    const why=h("div","fr-why");
+    const row=h("div","fr-why-row");
+    row.append(frNumeral(a,d,"mid"), h("span","fr-why-op",plus?"+":"\u2212"), frNumeral(b,d,"mid"),
+               h("span","fr-why-op","="), frNumeral(ans,d,"mid"));
+    why.append(row, h("p","fr-why-note",t("denomNote")));
+    celebrate(stage,ok,why,deal,t("nextQ"),proof);
   }
   deal();
 }
@@ -749,7 +756,7 @@ function renderRunArcade(side,stage){
 
 export default {
   games:[
-    {id:"bench", name:"gBench", blurb:"gBenchP", render:renderBench},
+    {id:"bench", name:"gFrBench", blurb:"gFrBenchP", render:renderBench},
     {id:"cmp",   name:"gCmp",   blurb:"gCmpP",   render:renderCompare,    full:true},
     {id:"of",    name:"gOf",    blurb:"gOfP",    render:renderFractionOf, full:true},
     {id:"add",   name:"gAdd",   blurb:"gAddP",   render:renderAddSub,     full:true},

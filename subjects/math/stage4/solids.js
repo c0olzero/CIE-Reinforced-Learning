@@ -600,7 +600,7 @@ function renderNetQuiz(side,stage){
   hudQuestion(stage,t("qNet"));
   const score=hudScore(stage);
   const act=hudActions(stage);
-  const bYes=h("button","abtn yes",t("yes")), bNo=h("button","abtn no",t("no"));
+  const bYes=h("button","abtn yes",t("yesFold")), bNo=h("button","abtn no",t("noFold"));
   act.append(bYes,bNo);
   let answered=false, a=null, clashTimer=0;
   pending.push(()=>clearTimeout(clashTimer));

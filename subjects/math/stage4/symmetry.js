@@ -634,7 +634,7 @@ function renderSymQuiz(side,stage){
   hudQuestion(stage,t("qLine"));
   const score=hudScore(stage);
   const act=hudActions(stage);
-  const bYes=h("button","abtn yes",t("yes")), bNo=h("button","abtn no",t("no"));
+  const bYes=h("button","abtn yes",t("yesSym")), bNo=h("button","abtn no",t("noSym"));
   act.append(bYes,bNo);
   let answered=false, cur=null;
 

@@ -36,7 +36,13 @@
 </div>
 <script type="module" src="engine/main.js"></script>
 <script>
-if("serviceWorker" in navigator) addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+if("serviceWorker" in navigator) addEventListener("load",()=>navigator.serviceWorker.register("sw.js").then(reg=>{
+  // the browser's own automatic update check is throttled to ~once/24h per
+  // registration, so editing sw.js mid-session can sit unnoticed for a day
+  // unless something calls update() explicitly, which bypasses that throttle
+  reg.update().catch(()=>{});
+  addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") reg.update().catch(()=>{}); });
+}).catch(()=>{}));
 </script>
 </body>
 </html>

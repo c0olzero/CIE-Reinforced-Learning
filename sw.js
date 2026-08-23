@@ -9,7 +9,7 @@
    Bump CACHE below if you ever need to force every visitor to start clean —
    also the only way to purge anything a stale fetch already wrote into the
    old cache entry before this file's own {cache:"no-store"} fix landed. */
-const CACHE = "workbench-v2";
+const CACHE = "workbench-v3";
 const CORE = [
   "./", "index.html", "manifest.webmanifest",
   "styles/base.css", "styles/games.css", "styles/responsive.css",

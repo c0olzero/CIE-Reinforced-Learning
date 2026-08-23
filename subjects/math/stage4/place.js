@@ -40,7 +40,7 @@ function renderBench(side,stage){
   stack.append(big,blockBox,expand,alt);
 
   const panel=h("div","panel");
-  panel.append(h("h4",null,t("gBench").toUpperCase()));
+  panel.append(h("h4",null,t("gPvBench").toUpperCase()));
   const row=h("div","pv-ctrls");
   const labels=[t("thLabel"),t("hLabel"),t("tLabel"),t("oLabel")];
   const digitEls=[];
@@ -57,7 +57,7 @@ function renderBench(side,stage){
     digitEls.push(val);
   });
   panel.appendChild(row);
-  panel.appendChild(h("p","note",t("benchHelp")));
+  panel.appendChild(h("p","note",t("pvBenchHelp")));
   side.appendChild(panel);
 
   function draw(){
@@ -255,6 +255,11 @@ function renderOrder(side,stage){
       const wantBig=Math.random()<0.5;
       q.textContent=wantBig?t("qBiggest"):t("qSmallest");
       ans=wantBig?Math.max(...three):Math.min(...three);
+      // this kind has no "sym" row to fill the stage with — show the three
+      // numbers here too, or the stage is just empty above the buttons
+      const rowEl=h("div","pv-row");
+      three.forEach(v=>rowEl.appendChild(h("div","pv-big mid",fmt(v))));
+      area.appendChild(rowEl);
       three.forEach(v=>{
         const btn=h("button","abtn",fmt(v));
         btn.onclick=()=>answerPick(v);
@@ -290,7 +295,7 @@ function renderOrder(side,stage){
 
 export default {
   games:[
-    {id:"bench", name:"gBench", blurb:"gBenchP", render:renderBench},
+    {id:"bench", name:"gPvBench", blurb:"gPvBenchP", render:renderBench},
     {id:"round", name:"gRound", blurb:"gRoundP", render:renderRound, full:true},
     {id:"zero",  name:"gZero",  blurb:"gZeroP",  render:renderZero},
     {id:"order", name:"gOrder", blurb:"gOrderP", render:renderOrder, full:true}

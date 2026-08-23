@@ -2,8 +2,8 @@
    Strings only. Add a language by adding a block here. */
 export default {
   en:{
-    gBench:"Fraction Bench",
-    gBenchP:"Cut a strip and shade the parts.",
+    gFrBench:"Fraction Bench",
+    gFrBenchP:"Cut a strip and shade the parts.",
     gCmp:"Compare it",
     gCmpP:"Is it bigger, smaller or the same?",
     gOf:"Fraction of",
@@ -12,7 +12,7 @@ export default {
     gAddP:"Same denominator, no tricks.",
     parts:"Parts",
     equiv:"Same value as",
-    benchHelp:"More parts means smaller parts. Drag the sliders and watch.",
+    frBenchHelp:"More parts means smaller parts. Drag the sliders and watch.",
     numerator:"Numerator",
     denominator:"Denominator",
     fewer:"Fewer",
@@ -33,12 +33,12 @@ export default {
     ofWhy:function(n,d,w,a){return "Split "+w+" into "+d+" equal groups of "+(w/d)+". "+
           (n===1?"One group is ":n+" groups are ")+a+".";},
     cmpWhy:function(a,b,sym){return a+" "+sym+" "+b+".";},
-    addWhy:function(a,op,b,r){return a+" "+op+" "+b+" = "+r+" \u2014 the denominator never changes.";},
+    denomNote:"the denominator never changes.",
     smallerWhy:"The more parts a whole is cut into, the smaller each part is."
   },
   vi:{
-    gBench:"Bàn Phân Số",
-    gBenchP:"Cắt một băng giấy rồi tô các phần.",
+    gFrBench:"Bàn Phân Số",
+    gFrBenchP:"Cắt một băng giấy rồi tô các phần.",
     gCmp:"So sánh",
     gCmpP:"Lớn hơn, nhỏ hơn hay bằng nhau?",
     gOf:"Phân số của",
@@ -47,7 +47,7 @@ export default {
     gAddP:"Cùng mẫu số, không rắc rối.",
     parts:"Số phần",
     equiv:"Bằng với",
-    benchHelp:"Càng chia nhiều phần thì mỗi phần càng nhỏ. Kéo các thanh trượt mà xem.",
+    frBenchHelp:"Càng chia nhiều phần thì mỗi phần càng nhỏ. Kéo các thanh trượt mà xem.",
     numerator:"Tử số",
     denominator:"Mẫu số",
     fewer:"Ít hơn",
@@ -68,7 +68,7 @@ export default {
     ofWhy:function(n,d,w,a){return "Chia "+w+" thành "+d+" nhóm bằng nhau, mỗi nhóm "+(w/d)+". "+
           (n===1?"Một nhóm là ":n+" nhóm là ")+a+".";},
     cmpWhy:function(a,b,sym){return a+" "+sym+" "+b+".";},
-    addWhy:function(a,op,b,r){return a+" "+op+" "+b+" = "+r+" \u2014 mẫu số không đổi.";},
+    denomNote:"mẫu số không đổi.",
     smallerWhy:"Chia một cái thành càng nhiều phần thì mỗi phần càng nhỏ."
   }
 };

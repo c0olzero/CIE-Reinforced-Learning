@@ -12,6 +12,32 @@ All notable changes to this project are documented here, newest first.
 
 Each version bump gets an entry here and a matching `git tag` (e.g. `v1.0.0`).
 
+## [1.3.1] - 2026-08-23
+
+### Fixed
+- **Fraction Lab**: Add & take away's explanation now shows the real
+  stacked numerator/line/denominator glyph used everywhere else, not a
+  "1/10" slash string.
+- **Place Value Lab**: renamed the mislabelled "Fraction Bench" tab to
+  "Number Bench", and fixed Compare & Order sometimes showing an empty
+  stage above the answer buttons for one of its two question shapes.
+- **Times Table Lab**: renamed the mislabelled "Fraction Bench" tab to
+  "Multiplication Bench".
+- Four cross-module string-key collisions, all from the shared i18n table
+  merging same-named keys from different modules so whichever loaded last
+  silently won for all of them: `gBench`/`benchHelp` (Fraction, Place
+  Value and Times Table Lab all used the same generic keys) and `yes`/`no`
+  (Solid Lab and Symmetry Lab). Every module now uses its own prefixed key.
+- The dev server (`python -m http.server`) sent no cache headers at all,
+  letting browsers heuristically cache edited files and serve them stale
+  on a plain reload — independent of, and able to undermine, the service
+  worker's own caching. `devserver.py` wraps it to add
+  `Cache-Control: no-store` on every response. Also had the page call
+  `registration.update()` after registering the service worker (and again
+  on regaining focus), since the browser's own automatic update check is
+  throttled to roughly once per day per registration and could otherwise
+  leave a stale worker running for hours after a fix landed.
+
 ## [1.3.0] - 2026-08-23
 
 ### Changed

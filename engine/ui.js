@@ -37,7 +37,9 @@ export function celebrate(stage,ok,text,onNext,nextLabel,extra){
   });
   box.appendChild(word);
   if(extra){ extra.classList.add("dim-extra"); box.appendChild(extra); }   // proof, not just words
-  box.appendChild(h("p","dimtext",text));
+  // usually a plain sentence, but a caller can pass a built DOM node instead
+  // (e.g. a real stacked fraction glyph inline, not text like "3/19")
+  box.appendChild(text instanceof Node ? text : h("p","dimtext",text));
 
   const btn=h("button","nextbtn");
   const bar=h("span","nextbar"), lab=h("span","nextlab",nextLabel), num=h("span","nextnum","8");

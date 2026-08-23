@@ -42,7 +42,10 @@ subjects across Stages 1–12.
   lowercase; GitHub Pages is case-sensitive even when your computer is not.
 - **The service worker must stay network-first.** Cache-first serves stale code
   after every deploy and makes iteration miserable.
-- **Must be served over http, not opened as a file.** `python3 -m http.server 8000`.
+- **Must be served over http, not opened as a file.** `python3 devserver.py 8000` (a thin
+  wrapper around `http.server` that adds `Cache-Control: no-store` — plain `http.server`
+  sends no cache headers at all, so browsers can heuristically cache edited files and
+  serve them stale on a plain reload, independent of the service worker's own caching).
 
 ## Verify before pushing
 
