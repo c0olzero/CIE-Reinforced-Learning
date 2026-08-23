@@ -12,6 +12,17 @@ All notable changes to this project are documented here, newest first.
 
 Each version bump gets an entry here and a matching `git tag` (e.g. `v1.0.0`).
 
+## [1.2.0] - 2026-08-23
+
+### Added
+- **Times Table Lab**: an Arcade tab. A 4x4 grid — random row and column
+  headers around a 3x3 play area — where you drag a number tile onto the
+  cell whose row and column multiply to match it. Filling a whole row or
+  column clears it for points (more for clearing both at once); a wrong
+  placement costs points. Hard mode's row headers can be decimals. This is
+  the project's first drag-and-drop interaction (tap-to-place still works
+  as the keyboard-accessible path).
+
 ## [1.1.0] - 2026-08-23
 
 ### Added

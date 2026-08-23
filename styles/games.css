@@ -217,6 +217,12 @@
 .fr-wrap.bench .fr-eq{min-height:40px;display:flex;align-items:center;justify-content:center}
 .fr-wrap.bench .fr-row{min-height:166px}
 .fr-wrap.bench .fr-num.big{min-width:1.9em}
+
+/* Add & take away's explanation — real stacked fractions, not "3/19" text */
+.fr-why{width:100%;text-align:center;margin:0 0 18px}
+.fr-why-row{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;color:var(--chalk)}
+.fr-why-op{font-family:var(--fun);font-weight:800;font-size:clamp(22px,3.4vw,30px);color:var(--chalk)}
+.fr-why-note{font-size:15px;line-height:1.5;color:var(--chalk);margin:10px auto 0;max-width:44ch}
 .fr-wrap.bench .fr-pct{min-width:3.6em;text-align:center}
 .fr-wrap.bench .fr-stack{min-height:330px;justify-content:center}
 .fr-wrap.bench{padding-top:120px}
@@ -477,6 +483,44 @@
 .tm-digit-drop{opacity:.4;text-decoration:line-through}
 .tm-arrow{font-family:var(--mono);font-size:13px;letter-spacing:.06em;color:var(--amber);font-weight:700}
 
+/* ---------- times table arcade ---------- */
+.tma-wrap{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:26px;padding:16px}
+.tma-board{display:grid;grid-template-columns:repeat(4,minmax(52px,92px));
+  grid-template-rows:repeat(4,minmax(52px,92px));gap:6px}
+.tma-corner,.tma-head{display:grid;place-items:center;background:rgba(247,242,231,.14);border-radius:8px;
+  font-family:var(--fun);font-weight:800;font-size:clamp(18px,2.6vw,28px);color:var(--chalk)}
+.tma-corner{color:var(--chalk-dim)}
+.tma-cell{display:grid;place-items:center;background:rgba(247,242,231,.06);
+  border:2px solid rgba(223,233,227,.25);border-radius:8px;font-family:var(--fun);font-weight:800;
+  font-size:clamp(18px,2.6vw,28px);color:var(--chalk);cursor:pointer;transition:background .15s}
+.tma-cell:disabled{cursor:default}
+.tma-cell.filled{background:var(--c2);color:var(--ink);border-color:transparent}
+.tma-cell.wrong{animation:tmaShake .35s ease}
+@keyframes tmaShake{
+  0%,100%{transform:translateX(0)}
+  20%{transform:translateX(-6px)} 40%{transform:translateX(6px)}
+  60%{transform:translateX(-4px)} 80%{transform:translateX(4px)}
+}
+.tma-cell.clearing{animation:tmaClear .38s ease;z-index:1}
+@keyframes tmaClear{
+  0%{transform:scale(1);filter:brightness(1)}
+  45%{transform:scale(1.12);filter:brightness(1.7)}
+  100%{transform:scale(1);filter:brightness(1)}
+}
+
+.tma-tray{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;max-width:560px}
+.tma-tile{min-width:64px;height:64px;padding:0 14px;border-radius:12px;background:var(--paper);
+  color:var(--ink);font-family:var(--fun);font-weight:800;font-size:clamp(20px,2.8vw,28px);border:none;
+  cursor:grab;box-shadow:0 8px 18px -8px rgba(0,0,0,.6);transition:transform .12s,box-shadow .12s}
+.tma-tile:active{cursor:grabbing}
+.tma-tile.armed{background:var(--amber);transform:translateY(-6px);box-shadow:0 14px 22px -8px rgba(0,0,0,.7)}
+.tma-tile.dragging{opacity:.35}
+.tma-ghost{position:fixed;left:0;top:0;transform:translate(-50%,-50%);z-index:999;pointer-events:none;
+  min-width:64px;height:64px;padding:0 14px;display:grid;place-items:center;border-radius:12px;
+  background:var(--amber);color:var(--ink);font-family:var(--fun);font-weight:800;
+  font-size:clamp(20px,2.8vw,28px);box-shadow:0 16px 30px -10px rgba(0,0,0,.8)}
+
 /* ---------- place value lab ---------- */
 .pv-wrap{position:absolute;inset:0;display:grid;place-items:center;padding:16px;pointer-events:none}
 .pv-stack{display:flex;flex-direction:column;align-items:center;gap:18px;width:100%;max-width:760px}
@@ -535,9 +579,9 @@
 /* ---------- telling time ---------- */
 .clk-wrap{position:absolute;inset:0;display:grid;place-items:center;padding:16px;pointer-events:none}
 .clk-stack{display:flex;flex-direction:column;align-items:center;gap:16px;width:100%;max-width:520px}
-.clk-cal-head,.clk-elapsed-row{pointer-events:auto}
+.clk-elapsed-row{pointer-events:auto}
 
-.clk-face{display:block;width:min(60vw,280px);height:auto;aspect-ratio:1/1;margin:0 auto}
+.clk-face{display:block;width:min(78vw,364px);height:auto;aspect-ratio:1/1;margin:0 auto}
 .clk-rim{fill:rgba(247,242,231,.06);stroke:var(--chalk-dim);stroke-width:3}
 .clk-tick{stroke:rgba(223,233,227,.35);stroke-width:2}
 .clk-tick.maj{stroke:var(--chalk-dim);stroke-width:3}
@@ -546,30 +590,67 @@
 .clk-hand-h{stroke:var(--chalk);stroke-width:7}
 .clk-hand-m{stroke:var(--amber);stroke-width:4}
 .clk-hub{fill:var(--chalk)}
+.clk-handle{cursor:grab;stroke:var(--ink);stroke-width:2}
+.clk-handle:active{cursor:grabbing}
+.clk-handle.h{fill:var(--chalk)}
+.clk-handle.m{fill:var(--amber)}
 
-.clk-digital{display:flex;flex-direction:column;align-items:center;gap:4px}
-.clk-d12{font-family:var(--fun);font-weight:800;font-size:clamp(28px,4.6vw,42px);color:var(--chalk)}
-.clk-d24{font-family:var(--mono);font-size:16px;letter-spacing:.08em;color:var(--chalk-dim)}
+.clk-digital{display:flex;align-items:center;justify-content:center;gap:14px}
+.clk-d12{font-family:var(--fun);font-weight:800;font-size:clamp(26px,4.2vw,38px);color:var(--chalk)}
+.clk-d24{font-family:var(--mono);font-weight:700;font-size:clamp(20px,3.4vw,30px);letter-spacing:.06em;color:var(--chalk-dim)}
+.clk-d-sep{font-size:clamp(20px,3.4vw,30px);color:var(--chalk-dim);opacity:.5}
 
-.clk-big{font-family:var(--fun);font-weight:800;font-size:clamp(34px,5.6vw,54px);color:var(--chalk)}
+.clk-big{font-family:var(--fun);font-weight:800;font-size:clamp(30px,5vw,50px);color:var(--chalk);
+  text-align:center;width:100%}
 
-.clk-cal-head{display:flex;align-items:center;justify-content:center;gap:18px}
-.clk-cal-mon{font-family:var(--fun);font-weight:800;font-size:clamp(22px,3.6vw,32px);color:var(--chalk);min-width:9ch;text-align:center}
-.clk-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;width:100%;max-width:380px}
-.clk-cal-day{aspect-ratio:1/1;display:grid;place-items:center;border-radius:6px;
-  background:rgba(247,242,231,.1);font-family:var(--mono);font-size:12px;color:var(--chalk-dim)}
-.clk-cal-note{font-family:var(--mono);font-size:12px;letter-spacing:.04em;color:var(--chalk-dim);text-align:center}
+/* am/pm switch — a checkbox styled as a sliding toggle, so it stays a real
+   focusable, keyboard-toggleable control rather than a div with click handlers */
+.clk-switch{display:inline-flex;align-items:center;gap:10px;cursor:pointer;pointer-events:auto}
+.clk-switch input{position:absolute;opacity:0;width:1px;height:1px}
+.clk-switch-track{position:relative;width:56px;height:30px;border-radius:15px;flex:none;
+  background:linear-gradient(90deg,var(--paper2),#D8CDB6);border:1.5px solid rgba(22,36,31,.3)}
+.clk-switch-thumb{position:absolute;top:2px;left:2px;width:24px;height:24px;border-radius:50%;
+  background:var(--amber);border:2px solid var(--ink);transition:transform .15s}
+.clk-switch input:checked ~ .clk-switch-track .clk-switch-thumb{transform:translateX(26px)}
+.clk-switch input:focus-visible ~ .clk-switch-track{outline:2px solid var(--amber);outline-offset:2px}
+.clk-switch-lab{font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:#8A9A8F}
+.clk-switch-lab.active{color:var(--ink);font-weight:700}
+
+/* conversion bench */
+.clk-conv-eq{font-family:var(--fun);font-weight:800;font-size:clamp(26px,4.4vw,40px);color:var(--chalk);text-align:center}
+.clk-unit-labs{display:flex;justify-content:space-between;font-family:var(--mono);font-size:9px;
+  letter-spacing:.06em;color:#8A9A8F;margin-top:6px;text-transform:uppercase}
+.clk-unit-labs span.active{color:var(--ink);font-weight:700}
 
 .clk-elapsed-row{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap}
 .clk-elapsed-row[hidden]{display:none}
-.clk-elapsed-t{font-family:var(--fun);font-weight:800;font-size:clamp(22px,3.6vw,32px);color:var(--chalk)}
-.clk-elapsed-arrow{font-family:var(--mono);font-size:14px;color:var(--amber);letter-spacing:.04em}
+.clk-elapsed-t,.clk-elapsed-arrow{font-family:var(--fun);font-weight:800;font-size:clamp(22px,3.6vw,32px)}
+.clk-elapsed-t{color:var(--chalk)}
+.clk-elapsed-arrow{letter-spacing:0}
+.clk-elapsed-arrow.add{color:var(--amber)}
+.clk-elapsed-arrow.before{color:var(--c3)}
+.clk-elapsed-arrow.dur{color:var(--c5)}
 
-/* elapsed-time proof, shown inside the celebration overlay */
-.clk-tl{display:flex;align-items:center;gap:14px;width:100%;max-width:420px;margin:0 auto}
-.clk-tl-lab{font-family:var(--mono);font-size:13px;color:var(--chalk-dim);white-space:nowrap}
-.clk-tl-track{position:relative;flex:1;height:6px;border-radius:3px;background:rgba(247,242,231,.16)}
-.clk-tl-fill{position:absolute;inset:0;border-radius:inherit;background:linear-gradient(90deg,var(--c1),var(--c2))}
-.clk-tl-durlabel{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);
-  font-family:var(--mono);font-size:12px;color:var(--chalk-dim);white-space:nowrap}
+/* elapsed-time proof: an hour-marked line graph, shown inside the celebration
+   overlay. The three modes (add/before/dur) share the row's colour coding.
+   NB: the class is "before", not "sub" — "sub" collides with base.css's
+   global .sub class (the card-subtitle style) and pulls in its margin/
+   font-size, which is exactly the bug that shipped here once already. */
+.clk-eltl{display:block;width:100%;max-width:460px;height:auto;aspect-ratio:480/110;margin:0 auto}
+.clk-eltl-base{stroke:rgba(247,242,231,.25);stroke-width:2}
+.clk-eltl-span{stroke-width:5;stroke-linecap:round}
+.clk-eltl-span.add{stroke:var(--amber)}
+.clk-eltl-span.before{stroke:var(--c3)}
+.clk-eltl-span.dur{stroke:var(--c5)}
+.clk-eltl-tick{stroke:rgba(223,233,227,.35);stroke-width:2}
+.clk-eltl-hourlab{fill:var(--chalk-dim);font-family:var(--mono);font-size:11px;text-anchor:middle}
+.clk-eltl-dot{stroke:var(--ink);stroke-width:2}
+.clk-eltl-dot.add{fill:var(--amber)}
+.clk-eltl-dot.before{fill:var(--c3)}
+.clk-eltl-dot.dur{fill:var(--c5)}
+.clk-eltl-lab{fill:var(--chalk);font-family:var(--mono);font-size:13px;font-weight:700;text-anchor:middle}
+.clk-eltl-durlab{font-family:var(--mono);font-size:13px;font-weight:700;text-anchor:middle}
+.clk-eltl-durlab.add{fill:var(--amber)}
+.clk-eltl-durlab.before{fill:var(--c3)}
+.clk-eltl-durlab.dur{fill:var(--c5)}
 

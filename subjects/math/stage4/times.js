@@ -4,7 +4,8 @@
 import {h, rand, pickOptions} from "../../../engine/dom.js";
 import {t, addStrings} from "../../../engine/i18n.js";
 import {celebrate, hudQuestion, hudScore, hudActions, foldlessHud} from "../../../engine/ui.js";
-import {sfxGold, sfxWrong} from "../../../engine/audio.js";
+import {arcadeShell} from "../../../engine/arcade.js";
+import {sfxGold, sfxBlue, sfxWrong} from "../../../engine/audio.js";
 import STRINGS from "./times.strings.js";
 addStrings(STRINGS);
 
@@ -128,7 +129,7 @@ function renderBench(side,stage){
     return {panel:p,input:inp};
   }
   const r1=lever(t("rows"),a), r2=lever(t("cols"),b);
-  r2.panel.appendChild(h("p","note",t("benchHelp")));
+  r2.panel.appendChild(h("p","note",t("tmBenchHelp")));
   side.append(r1.panel,r2.panel);
 
   r1.input.oninput=()=>{ a=+r1.input.value; draw(); };
@@ -322,10 +323,306 @@ function renderShift(side,stage){
   deal();
 }
 
+/* ---------- tab 4 — Arcade (4Ni.04) ---------- */
+/* 2 x 4 grid: a "x" corner, column headers (top row) and row headers (left
+   column) frame a 3x3 play area. Dragging a tray tile onto the cell whose
+   row x column it matches fills that cell; filling a whole row or column
+   clears it (and rerolls that one header) for points and bonus time — the
+   same row+column at once, in a single placement, pays out once at a
+   higher rate rather than stacking two separate clears. */
+const TMA_HDR_LO=2, TMA_HDR_HI=10;      // normal-mode header range
+const TMA_CLOCK=45000;                  // longer than the other arcades' 30s —
+                                         // clearing a line takes several placements
+const TMA_LINE=300, TMA_DUAL=1000, TMA_MISS=100;
+const TMA_LINE_TIME=1000, TMA_DUAL_TIME=3000;
+const TMA_DRAG_SLOP=8;                  // px of pointer movement before a tap becomes a drag
+const TMA_MIN_CORRECT=4;                // floor on how many tray tiles are a valid move
+const TMA_CLEAR_MS=380;                 // how long the clear flash plays before the line resets
+
+const tmaRound1=v=>Math.round(v*10)/10;
+const tmaClose=(a,b)=>Math.abs(a-b)<0.001;
+const tmaFmt=v=>Number.isInteger(v)?String(v):v.toFixed(1);
+function tmaShuffle(arr){
+  for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]]; }
+  return arr;
+}
+const tmaPick=arr=>arr[Math.floor(Math.random()*arr.length)];
+
+function tmaRowHeaderRaw(hard){
+  if(hard){
+    if(Math.random()<0.5) return tmaRound1((1+Math.floor(Math.random()*9))/10);  // 0.1-0.9
+    return 1+Math.floor(Math.random()*9);                                        // hard's whole-number alt: 1-9
+  }
+  return TMA_HDR_LO+Math.floor(Math.random()*(TMA_HDR_HI-TMA_HDR_LO+1));          // normal: 2-10
+}
+const tmaColHeaderRaw=()=>TMA_HDR_LO+Math.floor(Math.random()*(TMA_HDR_HI-TMA_HDR_LO+1));
+/* a fresh header for one axis position, never equal to any header the
+   caller says to avoid — used both to build the initial 3 (avoiding the
+   ones already picked) and to reroll one after a clear (avoiding the other
+   two AND its own just-cleared value, so nothing on that axis repeats and
+   a reroll never just puts back what was already there). */
+function tmaNewRowHeader(hard,avoid){
+  for(let a=0;a<50;a++){ const v=tmaRowHeaderRaw(hard); if(!avoid.some(x=>tmaClose(x,v))) return v; }
+  return tmaRowHeaderRaw(hard);   // bounded fallback; the pool is wide enough this never really triggers
+}
+function tmaNewColHeader(avoid){
+  for(let a=0;a<50;a++){ const v=tmaColHeaderRaw(); if(!avoid.some(x=>tmaClose(x,v))) return v; }
+  return tmaColHeaderRaw();
+}
+function tmaNewRowHeaders(hard){ const out=[]; for(let i=0;i<3;i++) out.push(tmaNewRowHeader(hard,out)); return out; }
+function tmaNewColHeaders(){ const out=[]; for(let i=0;i<3;i++) out.push(tmaNewColHeader(out)); return out; }
+
+const tmaCellVal=(rowH,colH,r,c)=>tmaRound1(rowH[r]*colH[c]);
+function tmaEmptyProducts(rowH,colH,filled){
+  const set=new Set();
+  for(let r=0;r<3;r++) for(let c=0;c<3;c++) if(!filled[r][c]) set.add(tmaCellVal(rowH,colH,r,c));
+  return [...set];
+}
+/* a plausible wrong tile: one factor on a real board cell nudged by +-1
+   (or +-0.1 for a decimal row header) — never an arbitrary number, matching
+   the rest of this module's distractor style (see factProductOptions). */
+function tmaGenDistractor(rowH,colH,filled,avoid){
+  for(let attempt=0;attempt<30;attempt++){
+    const r=Math.floor(Math.random()*3), c=Math.floor(Math.random()*3);
+    let rv=rowH[r], cv=colH[c];
+    if(Math.random()<0.5) rv=Math.max(rv<1?0.1:1, rv+(Math.random()<0.5?-1:1)*(rv<1?0.1:1));
+    else cv=Math.max(1, cv+(Math.random()<0.5?-1:1));
+    const val=tmaRound1(rv*cv);
+    if(val>0 && !avoid.some(a=>tmaClose(a,val))) return val;
+  }
+  // fallback also respects avoid — a handful of avoided values can never
+  // exhaust 49 sequential offsets from a real board product
+  const base=tmaRound1(rowH[0]*colH[0]);
+  for(let k=1;k<50;k++){
+    const val=tmaRound1(base+k);
+    if(val>0 && !avoid.some(a=>tmaClose(a,val))) return val;
+  }
+  return tmaRound1(base+50+Math.random());
+}
+/* keeps "at least TMA_MIN_CORRECT correct tiles" true after any
+   reroll/clear, AND retires any duplicate correct value once a distinct
+   alternative exists — a duplicate can be left over from an earlier round
+   where too few distinct products existed to avoid one, and the count-only
+   check below would otherwise never revisit it once the count is met. */
+function tmaTopUp(pool,rowH,colH,filled){
+  const correctVals=tmaEmptyProducts(rowH,colH,filled);
+  if(!correctVals.length) return;
+  let attempts=0;
+  while(pool.filter(v=>correctVals.some(cv=>tmaClose(cv,v))).length<TMA_MIN_CORRECT && attempts<20){
+    attempts++;
+    const wrongIdx=pool.findIndex(v=>!correctVals.some(cv=>tmaClose(cv,v)));
+    if(wrongIdx===-1) break;
+    const unused=correctVals.filter(cv=>!pool.some(v=>tmaClose(v,cv)));
+    pool[wrongIdx]=unused.length?tmaPick(unused):tmaPick(correctVals);
+  }
+  let dedupGuard=0;
+  while(dedupGuard<10){
+    dedupGuard++;
+    const seen=new Set(); let dupIdx=-1;
+    for(let i=0;i<pool.length;i++){
+      const key=pool[i].toFixed(3);
+      if(seen.has(key)){ dupIdx=i; break; }
+      seen.add(key);
+    }
+    if(dupIdx===-1) break;
+    const unused=correctVals.filter(cv=>!pool.some((v,i)=>i!==dupIdx&&tmaClose(v,cv)));
+    if(!unused.length) break;
+    pool[dupIdx]=tmaPick(unused);
+  }
+}
+function tmaGenPool(rowH,colH,filled){
+  const correct=tmaShuffle(tmaEmptyProducts(rowH,colH,filled).slice());
+  const take=Math.min(correct.length,TMA_MIN_CORRECT+Math.floor(Math.random()*3));
+  const pool=correct.slice(0,take);
+  let guard=0;
+  while(pool.length<6 && guard<200){
+    guard++;
+    const d=tmaGenDistractor(rowH,colH,filled,pool);
+    if(!pool.some(v=>tmaClose(v,d))) pool.push(d);
+  }
+  tmaTopUp(pool,rowH,colH,filled);
+  return tmaShuffle(pool);
+}
+
+function renderTimesArcade(side,stage){
+  const wrap=h("div","tma-wrap"); stage.appendChild(wrap);
+  const board=h("div","tma-board");
+  const tray=h("div","tma-tray");
+  wrap.append(board,tray);
+
+  let rowH,colH,filled,pool,armedIdx=null,suppressClick=false;
+  let cellEls=[],headREls=[],headCEls=[],tileEls=[],drag=null;
+
+  function buildBoard(){
+    board.innerHTML=""; cellEls=[]; headREls=[]; headCEls=[];
+    board.appendChild(h("div","tma-corner","×"));
+    for(let c=0;c<3;c++) headCEls.push(board.appendChild(h("div","tma-head")));
+    for(let r=0;r<3;r++){
+      headREls.push(board.appendChild(h("div","tma-head")));
+      for(let c=0;c<3;c++){
+        const cell=document.createElement("button");
+        cell.className="tma-cell";
+        cell.dataset.r=r; cell.dataset.c=c;
+        cell.addEventListener("click",()=>{ if(armedIdx!=null) tryPlace(armedIdx,r,c); });
+        board.appendChild(cell);
+        cellEls.push(cell);
+      }
+    }
+  }
+  function paintHeaders(){
+    headCEls.forEach((el,c)=>el.textContent=tmaFmt(colH[c]));
+    headREls.forEach((el,r)=>el.textContent=tmaFmt(rowH[r]));
+  }
+  function paintCells(){
+    cellEls.forEach(cell=>{
+      const r=+cell.dataset.r, c=+cell.dataset.c, done=filled[r][c];
+      cell.classList.toggle("filled",done);
+      cell.textContent=done?tmaFmt(tmaCellVal(rowH,colH,r,c)):"";
+      cell.disabled=done;
+    });
+  }
+  function paintArmed(){
+    tileEls.forEach((el,i)=>el.classList.toggle("armed",i===armedIdx));
+  }
+  function buildTray(){
+    tray.innerHTML=""; tileEls=[];
+    pool.forEach((v,i)=>{
+      const tile=document.createElement("button");
+      tile.className="tma-tile";
+      tile.textContent=tmaFmt(v);
+      tile.style.touchAction="none";
+      wireTile(tile,i);
+      tray.appendChild(tile);
+      tileEls.push(tile);
+    });
+  }
+
+  function wireTile(tile,i){
+    tile.addEventListener("pointerdown",e=>{
+      if(!api.running) return;
+      suppressClick=false;
+      drag={idx:i,startX:e.clientX,startY:e.clientY,moved:false,ghost:null,pid:e.pointerId};
+      tile.setPointerCapture(e.pointerId);
+    });
+    tile.addEventListener("pointermove",e=>{
+      if(!drag||drag.idx!==i) return;
+      const dx=e.clientX-drag.startX, dy=e.clientY-drag.startY;
+      if(!drag.moved && Math.hypot(dx,dy)>TMA_DRAG_SLOP){
+        drag.moved=true;
+        drag.ghost=h("div","tma-ghost",tile.textContent);
+        document.body.appendChild(drag.ghost);
+        tile.classList.add("dragging");
+      }
+      if(drag.moved){ drag.ghost.style.left=e.clientX+"px"; drag.ghost.style.top=e.clientY+"px"; }
+    });
+    const finish=e=>{
+      if(!drag||drag.idx!==i) return;
+      tile.releasePointerCapture(drag.pid);
+      tile.classList.remove("dragging");
+      if(drag.moved){
+        suppressClick=true;   // the browser still fires a click right after this — ignore it
+        if(drag.ghost) drag.ghost.remove();
+        const under=document.elementFromPoint(e.clientX,e.clientY);
+        const cellEl=under&&under.closest(".tma-cell");
+        if(cellEl&&!cellEl.disabled) tryPlace(i,+cellEl.dataset.r,+cellEl.dataset.c);
+      }
+      drag=null;
+    };
+    tile.addEventListener("pointerup",finish);
+    tile.addEventListener("pointercancel",()=>{
+      if(drag&&drag.idx===i){ if(drag.ghost) drag.ghost.remove(); tile.classList.remove("dragging"); drag=null; }
+    });
+    /* covers a plain tap, AND keyboard Enter/Space (which never fires the
+       pointer events above at all) — one path for both input styles */
+    tile.addEventListener("click",()=>{
+      if(suppressClick){ suppressClick=false; return; }
+      if(!api.running) return;
+      armedIdx=armedIdx===i?null:i;
+      paintArmed();
+    });
+  }
+
+  function tryPlace(idx,r,c){
+    if(filled[r][c]) return;
+    const val=pool[idx];
+    const target=tmaCellVal(rowH,colH,r,c);
+    const cellEl=cellEls[r*3+c];
+    const rect=cellEl.getBoundingClientRect();
+    const px=rect.left+rect.width/2, py=rect.top;
+    if(tmaClose(val,target)){
+      filled[r][c]=true;
+      paintCells();   // show this cell as filled right away, independent of any clear below
+      const rowFull=filled[r].every(Boolean);
+      const colFull=[0,1,2].every(rr=>filled[rr][c]);
+      if(rowFull||colFull){
+        const dual=rowFull&&colFull;
+        const flashEls=new Set();
+        if(rowFull) for(let cc=0;cc<3;cc++) flashEls.add(cellEls[r*3+cc]);
+        if(colFull) for(let rr=0;rr<3;rr++) flashEls.add(cellEls[rr*3+c]);
+        flashEls.forEach(el=>el.classList.add("clearing"));
+        setTimeout(()=>{
+          flashEls.forEach(el=>el.classList.remove("clearing"));
+          if(dual){
+            for(let cc=0;cc<3;cc++) filled[r][cc]=false;
+            for(let rr=0;rr<3;rr++) filled[rr][c]=false;
+            rowH[r]=tmaNewRowHeader(api.hard,[rowH[(r+1)%3],rowH[(r+2)%3],rowH[r]]);
+            colH[c]=tmaNewColHeader([colH[(c+1)%3],colH[(c+2)%3],colH[c]]);
+          }else if(rowFull){
+            for(let cc=0;cc<3;cc++) filled[r][cc]=false;
+            rowH[r]=tmaNewRowHeader(api.hard,[rowH[(r+1)%3],rowH[(r+2)%3],rowH[r]]);
+          }else{
+            for(let rr=0;rr<3;rr++) filled[rr][c]=false;
+            colH[c]=tmaNewColHeader([colH[(c+1)%3],colH[(c+2)%3],colH[c]]);
+          }
+          pool[idx]=tmaGenDistractor(rowH,colH,filled,pool);
+          tmaTopUp(pool,rowH,colH,filled);
+          paintHeaders(); paintCells(); buildTray();
+        },TMA_CLEAR_MS);
+        const got=api.award(dual?TMA_DUAL:TMA_LINE);
+        api.addTime(dual?TMA_DUAL_TIME:TMA_LINE_TIME);
+        api.pop(px,py,"+"+got,"var(--c1)");
+        if(dual){ api.pop(px,py-30,t("tmaBonus3s"),"var(--c2)"); sfxBlue(); }
+        else sfxGold();
+      }else{
+        pool[idx]=tmaGenDistractor(rowH,colH,filled,pool);
+        tmaTopUp(pool,rowH,colH,filled);
+        buildTray();
+        sfxGold();
+      }
+    }else{
+      api.penalise(TMA_MISS);
+      api.pop(px,py,"-"+TMA_MISS,"var(--red)");
+      sfxWrong();
+      cellEl.classList.add("wrong");
+      setTimeout(()=>cellEl.classList.remove("wrong"),350);
+    }
+    armedIdx=null; paintArmed();
+  }
+
+  const api=arcadeShell(stage,{
+    how:"arcHowTma",
+    key:"tma",
+    rules:[["var(--c1)","ruleTmaLine"],["var(--c2)","ruleTmaDual"],["var(--red)","ruleTmaMiss"]],
+    clockMs:TMA_CLOCK,
+    reset(){
+      rowH=tmaNewRowHeaders(api.hard);
+      colH=tmaNewColHeaders();
+      filled=[[false,false,false],[false,false,false],[false,false,false]];
+      pool=tmaGenPool(rowH,colH,filled);
+      armedIdx=null;
+      buildBoard(); paintHeaders(); paintCells(); buildTray();
+    },
+    cleanup(){ if(drag&&drag.ghost) drag.ghost.remove(); drag=null; },
+    frame(){}
+  });
+}
+
 export default {
   games:[
-    {id:"bench", name:"gBench", blurb:"gBenchP", render:renderBench},
+    {id:"bench", name:"gTmBench", blurb:"gTmBenchP", render:renderBench},
     {id:"fact",  name:"gFact",  blurb:"gFactP",  render:renderMissingFactor, full:true},
-    {id:"shift", name:"gShift", blurb:"gShiftP", render:renderShift,         full:true}
+    {id:"shift", name:"gShift", blurb:"gShiftP", render:renderShift,         full:true},
+    {id:"arc",   name:"gArc",  blurb:"gArcP",   render:renderTimesArcade,    full:true, rainbow:true}
   ]
 };
