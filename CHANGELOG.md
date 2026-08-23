@@ -12,6 +12,23 @@ All notable changes to this project are documented here, newest first.
 
 Each version bump gets an entry here and a matching `git tag` (e.g. `v1.0.0`).
 
+## [1.3.0] - 2026-08-23
+
+### Changed
+- **Telling Time** — Clock Bench: the 24-hour readout now sits beside the
+  12-hour AM/PM readout instead of below it, and dragging the minute hand
+  past the 12 correctly rolls the hour forward/back instead of snapping
+  back. Convert It's "12-Hour or 24-Hour?" tab is now a Conversion Quiz
+  aimed at time-unit conversion (minutes/hours/days) instead of notation,
+  and no longer offers converting days into anything smaller than hours.
+  The Unit Converter shows a thousand separator, and its slider's minimum
+  and step size scale to the bigger unit when converting up (e.g.
+  hours→days steps in half-days). Elapsed Time's three question types
+  share one font size and are colour-coded only on the equation itself
+  (gold for addition, blue for subtraction, green for a plain duration);
+  its answer screen now shows a line-graph timeline with hour marks
+  instead of bare numbers.
+
 ## [1.2.0] - 2026-08-23
 
 ### Added
