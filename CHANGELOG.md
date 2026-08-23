@@ -12,6 +12,18 @@ All notable changes to this project are documented here, newest first.
 
 Each version bump gets an entry here and a matching `git tag` (e.g. `v1.0.0`).
 
+## [1.1.0] - 2026-08-23
+
+### Added
+- **Telling Time** (Geometry & Measure, 4Gt.01–.04): Clock Bench (drag hour
+  and minute hands, watch the 12-hour and 24-hour digital readouts update
+  live), a Calendar & Units bench (days-in-month, the leap-year rule, and
+  live weeks-to-days / hours-to-minutes-to-seconds conversions), and three
+  quizzes — Read the Clock (nearest-minute reading, with distractors built
+  from the real ways a kid misreads a clock, not random numbers),
+  12-Hour or 24-Hour? (notation conversion both directions), and Elapsed
+  Time (duration or end-time, shown on a timeline rather than bare numbers).
+
 ## [1.0.1] - 2026-08-22
 
 ### Fixed

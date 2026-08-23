@@ -69,9 +69,10 @@ export const CATALOGUE=[
     objectives:["4Np.01","4Np.02","4Np.03","4Np.05"],
     load:()=>import("../subjects/math/stage4/place.js") },
 
-  // ——— planned; see README for the full Stage 4 coverage map ———
-  { id:"time",  subject:"math", stage:4, strand:"geometry",
+  { id:"time",  subject:"math", stage:4, strand:"geometry", live:true,
     title:{en:"Telling Time", vi:"Xem Giờ"},
-    blurb:{en:"Coming next.", vi:"Sắp có."},
-    objectives:["4Gt.01","4Gt.02","4Gt.03","4Gt.04"] }
+    blurb:{en:"Read a clock, switch between 12- and 24-hour time, and work out how long something takes.",
+           vi:"Xem giờ, đổi giữa giờ 12 và giờ 24, và tính xem việc gì đó mất bao lâu."}, colors:[1,3,5,2],
+    objectives:["4Gt.01","4Gt.02","4Gt.03","4Gt.04"],
+    load:()=>import("../subjects/math/stage4/time.js") }
 ];
