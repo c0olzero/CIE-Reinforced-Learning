@@ -181,7 +181,7 @@ export function arcadeShell(stage,cfg){
       row.appendChild(b);
     });
     box.appendChild(row);
-    box.appendChild(h("div","diffnote",t("diffNote")));
+    box.appendChild(h("div","diffnote",t(cfg.diffNote||"diffNote")));
     const rules=h("div","arc-rule");
     cfg.rules.forEach(([c,k])=>{
       const line=h("div"); const sw=h("i"); sw.style.background=c;

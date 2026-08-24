@@ -60,7 +60,7 @@ visible and a teacher can find the game for a given objective. Stage 4
 Mathematics (0096) has 46 objectives; see the coverage map in the project notes.
 
 Built: 4Nf.01–.07 (Fraction Lab), 4Gg.05–.06 (Solid Lab), 4Gg.07/4Gp.03 (Symmetry Lab),
-4Gg.08–.09 (Angle Lab), 4Ni.04/.07/.08 (Times Table Lab), 4Np.01/.02/.03/.05 (Place Value Lab),
+4Gg.08–.09 (Angle Lab), 4Ni.04 (Times Table Lab), 4Np.01/.02/.03/.05 (Place Value Lab),
 4Gt.01–.04 (Telling Time).
 
 Objective codes are referenced for navigation. The framework text itself is

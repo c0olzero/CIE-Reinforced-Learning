@@ -329,7 +329,7 @@ function renderMirrorIt(side,stage){
   hudQuestion(stage,t("mgHow"));
   const score=hudScore(stage);
 
-  let geo=null, seed=null, quadState=null, celebrating=false, hover=null;
+  let geo=null, seed=null, quadState=null, celebrating=false, hover=null, lastSeedKey=null;
   function measure(){
     const W=stage.clientWidth,H=stage.clientHeight;
     const topReserve=132;                    // clears the instruction text, even wrapped to 3 lines
@@ -346,7 +346,12 @@ function renderMirrorIt(side,stage){
   }
   function newRound(){
     celebrating=false; hover=null;
-    seed=mgGenSeed();
+    let key;
+    do{
+      seed=mgGenSeed();
+      key=seed.quad.id+":"+seed.verts.slice().sort((a,b)=>a-b).join(",");
+    }while(key===lastSeedKey);
+    lastSeedKey=key;
     quadState={};
     MG_QUADS.forEach(q=>{ if(q.id!==seed.quad.id) quadState[q.id]={seq:[],done:false,correct:null}; });
     draw();

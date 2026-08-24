@@ -12,6 +12,34 @@ All notable changes to this project are documented here, newest first.
 
 Each version bump gets an entry here and a matching `git tag` (e.g. `v1.0.0`).
 
+## [1.4.0] - 2026-08-24
+
+### Added
+- **Times Table Lab**: a Venn Sort quiz tab. Two overlapping circles are
+  each labelled "Divisible by N" for a random pair of numbers 2-9; of
+  three number tiles, exactly one truly belongs somewhere in the
+  diagram (the other two divide evenly by neither circle's number, so no
+  drop zone will ever accept them). Correctness is checked live against
+  wherever the tile is actually dropped, not a pre-picked "intended"
+  answer. The zone under the tile lights up while dragging, and the
+  celebration screen always shows the real division facts either way.
+
+### Changed
+- **Times Table Lab**: removed the "Shift by 10 & 100" tab — every one of
+  its questions could be answered by moving the decimal point without
+  ever reasoning about the multiplication, which taught pattern-matching
+  rather than the objective. The Arcade tab's Normal/Hard picker now
+  explains that Normal is whole numbers only and Hard mixes in decimals.
+- The on-screen question prompt (`hud-q`) now sits centred partway down
+  the stage instead of pinned to the top-left corner.
+
+### Fixed
+- **Telling Time**: Convert It could still ask to convert a unit *into*
+  days from anything smaller than an hour (e.g. "86,400 seconds = ? days")
+  — the exclusion only checked the "from" unit, not the "to" unit.
+- Every quiz and arcade game now avoids repeating the exact same question
+  twice in a row (audited across all 7 modules).
+
 ## [1.3.1] - 2026-08-23
 
 ### Fixed

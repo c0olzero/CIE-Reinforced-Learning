@@ -320,10 +320,15 @@ function renderReadClock(side,stage){
   wrap.appendChild(stack); stage.appendChild(wrap);
   const svg=clockFace(); stack.appendChild(svg);
 
-  let H=0,M=0,answered=false;
+  let H=0,M=0,answered=false,lastKey=null;
   function deal(){
     answered=false; act.hidden=false; act.innerHTML="";
-    H=Math.floor(Math.random()*12); M=Math.floor(Math.random()*60);
+    let key;
+    do{
+      H=Math.floor(Math.random()*12); M=Math.floor(Math.random()*60);
+      key=H+":"+M;
+    }while(key===lastKey);
+    lastKey=key;
     drawClockFace(svg,H,M,280);
     const trueH=(H%12)||12;
     const truth=trueH+":"+pad2(M);
@@ -359,11 +364,12 @@ const RATIO_CONFUSE={
 };
 function pickUnitQuizRound(){
   let fromU,toU;
-  // days (index 0) only ever converts to hours — "how many minutes/seconds
-  // in N days" gets unwieldy fast, so that direction stops at the first hop
+  // days (index 0) only ever pairs with hours (index 1), in either direction
+  // — "how many minutes/seconds in N days" (or the reverse) gets unwieldy
+  // fast, so days never hops past the first unit either way
   do{
     fromU=Math.floor(Math.random()*4); toU=Math.floor(Math.random()*4);
-  }while(fromU===toU || (fromU===0 && toU!==1));
+  }while(fromU===toU || ((fromU===0||toU===0) && fromU!==1 && toU!==1));
   let val;
   if(fromU<toU){
     const [lo,hi]=UNIT_RANGE[fromU];
@@ -505,14 +511,19 @@ function renderElapsed(side,stage){
   wrap.appendChild(stack); stage.appendChild(wrap);
   const row=h("div","clk-elapsed-row"); stack.appendChild(row);
 
-  let sH=0,sM=0,dur=0,mode="dur",answered=false;
+  let sH=0,sM=0,dur=0,mode="dur",answered=false,lastKey=null;
   let leftH=0,leftM=0,rightH=0,rightM=0;
   function deal(){
     answered=false; act.hidden=false; act.innerHTML=""; row.innerHTML=""; row.hidden=false;
-    sH=Math.floor(Math.random()*24); sM=Math.floor(Math.random()*60);
-    dur=5*(1+Math.floor(Math.random()*35));       // 5 to 175 minutes
-    mode=["dur","add","before"][Math.floor(Math.random()*3)];   // NB: not "sub" — that collides with
-                                                                  // base.css's global .sub class (card subtitle)
+    let key;
+    do{
+      sH=Math.floor(Math.random()*24); sM=Math.floor(Math.random()*60);
+      dur=5*(1+Math.floor(Math.random()*35));       // 5 to 175 minutes
+      mode=["dur","add","before"][Math.floor(Math.random()*3)];   // NB: not "sub" — that collides with
+                                                                    // base.css's global .sub class (card subtitle)
+      key=mode+","+sH+","+sM+","+dur;
+    }while(key===lastKey);
+    lastKey=key;
     let truth;
     if(mode==="dur"){
       [rightH,rightM]=addMinutes(sH,sM,dur); leftH=sH; leftM=sM;

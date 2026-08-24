@@ -109,7 +109,8 @@
 /* ---------- full-bleed quiz HUD ---------- */
 .lab.full{grid-template-columns:1fr}
 .lab.full .side{display:none}
-.hud-q{position:absolute;left:22px;top:18px;z-index:4;pointer-events:none;max-width:min(56%,560px);
+.hud-q{position:absolute;left:50%;top:16%;transform:translateX(-50%);text-align:center;
+  z-index:4;pointer-events:none;max-width:min(80%,640px);
   font-family:var(--display);font-weight:800;font-size:clamp(19px,2.6vw,31px);
   line-height:1.12;letter-spacing:-.025em;color:var(--chalk);text-shadow:0 2px 12px rgba(0,0,0,.45)}
 .hud-q em{font-style:normal;display:block;margin-top:8px;font-size:.82em;font-family:var(--fun)}
@@ -475,13 +476,6 @@
   color:inherit;min-width:1.1em;text-align:center}
 .tm-sym{color:var(--amber)}
 .tm-op{font-family:var(--fun);font-weight:800;font-size:clamp(26px,4.2vw,42px);color:var(--chalk)}
-.tm-shift{display:flex;align-items:center;gap:18px;justify-content:center;flex-wrap:wrap}
-.tm-digits{display:flex;gap:4px}
-.tm-digit{font-family:var(--mono);font-weight:700;font-size:22px;color:var(--chalk);
-  background:rgba(247,242,231,.1);border-radius:6px;min-width:1.3em;text-align:center;padding:6px 2px}
-.tm-digit-new{background:var(--c2);color:var(--ink)}
-.tm-digit-drop{opacity:.4;text-decoration:line-through}
-.tm-arrow{font-family:var(--mono);font-size:13px;letter-spacing:.06em;color:var(--amber);font-weight:700}
 
 /* ---------- times table arcade ---------- */
 .tma-wrap{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
@@ -520,6 +514,41 @@
   min-width:64px;height:64px;padding:0 14px;display:grid;place-items:center;border-radius:12px;
   background:var(--amber);color:var(--ink);font-family:var(--fun);font-weight:800;
   font-size:clamp(20px,2.8vw,28px);box-shadow:0 16px 30px -10px rgba(0,0,0,.8)}
+
+.tv-wrap{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:34px;padding:16px}
+.tv-diagram{position:relative;width:559px;height:338px;margin-top:175px;flex:none}
+.tv-circle{position:absolute;top:0;width:338px;height:338px;border-radius:50%;
+  pointer-events:none;mix-blend-mode:screen}
+.tv-circle.tv-c-left{left:0;background:var(--c1);opacity:.45}
+.tv-circle.tv-c-right{left:221px;background:var(--c2);opacity:.45}
+.tv-zone{position:absolute;top:0;height:338px;background:transparent;transition:background .1s}
+.tv-zone.tv-z-left{left:0;width:221px;border-radius:169px 0 0 169px}
+.tv-zone.tv-z-both{left:221px;width:117px}
+.tv-zone.tv-z-right{left:338px;width:221px;border-radius:0 169px 169px 0}
+.tv-zone:focus-visible{outline:3px solid var(--amber);outline-offset:-3px}
+/* neutral hover feedback while dragging — same style for all three zones,
+   so which one lights up never leaks whether it's the right answer */
+.tv-zone.tv-zone-over{background:rgba(247,242,231,.22)}
+.tv-title{position:absolute;top:-44px;width:195px;text-align:center;
+  font-family:var(--fun);font-weight:800;font-size:clamp(14px,1.8vw,18px);color:var(--chalk);
+  pointer-events:none}
+.tv-title.tv-t-left{left:169px;transform:translateX(-50%)}
+.tv-title.tv-t-right{left:390px;transform:translateX(-50%)}
+.tv-tray{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
+.tv-tile{min-width:72px;height:72px;padding:0 16px;border-radius:14px;background:var(--paper);
+  color:var(--ink);font-family:var(--fun);font-weight:800;font-size:clamp(22px,3vw,30px);
+  cursor:grab;box-shadow:0 8px 18px -8px rgba(0,0,0,.6);transition:transform .12s,box-shadow .12s}
+.tv-tile:active{cursor:grabbing}
+.tv-tile.armed{background:var(--amber);transform:translateY(-6px);box-shadow:0 14px 22px -8px rgba(0,0,0,.7)}
+.tv-tile.dragging{opacity:.35}
+.tv-tile:disabled{cursor:default}
+.tv-ghost{position:fixed;left:0;top:0;transform:translate(-50%,-50%);z-index:999;pointer-events:none;
+  min-width:72px;height:72px;padding:0 16px;display:grid;place-items:center;border-radius:14px;
+  background:var(--amber);color:var(--ink);font-family:var(--fun);font-weight:800;
+  font-size:clamp(22px,3vw,30px);box-shadow:0 16px 30px -10px rgba(0,0,0,.8)}
+.tv-proof{display:flex;flex-direction:column;gap:6px;align-items:center;margin:0 auto}
+.tv-proofline{font-family:var(--fun);font-weight:800;font-size:clamp(16px,2.2vw,22px)}
 
 /* ---------- place value lab ---------- */
 .pv-wrap{position:absolute;inset:0;display:grid;place-items:center;padding:16px;pointer-events:none}

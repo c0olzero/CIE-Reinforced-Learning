@@ -202,7 +202,7 @@ function renderCompare(side,stage){
   const aBox=h("div"), bBox=h("div");
   top.append(aBox,sym,bBox);
   stack.appendChild(top);
-  let A=[1,2],B=[1,3],answered=false;
+  let A=[1,2],B=[1,3],answered=false,lastPairKey=null;
   ["<","=",">"].forEach(k=>{
     const b=h("button","abtn",k); b.style.fontSize="24px";
     b.onclick=()=>answer(k); act.appendChild(b);
@@ -243,7 +243,13 @@ function renderCompare(side,stage){
   function deal(){
     answered=false; act.hidden=false; sym.textContent="?"; sym.style.color="";
     const viz=rand(FR_VIZ);                       // numbers, bars or pies — never mixed within a round
-    [A,B]=pick(viz==="num" ? FR_MAXD : FR_MAXD_PIC, viz==="num");
+    let pairKey;
+    for(let tries=0;tries<20;tries++){
+      [A,B]=pick(viz==="num" ? FR_MAXD : FR_MAXD_PIC, viz==="num");
+      pairKey=A[0]+"/"+A[1]+" "+B[0]+"/"+B[1];
+      if(pairKey!==lastPairKey) break;
+    }
+    lastPairKey=pairKey;
     // sized off the real stage, not a fixed pixel guess — a tall tablet
     // gets a picture that actually fills the height instead of a small
     // one stranded in the middle of a lot of empty space. Bounded by width
@@ -354,7 +360,7 @@ function renderFractionOf(side,stage){
                     "display:grid;place-items:center;pointer-events:none";
   stage.appendChild(viz);
 
-  let n=1,d=3,whole=12,per=4,ans=4,answered=false,items=[],kind="dots";
+  let n=1,d=3,whole=12,per=4,ans=4,answered=false,items=[],kind="dots",lastKey=null;
 
   const preview=v=>{ items.forEach((el,i)=>el.classList.toggle("pre",!answered&&i<v)); };
   const space=()=>({w:stage.clientWidth-70, h:viz.clientHeight-24});
@@ -381,10 +387,15 @@ function renderFractionOf(side,stage){
 
   function deal(){
     answered=false; act.hidden=false; act.innerHTML="";
-    d=rand([2,3,4,5,6]);
-    per=2+Math.floor(Math.random()*3);                 // 2-4 in each group
+    let key;
+    do{
+      d=rand([2,3,4,5,6]);
+      per=2+Math.floor(Math.random()*3);                 // 2-4 in each group
+      n=Math.random()<0.65?1:1+Math.floor(Math.random()*(d-1));   // unit fractions mostly
+      key=d+","+per+","+n;
+    }while(key===lastKey);
+    lastKey=key;
     whole=d*per;
-    n=Math.random()<0.65?1:1+Math.floor(Math.random()*(d-1));   // unit fractions mostly
     ans=per*n;
     const kinds=["dots","squares","icons","bar","icons"];       // icons twice: kids like them
     if(whole<=12) kinds.push("pie");
@@ -458,16 +469,22 @@ function renderAddSub(side,stage){
   const wrap=h("div","fr-wrap"), stack=h("div","fr-stack");
   wrap.appendChild(stack); stage.appendChild(wrap);
   const line=h("div","fr-row"); stack.appendChild(line);
-  let a=1,b=1,d=4,plus=true,ans=2,answered=false;
+  let a=1,b=1,d=4,plus=true,ans=2,answered=false,lastKey=null;
 
   function deal(){
     answered=false; act.hidden=false; act.innerHTML="";
     const viz=rand(FR_VIZ);             // numbers, bars or pies \u2014 same picture for a, b and every option
     const maxD=viz==="num" ? FR_MAXD : FR_MAXD_PIC;
-    d=4+Math.floor(Math.random()*(maxD-3));   // 4..maxD
-    plus=Math.random()<0.6;
-    if(plus){ a=1+Math.floor(Math.random()*(d-2)); b=1+Math.floor(Math.random()*(d-a-1)); ans=a+b; }
-    else { a=2+Math.floor(Math.random()*(d-2)); b=1+Math.floor(Math.random()*(a-1)); ans=a-b; }
+    let key;
+    for(let tries=0;tries<20;tries++){
+      d=4+Math.floor(Math.random()*(maxD-3));   // 4..maxD
+      plus=Math.random()<0.6;
+      if(plus){ a=1+Math.floor(Math.random()*(d-2)); b=1+Math.floor(Math.random()*(d-a-1)); ans=a+b; }
+      else { a=2+Math.floor(Math.random()*(d-2)); b=1+Math.floor(Math.random()*(a-1)); ans=a-b; }
+      key=(plus?"+":"-")+a+"/"+d+","+b+"/"+d;
+      if(key!==lastKey) break;
+    }
+    lastKey=key;
     line.innerHTML="";
     // sized off the real stage \u2014 see the matching comment in Compare it.
     // Add's row has 3 more (narrower) elements between the two shapes, so
@@ -570,7 +587,7 @@ function runCompareQ(kind){
   const opts=frShuffle([correct].concat(wrongs));
   const node=h("div","run-q");
   node.append(h("span",null,t(kind==="eq"?"qEq":kind==="gt"?"qGt":"qLt")),frNumeral(tn,td,"mid"));
-  return {node:node,opts:opts,correct:opts.indexOf(correct)};
+  return {node:node,opts:opts,correct:opts.indexOf(correct),sig:kind+":"+tn+"/"+td};
 }
 function runAddQ(plus){
   const d=rand([4,5,6,8,10]);
@@ -583,7 +600,7 @@ function runAddQ(plus){
   node.append(frNumeral(a,d,"mid"),h("span",null,plus?"+":"\u2212"),
               frNumeral(b,d,"mid"),h("span",null,"=?"));
   let ci=0; opts.forEach((o,i)=>{ if(o.n===ans) ci=i; });
-  return {node:node,opts:opts,correct:ci};
+  return {node:node,opts:opts,correct:ci,sig:(plus?"add":"sub")+":"+a+"/"+d+","+b};
 }
 function runOfQ(){
   const d=rand([2,3,4,5,6]), per=2+Math.floor(Math.random()*3), whole=d*per;
@@ -594,15 +611,18 @@ function runOfQ(){
   node.append(frNumeral(n,d,"mid"),h("span",null,t("ofWord")),
               h("span",null,String(whole)),h("span",null,"=?"));
   let ci=0; opts.forEach((o,i)=>{ if(o.v===ans) ci=i; });
-  return {node:node,opts:opts,correct:ci};
+  return {node:node,opts:opts,correct:ci,sig:"of:"+n+"/"+d+"x"+whole};
 }
-function runQuestion(){
+/* avoid: the previous gate's signature, so two consecutive gates never ask
+   the exact same fact even though the kind+params are picked independently
+   each time */
+function runQuestion(avoid){
   for(let tries=0;tries<30;tries++){
     const k=rand(["eq","gt","lt","add","sub","of"]);
     const q = (k==="eq"||k==="gt"||k==="lt") ? runCompareQ(k)
             : (k==="add"||k==="sub") ? runAddQ(k==="add")
             : runOfQ();
-    if(q) return q;
+    if(q && q.sig!==avoid) return q;
   }
   return runAddQ(true);                       // always succeeds
 }
@@ -633,7 +653,7 @@ function renderRunArcade(side,stage){
         br=h("button","run-arrow","\u25B6");
   ctrl.append(bl,bu,br); road.appendChild(ctrl);   // overlaid on the road, not below it
 
-  let lane=1, mult=1, scroll=0, live=[], apiRef=null, boost=false;
+  let lane=1, mult=1, scroll=0, live=[], apiRef=null, boost=false, lastQSig=null;
   /* Which lane holds the answer is weighted, not uniform. Every lane starts at
      1/3; the one just used drops 10 points and the other two gain 5 each, which
      conserves the total. A repeat is possible but progressively unlikely, so
@@ -681,7 +701,8 @@ function renderRunArcade(side,stage){
 
   function clearGates(){ live.forEach(g=>g.el.remove()); live=[]; }
   function spawn(){
-    const q=runQuestion();
+    const q=runQuestion(lastQSig);
+    lastQSig=q.sig;
     // choose the lane by weight, then move the answer there
     let want=pickLane();
     if(want===lastLane && laneRun>=2) want=(want+1+Math.floor(Math.random()*2))%3;
@@ -729,7 +750,7 @@ function renderRunArcade(side,stage){
     rules:[["var(--c2)","ruleRunGood"],["var(--red)","ruleRunBad"],
            ["var(--c1)","ruleRunFast"],["var(--chalk)","ruleRunBoost"]],
     reset(api){ apiRef=api; mult=1; scroll=0;
-                laneW=[1/3,1/3,1/3]; lastLane=-1; laneRun=0;
+                laneW=[1/3,1/3,1/3]; lastLane=-1; laneRun=0; lastQSig=null;
                 setBoost(false); clearGates(); setLane(1); spawn(); },
     cleanup(){ clearGates(); },
     frame(dt,played,api){

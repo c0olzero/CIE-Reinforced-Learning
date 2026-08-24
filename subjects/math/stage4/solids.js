@@ -602,13 +602,15 @@ function renderNetQuiz(side,stage){
   const act=hudActions(stage);
   const bYes=h("button","abtn yes",t("yesFold")), bNo=h("button","abtn no",t("noFold"));
   act.append(bYes,bNo);
-  let answered=false, a=null, clashTimer=0;
+  let answered=false, a=null, clashTimer=0, lastCells=null;
   pending.push(()=>clearTimeout(clashTimer));
 
   function deal(){
     clearTimeout(clashTimer);
     answered=false; act.hidden=false;
-    const cells=Math.random()<0.5?rand(NETS_CUBE):rand(NOTNETS);
+    let cells;
+    do{ cells=Math.random()<0.5?rand(NETS_CUBE):rand(NOTNETS); }while(cells===lastCells);
+    lastCells=cells;
     const net=netFromCells(cells); a=net.analysis;
     view.setNet(net,{clashSides:a.sides});
     view.setFold(0); view.resetView();
@@ -636,12 +638,16 @@ function renderOpposite(side,stage){
   stage.classList.add("pickmode");     // picking is the main action here, so one cursor throughout
   hudQuestion(stage,t("qOpp"));
   const score=hudScore(stage);
-  let answered=false, star=0, a=null;
+  let answered=false, star=0, a=null, lastKey={cells:null,star:-1};
 
   function deal(){
     answered=false;
-    const net=netFromCells(rand(NETS_CUBE)); a=net.analysis;
-    star=Math.floor(Math.random()*6);
+    let cells,net;
+    do{
+      cells=rand(NETS_CUBE); net=netFromCells(cells); a=net.analysis;
+      star=Math.floor(Math.random()*6);
+    }while(cells===lastKey.cells && star===lastKey.star);
+    lastKey={cells,star};
     view.onFace=pick;
     view.setNet(net,{star:star});
     view.setFold(0); view.resetView();

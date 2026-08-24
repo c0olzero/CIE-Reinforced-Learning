@@ -1,5 +1,5 @@
-/* Workbench — Times Table Lab — recall, missing factors, x10/x100
-   Cambridge Primary Mathematics 0096, Stage 4. Objectives: 4Ni.04, 4Ni.07, 4Ni.08 */
+/* Workbench — Times Table Lab — recall, missing factors and a Venn sort
+   Cambridge Primary Mathematics 0096, Stage 4. Objectives: 4Ni.04 */
 
 import {h, rand, pickOptions} from "../../../engine/dom.js";
 import {t, addStrings} from "../../../engine/i18n.js";
@@ -13,7 +13,6 @@ addStrings(STRINGS);
    TIMES TABLE LAB — Cambridge Primary Stage 4
 
    4Ni.04 recall multiplication/division facts to 12x12
-   4Ni.07, 4Ni.08 multiply and divide by 10 and 100
    ============================================================ */
 const TM_MAX=12;
 
@@ -190,14 +189,19 @@ function renderMissingFactor(side,stage){
   const wrap=h("div","tm-wrap"), stack=h("div","tm-stack");
   wrap.appendChild(stack); stage.appendChild(wrap);
   const line=h("div","tm-row"); stack.appendChild(line);
-  let a=3,b=4,c=12,ans=4,answered=false;
+  let a=3,b=4,c=12,ans=4,answered=false,lastKey=null;
 
   function deal(){
     answered=false; act.hidden=false; act.innerHTML="";
-    a=1+Math.floor(Math.random()*TM_MAX);
-    b=1+Math.floor(Math.random()*TM_MAX);
+    let kind,key;
+    do{
+      a=1+Math.floor(Math.random()*TM_MAX);
+      b=1+Math.floor(Math.random()*TM_MAX);
+      kind=rand(["ab","ax","xb","da","db"]);
+      key=kind+","+a+","+b;
+    }while(key===lastKey);
+    lastKey=key;
     c=a*b;
-    const kind=rand(["ab","ax","xb","da","db"]);
     line.innerHTML="";
     let opts;
     if(kind==="ab"){
@@ -243,82 +247,204 @@ function renderMissingFactor(side,stage){
   deal();
 }
 
-/* ---------- tab 3 — Shift by 10/100 (4Ni.07, 4Ni.08) ---------- */
-/* Digit strip: multiplying appends zeros (marked new); dividing drops them
-   (marked as leaving) — the same picture either direction. */
-function tmDigits(numStr,dropCount){
-  const el=h("div","tm-digits");
-  [...numStr].forEach(ch=>el.appendChild(h("span","tm-digit",ch)));
-  for(let i=0;i<dropCount;i++) el.appendChild(h("span","tm-digit tm-digit-drop","0"));
-  return el;
+/* ---------- tab 3 — Venn Sort (4Ni.04) ---------- */
+/* Two overlapping circles, "Divisible by X" / "Divisible by Y". Three tiles,
+   exactly one of which truly belongs in the diagram — the other two are
+   divisible by neither X nor Y, so no drop zone will ever accept them.
+   Correctness is checked live from the dropped (value, zone) pair, not
+   against a stored "intended tile" — the only thing generation guarantees
+   is that exactly one value satisfies exactly one zone. */
+const TV_MIN=2, TV_MAX_D=9, TV_CAP=99;
+
+function tvLcm(a,b){
+  const gcd=(x,y)=>y?gcd(y,x%y):x;
+  return a*b/gcd(a,b);
 }
-function tmShiftProof(n,op,factor,ans){
-  const wrap=h("div","tm-shift");
-  const zeros=factor===10?1:2;
-  const arrow=h("div","tm-arrow",(op==="mul"?"×":"÷")+factor);
-  let fromNode,toNode;
-  if(op==="mul"){
-    fromNode=tmDigits(String(n),0);
-    toNode=h("div","tm-digits");
-    [...String(ans)].forEach((ch,i,arr)=>{
-      const isNew=i>=arr.length-zeros;
-      toNode.appendChild(h("span","tm-digit"+(isNew?" tm-digit-new":""),ch));
-    });
-  }else{
-    const nStr=String(n);
-    fromNode=tmDigits(nStr.slice(0,nStr.length-zeros),zeros);
-    toNode=tmDigits(String(ans),0);
+/* "left"/"right" only exist when neither divisor is a multiple of the
+   other — if Y is a multiple of X, every multiple of Y is automatically a
+   multiple of X too, so "divisible by Y but not X" has no solution. */
+function tvValidRegions(X,Y){
+  const out=["both"];
+  if(X%Y!==0) out.push("left");
+  if(Y%X!==0) out.push("right");
+  return out;
+}
+function tvGenFor(region,X,Y){
+  if(region==="both"){
+    const l=tvLcm(X,Y);
+    const maxK=Math.max(1,Math.floor(TV_CAP/l));
+    return l*(1+Math.floor(Math.random()*maxK));
   }
-  wrap.append(fromNode,arrow,toNode);
-  return wrap;
+  const div=region==="left"?X:Y, other=region==="left"?Y:X;
+  for(let tries=0;tries<50;tries++){
+    const k=1+Math.floor(Math.random()*Math.floor(TV_CAP/div));
+    const val=div*k;
+    if(val%other!==0) return val;
+  }
+  return div;   // unreachable given tvValidRegions guards the caller
 }
-function mulShiftOptions(n,factor,ans){
-  const otherFactor=factor===10?100:10;
-  const wrongPow=n*otherFactor;
-  const pool=pickOptions(ans,Math.max(1,ans-factor*4),ans+factor*4,4,factor)
-    .filter(v=>v!==wrongPow&&v!==ans);
-  const set=new Set([ans,wrongPow]);
-  for(const v of pool){ if(set.size>=4) break; set.add(v); }
-  return [...set].sort((x,y)=>x-y);
+/* a plausible wrong tile: a near-miss of a real multiple of X or Y (off by
+   one), never an arbitrary number — matches factProductOptions' style.
+   Must fit neither circle, so it has no correct home anywhere. */
+function tvNearMiss(X,Y,avoid){
+  for(let tries=0;tries<80;tries++){
+    const base=rand([X,Y]);
+    const k=1+Math.floor(Math.random()*Math.floor(TV_CAP/base));
+    const val=base*k+(Math.random()<0.5?-1:1);
+    if(val>=2&&val<=TV_CAP&&val%X!==0&&val%Y!==0&&!avoid.includes(val)) return val;
+  }
+  for(let val=2;val<=TV_CAP;val++) if(val%X!==0&&val%Y!==0&&!avoid.includes(val)) return val;
+  return TV_CAP;
 }
-function renderShift(side,stage){
+function tvShuffle3(arr){
+  for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; }
+  return arr;
+}
+
+function renderVenn(side,stage){
   foldlessHud(stage);
-  hudQuestion(stage,t("qShift"));
+  hudQuestion(stage,t("qVenn"));
   const score=hudScore(stage);
-  const act=hudActions(stage);
-  const wrap=h("div","tm-wrap"), stack=h("div","tm-stack");
-  wrap.appendChild(stack); stage.appendChild(wrap);
-  const line=h("div","tm-row"); stack.appendChild(line);
-  let n=3,factor=10,op="mul",ans=30,answered=false;
+  const wrap=h("div","tv-wrap"); stage.appendChild(wrap);
+  const diagram=h("div","tv-diagram");
+  const tray=h("div","tv-tray");
+  wrap.append(diagram,tray);
+
+  const cLeft=h("div","tv-circle tv-c-left");
+  const cRight=h("div","tv-circle tv-c-right");
+  const tLeft=h("div","tv-title tv-t-left");
+  const tRight=h("div","tv-title tv-t-right");
+  const zLeft=document.createElement("button"); zLeft.className="tv-zone tv-z-left"; zLeft.dataset.zone="left";
+  const zBoth=document.createElement("button"); zBoth.className="tv-zone tv-z-both"; zBoth.dataset.zone="both";
+  const zRight=document.createElement("button"); zRight.className="tv-zone tv-z-right"; zRight.dataset.zone="right";
+  diagram.append(cLeft,cRight,zLeft,zBoth,zRight,tLeft,tRight);
+
+  let X,Y,correctRegion,correctVal,tiles=[],lastKey=null,answered=false;
+  let tileEls=[],armedIdx=null,drag=null,suppressClick=false,hoverZoneEl=null;
+
+  [zLeft,zBoth,zRight].forEach(z=>{
+    z.addEventListener("click",()=>{ if(armedIdx!=null) tryPlace(armedIdx,z.dataset.zone); });
+  });
+
+  function paintArmed(){ tileEls.forEach((el,i)=>el.classList.toggle("armed",i===armedIdx)); }
+  /* neutral highlight only — which zone lit up must never hint right/wrong,
+     so it's the same style regardless of which of the three it is */
+  function setHoverZone(zoneEl){
+    if(zoneEl===hoverZoneEl) return;
+    if(hoverZoneEl) hoverZoneEl.classList.remove("tv-zone-over");
+    hoverZoneEl=zoneEl;
+    if(hoverZoneEl) hoverZoneEl.classList.add("tv-zone-over");
+  }
+
+  function buildTiles(){
+    tray.innerHTML=""; tileEls=[];
+    tiles.forEach((v,i)=>{
+      const tile=document.createElement("button");
+      tile.className="tv-tile";
+      tile.textContent=String(v);
+      tile.style.touchAction="none";
+      wireTile(tile,i);
+      tray.appendChild(tile);
+      tileEls.push(tile);
+    });
+  }
+
+  function wireTile(tile,i){
+    tile.addEventListener("pointerdown",e=>{
+      if(answered) return;
+      suppressClick=false;
+      drag={idx:i,startX:e.clientX,startY:e.clientY,moved:false,ghost:null,pid:e.pointerId};
+      tile.setPointerCapture(e.pointerId);
+    });
+    tile.addEventListener("pointermove",e=>{
+      if(!drag||drag.idx!==i) return;
+      const dx=e.clientX-drag.startX, dy=e.clientY-drag.startY;
+      if(!drag.moved && Math.hypot(dx,dy)>8){
+        drag.moved=true;
+        drag.ghost=h("div","tv-ghost",tile.textContent);
+        document.body.appendChild(drag.ghost);
+        tile.classList.add("dragging");
+      }
+      if(drag.moved){
+        drag.ghost.style.left=e.clientX+"px"; drag.ghost.style.top=e.clientY+"px";
+        const under=document.elementFromPoint(e.clientX,e.clientY);
+        setHoverZone(under&&under.closest(".tv-zone"));
+      }
+    });
+    const finish=e=>{
+      if(!drag||drag.idx!==i) return;
+      tile.releasePointerCapture(drag.pid);
+      tile.classList.remove("dragging");
+      if(drag.moved){
+        suppressClick=true;   // the browser still fires a click right after this — ignore it
+        if(drag.ghost) drag.ghost.remove();
+        const under=document.elementFromPoint(e.clientX,e.clientY);
+        const zoneEl=under&&under.closest(".tv-zone");
+        setHoverZone(null);
+        if(zoneEl) tryPlace(i,zoneEl.dataset.zone);
+      }
+      drag=null;
+    };
+    tile.addEventListener("pointerup",finish);
+    tile.addEventListener("pointercancel",()=>{
+      if(drag&&drag.idx===i){ if(drag.ghost) drag.ghost.remove(); tile.classList.remove("dragging"); setHoverZone(null); drag=null; }
+    });
+    /* covers a plain tap, AND keyboard Enter/Space (which never fires the
+       pointer events above at all) — one path for both input styles */
+    tile.addEventListener("click",()=>{
+      if(suppressClick){ suppressClick=false; return; }
+      if(answered) return;
+      armedIdx=armedIdx===i?null:i;
+      paintArmed();
+    });
+  }
+
+  function tvProof(){
+    const stack=h("div","tv-proof");
+    const remX=correctVal%X, remY=correctVal%Y;
+    const lineX=h("div","tv-proofline",remX===0?t("vennDivOk")(correctVal,X,correctVal/X):t("vennDivNo")(correctVal,X,remX));
+    lineX.style.color=remX===0?"var(--c2)":"var(--red)";
+    const lineY=h("div","tv-proofline",remY===0?t("vennDivOk")(correctVal,Y,correctVal/Y):t("vennDivNo")(correctVal,Y,remY));
+    lineY.style.color=remY===0?"var(--c2)":"var(--red)";
+    stack.append(lineX,lineY);
+    return stack;
+  }
+
+  function tryPlace(idx,zone){
+    if(answered) return;
+    answered=true;
+    const val=tiles[idx];
+    const ok=(zone==="left"&&val%X===0&&val%Y!==0)
+            ||(zone==="right"&&val%Y===0&&val%X!==0)
+            ||(zone==="both"&&val%X===0&&val%Y===0);
+    score.hit(ok);
+    tileEls[idx].style.color=ok?"var(--c2)":"var(--red)";
+    tileEls.forEach(el=>el.disabled=true);
+    if(ok) sfxGold(); else sfxWrong();
+    armedIdx=null; paintArmed();
+    celebrate(stage,ok,t("vennWhy")(correctRegion,correctVal,X,Y),deal,t("nextQ"),tvProof());
+  }
 
   function deal(){
-    answered=false; act.hidden=false; act.innerHTML="";
-    const kind=rand(["x10","x100","d10","d100"]);
-    if(kind==="x10"){       op="mul"; factor=10;  n=2+Math.floor(Math.random()*98); ans=n*10; }
-    else if(kind==="x100"){ op="mul"; factor=100; n=2+Math.floor(Math.random()*9);  ans=n*100; }
-    else if(kind==="d10"){  op="div"; factor=10;  const k=2+Math.floor(Math.random()*98); n=k*10;  ans=k; }
-    else{                   op="div"; factor=100; const k=2+Math.floor(Math.random()*9);  n=k*100; ans=k; }
-    line.innerHTML="";
-    line.append(numNode(n),opNode(op==="mul"?"×":"÷"),numNode(factor),opNode("="),symNode());
-    const opts = op==="mul" ? mulShiftOptions(n,factor,ans)
-                             : pickOptions(ans,1,Math.max(20,ans+3*factor),4,3);
-    opts.forEach(v=>{
-      const btn=h("button","abtn",String(v));
-      btn.onclick=()=>answer(v);
-      act.appendChild(btn);
-    });
-  }
-  function answer(said){
-    if(answered) return; answered=true;
-    const ok=said===ans;
-    act.hidden=true;
-    const symEl=line.querySelector(".tm-sym");
-    if(symEl){ symEl.textContent=String(ans); symEl.style.color=ok?"var(--c2)":"var(--red)"; }
-    score.hit(ok);
-    if(ok) sfxGold(); else sfxWrong();
-    const proof=tmShiftProof(n,op,factor,ans);
-    const why=op==="mul" ? t("shiftWhyMul")(n,factor,ans) : t("shiftWhyDiv")(n,factor,ans);
-    celebrate(stage,ok,why,deal,t("nextQ"),proof);
+    answered=false;
+    let key;
+    do{
+      X=TV_MIN+Math.floor(Math.random()*(TV_MAX_D-TV_MIN+1));
+      do{ Y=TV_MIN+Math.floor(Math.random()*(TV_MAX_D-TV_MIN+1)); }while(Y===X);
+      correctRegion=rand(tvValidRegions(X,Y));
+      correctVal=tvGenFor(correctRegion,X,Y);
+      key=X+","+Y+","+correctRegion+","+correctVal;
+    }while(key===lastKey);
+    lastKey=key;
+    const d1=tvNearMiss(X,Y,[correctVal]);
+    const d2=tvNearMiss(X,Y,[correctVal,d1]);
+    tiles=tvShuffle3([correctVal,d1,d2]);
+    tLeft.textContent=t("divTitle")(X);
+    tRight.textContent=t("divTitle")(Y);
+    zLeft.setAttribute("aria-label",t("divTitle")(X));
+    zRight.setAttribute("aria-label",t("divTitle")(Y));
+    zBoth.setAttribute("aria-label",t("vennBothLabel")(X,Y));
+    buildTiles();
   }
   deal();
 }
@@ -603,6 +729,7 @@ function renderTimesArcade(side,stage){
   const api=arcadeShell(stage,{
     how:"arcHowTma",
     key:"tma",
+    diffNote:"tmaDiffNote",
     rules:[["var(--c1)","ruleTmaLine"],["var(--c2)","ruleTmaDual"],["var(--red)","ruleTmaMiss"]],
     clockMs:TMA_CLOCK,
     reset(){
@@ -622,7 +749,7 @@ export default {
   games:[
     {id:"bench", name:"gTmBench", blurb:"gTmBenchP", render:renderBench},
     {id:"fact",  name:"gFact",  blurb:"gFactP",  render:renderMissingFactor, full:true},
-    {id:"shift", name:"gShift", blurb:"gShiftP", render:renderShift,         full:true},
+    {id:"venn",  name:"gVenn",  blurb:"gVennP",  render:renderVenn,          full:true},
     {id:"arc",   name:"gArc",  blurb:"gArcP",   render:renderTimesArcade,    full:true, rainbow:true}
   ]
 };

@@ -100,14 +100,19 @@ function renderRound(side,stage){
   const wrap=h("div","pv-wrap"), stack=h("div","pv-stack");
   wrap.appendChild(stack); stage.appendChild(wrap);
   const big=h("div","pv-big"); stack.appendChild(big);
-  let n=0,unit=10,ans=0,answered=false;
+  let n=0,unit=10,ans=0,answered=false,lastKey=null;
 
   function deal(){
     answered=false; act.hidden=false; act.innerHTML="";
-    unit=rand([10,100]);
-    n = unit===10 ? 100+Math.floor(Math.random()*899)
-                  : 100+Math.floor(Math.random()*9800);
-    if(n%unit===0) n+=(Math.random()<0.5?-1:1)*(1+Math.floor(Math.random()*(unit/2-1||1)));
+    let key;
+    do{
+      unit=rand([10,100]);
+      n = unit===10 ? 100+Math.floor(Math.random()*899)
+                    : 100+Math.floor(Math.random()*9800);
+      if(n%unit===0) n+=(Math.random()<0.5?-1:1)*(1+Math.floor(Math.random()*(unit/2-1||1)));
+      key=unit+","+n;
+    }while(key===lastKey);
+    lastKey=key;
     ans=Math.round(n/unit)*unit;
     q.textContent=t("qRound")(fmt(n),unit);
     big.textContent=fmt(n);
@@ -231,14 +236,30 @@ function renderOrder(side,stage){
   const wrap=h("div","pv-wrap"), stack=h("div","pv-stack");
   wrap.appendChild(stack); stage.appendChild(wrap);
   const area=h("div","pv-order-area"); stack.appendChild(area);
-  let A=0,B=0,three=[],ans=null,answered=false;
+  let A=0,B=0,three=[],ans=null,answered=false,lastKey=null;
 
   function deal(){
     answered=false; act.hidden=false; act.innerHTML="";
     area.innerHTML="";
-    const kind=Math.random()<0.55?"sym":"pick";
+    // pick the round's values first (no DOM yet) so a repeat can be
+    // rerolled cleanly instead of leaving half-built UI behind
+    let kind,wantBig,key;
+    for(let tries=0;tries<20;tries++){
+      kind=Math.random()<0.55?"sym":"pick";
+      if(kind==="sym"){
+        [A,B]=pvPickPair();
+        key="sym,"+A+","+B;
+      }else{
+        const nums=new Set();
+        while(nums.size<3) nums.add(Math.floor(Math.random()*10000));
+        three=[...nums];
+        wantBig=Math.random()<0.5;
+        key="pick,"+wantBig+","+three.slice().sort((x,y)=>x-y).join(",");
+      }
+      if(key!==lastKey) break;
+    }
+    lastKey=key;
     if(kind==="sym"){
-      [A,B]=pvPickPair();
       q.textContent=t("qWhich");
       const rowEl=h("div","pv-row");
       rowEl.append(h("div","pv-big mid",fmt(A)),h("div","pv-sym","?"),h("div","pv-big mid",fmt(B)));
@@ -249,10 +270,6 @@ function renderOrder(side,stage){
         act.appendChild(btn);
       });
     }else{
-      const nums=new Set();
-      while(nums.size<3) nums.add(Math.floor(Math.random()*10000));
-      three=[...nums];
-      const wantBig=Math.random()<0.5;
       q.textContent=wantBig?t("qBiggest"):t("qSmallest");
       ans=wantBig?Math.max(...three):Math.min(...three);
       // this kind has no "sym" row to fill the stage with — show the three

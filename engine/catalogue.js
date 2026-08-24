@@ -57,9 +57,9 @@ export const CATALOGUE=[
 
   { id:"times", subject:"math", stage:4, strand:"number", live:true,
     title:{en:"Times Tables", vi:"Bảng Nhân"},
-    blurb:{en:"Build the array, find the missing factor, shift by 10 and 100.",
-           vi:"Xếp mảng nhân, tìm số còn thiếu, nhân chia cho 10 và 100."}, colors:[4,5,0],
-    objectives:["4Ni.04","4Ni.07","4Ni.08"],
+    blurb:{en:"Build the array, find the missing factor, race the arcade.",
+           vi:"Xếp mảng nhân, tìm số còn thiếu, đua trong xưởng trò chơi."}, colors:[4,5,0],
+    objectives:["4Ni.04"],
     load:()=>import("../subjects/math/stage4/times.js") },
 
   { id:"place", subject:"math", stage:4, strand:"number", live:true,

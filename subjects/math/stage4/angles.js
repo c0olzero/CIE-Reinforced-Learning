@@ -370,14 +370,20 @@ function renderAngleArcade(side,stage){
         +arcTo(rw,sweep,sweep>180?1:0)+" Z");
     } else el.wedge.setAttribute("d","");
   }
-  function newTarget(){ return 45+15*Math.floor(Math.random()*10); }   // 45-180, every 15 deg
+  // 45-180 every 15deg, 10 values — small enough that picking blind repeats
+  // the same target fairly often, so it always excludes whatever it's about
+  // to replace
+  function newTarget(avoid){
+    let v; do{ v=45+15*Math.floor(Math.random()*10); }while(v===avoid);
+    return v;
+  }
 
   /* on a hit the base takes the arm's place and the sweep turns around */
   function nextRound(){
     base=base+dir*sweep;               // the base takes the arm's place
     dir=-dir;                          // and the sweep turns around
     sweep=0;
-    target=newTarget();
+    target=newTarget(target);
     blue=Math.random()<0.3;
     showTarget();
     layout();                          // the arm carries straight on, no pause
@@ -391,7 +397,7 @@ function renderAngleArcade(side,stage){
     rules:[["var(--c1)","ruleAim"],["var(--c3)","ruleBlueA"],["var(--red)","ruleMiss"]],
     reset(){
       base=0; dir=1; sweep=0;
-      target=newTarget(); blue=Math.random()<0.3;
+      target=newTarget(target); blue=Math.random()<0.3;
       showTarget(); layout();
     },
     cleanup(){},
