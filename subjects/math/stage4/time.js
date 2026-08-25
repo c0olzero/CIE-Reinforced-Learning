@@ -3,12 +3,12 @@
 
    4Gt.01 units of time (days/hours/minutes/sec) — Conversion Bench + Convert It!
    4Gt.02 read a clock to the nearest minute     — Clock Bench + Read the Clock
-   4Gt.03 12-hour vs 24-hour notation             — passively shown on Clock Bench's
-                                                     digital readout (no dedicated quiz)
+   4Gt.03 12-hour vs 24-hour notation             — Clock Bench's digital readout, and
+                                                     Read the Clock's digital-face rounds
    4Gt.04 elapsed time / duration                — Elapsed Time
    ============================================================ */
 
-import {h, SVGNS} from "../../../engine/dom.js";
+import {h, SVGNS, rand} from "../../../engine/dom.js";
 import {t, addStrings, getLang} from "../../../engine/i18n.js";
 import {celebrate, hudQuestion, hudScore, hudActions, foldlessHud} from "../../../engine/ui.js";
 import {sfxGold, sfxWrong} from "../../../engine/audio.js";
@@ -299,18 +299,26 @@ function renderUnitsBench(side,stage){
   syncRange(); draw();
 }
 
-/* ---------- tab 3 — Read the Clock (4Gt.02) ---------- */
+/* ---------- tab 3 — Read the Clock (4Gt.02, .03) ---------- */
+/* Three ways the time is shown, picked at random each round: the analogue
+   face (as before — AM/PM is inherently ambiguous on a 12-hour face, so it
+   never needs to be resolved), a 24-hour digital readout (reading this one
+   back as a 12-hour answer is real 4Gt.03 notation practice), and a 12-hour
+   AM/PM digital readout. */
+const READ_STIM=["analog","d24","d12"];
 /* Distractors are the real ways a kid misreads a clock, not random numbers:
    reading the hour the hand is nearest to instead of which hour it's still
    *between* (past halfway rounds up early), and misreading the minute hand
-   against a neighbouring tick mark. */
-function readDistractors(trueH,mm){
-  const label=(hh,m)=>hh+":"+pad2(((m%60)+60)%60);
+   against a neighbouring tick mark. Returned as raw [h,m] pairs so the
+   caller can format them either as digits or as a past/to phrase. */
+function readDistractorPairs(trueH,mm){
+  const wrap=m=>((m%60)+60)%60;
   const nextH=(trueH%12)+1, prevH=((trueH+10)%12)+1;
   const wrongHour = mm>=30 ? nextH : prevH;
-  return [label(wrongHour,mm), label(trueH,mm+5), label(trueH,mm-5),
-          label(trueH,mm+10), label(trueH,mm-10)];
+  return [[wrongHour,mm], [trueH,wrap(mm+5)], [trueH,wrap(mm-5)],
+          [trueH,wrap(mm+10)], [trueH,wrap(mm-10)]];
 }
+const readDigits=(hh,mm)=>hh+":"+pad2(mm);
 function renderReadClock(side,stage){
   foldlessHud(stage);
   hudQuestion(stage,t("qRead"));
@@ -318,21 +326,45 @@ function renderReadClock(side,stage){
   const act=hudActions(stage);
   const wrap=h("div","clk-wrap"), stack=h("div","clk-stack");
   wrap.appendChild(stack); stage.appendChild(wrap);
-  const svg=clockFace(); stack.appendChild(svg);
+  const slot=h("div","clk-read-slot"); stack.appendChild(slot);
 
-  let H=0,M=0,answered=false,lastKey=null;
+  let H=0,M=0,verbal=false,answered=false,lastKey=null;
   function deal(){
     answered=false; act.hidden=false; act.innerHTML="";
     let key;
     do{
-      H=Math.floor(Math.random()*12); M=Math.floor(Math.random()*60);
-      key=H+":"+M;
+      // 40% of rounds ask for the "past/to" phrase instead of digits — those
+      // only ever land on a real 5-minute tick, or "twenty-three past four"
+      // isn't a thing anyone says
+      verbal=Math.random()<0.4;
+      H=Math.floor(Math.random()*24);
+      M=verbal ? 5*Math.floor(Math.random()*12) : Math.floor(Math.random()*60);
+      key=H+":"+M+":"+verbal;
     }while(key===lastKey);
     lastKey=key;
-    drawClockFace(svg,H,M,280);
+
+    slot.innerHTML="";
+    const stim=rand(READ_STIM);
+    if(stim==="analog"){
+      const svg=clockFace(); slot.appendChild(svg);
+      drawClockFace(svg,H,M,280);
+    }else if(stim==="d24"){
+      const box=h("div","clk-digibig");
+      box.appendChild(h("div","clk-digibig-time",fmt24(H,M)));
+      slot.appendChild(box);
+    }else{
+      const pm=H>=12, h12=((H+11)%12)+1;
+      const box=h("div","clk-digibig");
+      box.appendChild(h("div","clk-digibig-time",h12+":"+pad2(M)));
+      box.appendChild(h("div","clk-digibig-ap",pm?t("pmShort"):t("amShort")));
+      slot.appendChild(box);
+    }
+
     const trueH=(H%12)||12;
-    const truth=trueH+":"+pad2(M);
-    opts4(readDistractors(trueH,M),truth).forEach(v=>{
+    const label=verbal ? t("pastToPhrase") : readDigits;
+    const truth=label(trueH,M);
+    const cands=readDistractorPairs(trueH,M).map(([hh,mm])=>label(hh,mm));
+    opts4(cands,truth).forEach(v=>{
       const btn=h("button","abtn",v);
       btn.onclick=()=>answer(v===truth,truth);
       act.appendChild(btn);
@@ -342,8 +374,8 @@ function renderReadClock(side,stage){
     if(answered) return; answered=true;
     act.hidden=true; score.hit(ok);
     if(ok) sfxGold(); else sfxWrong();
-    // the clock already on stage is the proof (unchanged, still the right time) —
-    // dimming it in place, not redrawing a second one, avoids two overlapping faces
+    // the stimulus already on stage is the proof (unchanged, still the
+    // right time) — dimming it in place, not redrawing a second one
     celebrate(stage,ok,t("readWhy")(truth),deal,t("nextQ"));
   }
   deal();

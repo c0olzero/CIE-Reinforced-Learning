@@ -12,6 +12,18 @@ All notable changes to this project are documented here, newest first.
 
 Each version bump gets an entry here and a matching `git tag` (e.g. `v1.0.0`).
 
+## [1.9.0] - 2026-08-30
+
+### Changed
+- **Telling Time** — Read the Clock now randomizes how each time is shown:
+  the analogue face as before, a 24-hour digital readout, or a 12-hour
+  AM/PM digital readout — reading the 24-hour one back as a 12-hour answer
+  is genuine 4Gt.03 notation practice. 40% of rounds also ask for a
+  "past/to" phrase (e.g. "twenty-five past three", "quarter to four" in
+  English; "ba giờ hai mươi lăm phút", "bốn giờ kém mười lăm" in
+  Vietnamese) instead of digits, restricted to 5-minute ticks since that's
+  the only granularity anyone actually says that way.
+
 ## [1.8.0] - 2026-08-27
 
 ### Added

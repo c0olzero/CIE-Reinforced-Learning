@@ -1,5 +1,9 @@
 /* Workbench — Telling Time
    Strings only. Add a language by adding a block here. */
+const EN_HOUR_WORDS=["twelve","one","two","three","four","five","six","seven",
+  "eight","nine","ten","eleven"];
+const EN_MIN_WORDS={5:"five",10:"ten",15:"quarter",20:"twenty",25:"twenty-five",30:"half"};
+
 export default {
   en:{
     gClock:"Clock Bench",
@@ -25,7 +29,14 @@ export default {
     dayOne:"day", dayMany:"days",
     secOne:"second", secMany:"seconds",
     qRead:"What time does the clock show?",
-    readWhy:function(truth){return "The hour hand and minute hand together show "+truth+".";},
+    readWhy:function(truth){return "The clock shows "+truth+".";},
+    pastToPhrase:function(hh,mm){
+      const hw=EN_HOUR_WORDS[hh%12];
+      if(mm===0) return hw+" o'clock";
+      if(mm<=30) return EN_MIN_WORDS[mm]+" past "+hw;
+      const nextH=(hh%12)+1;
+      return EN_MIN_WORDS[60-mm]+" to "+EN_HOUR_WORDS[nextH%12];
+    },
     qUnitConvert:function(fromText,toUnit){return fromText+" = ?? "+toUnit;},
     unitWhyMul:function(oneUnit,ratio,manyUnit,valText,truthText){return "1 "+oneUnit+" = "+ratio+" "+manyUnit+", so "+valText+" = "+truthText+".";},
     unitWhyDiv:function(ratio,manyUnit,oneUnit,valText,truthText){return ratio+" "+manyUnit+" = 1 "+oneUnit+", so "+valText+" = "+truthText+".";},
@@ -63,7 +74,14 @@ export default {
     dayOne:"ngày", dayMany:"ngày",
     secOne:"giây", secMany:"giây",
     qRead:"Đồng hồ đang chỉ mấy giờ?",
-    readWhy:function(truth){return "Kim giờ và kim phút cùng chỉ "+truth+".";},
+    readWhy:function(truth){return "Đồng hồ đang chỉ "+truth+".";},
+    pastToPhrase:function(hh,mm){
+      if(mm===0) return hh+" giờ đúng";
+      if(mm===30) return hh+" giờ rưỡi";
+      if(mm<30) return hh+" giờ "+mm+" phút";
+      const nextH=(hh%12)+1;
+      return nextH+" giờ kém "+(60-mm)+" phút";
+    },
     qUnitConvert:function(fromText,toUnit){return fromText+" = ?? "+toUnit;},
     unitWhyMul:function(oneUnit,ratio,manyUnit,valText,truthText){return "1 "+oneUnit+" = "+ratio+" "+manyUnit+", nên "+valText+" = "+truthText+".";},
     unitWhyDiv:function(ratio,manyUnit,oneUnit,valText,truthText){return ratio+" "+manyUnit+" = 1 "+oneUnit+", nên "+valText+" = "+truthText+".";},
