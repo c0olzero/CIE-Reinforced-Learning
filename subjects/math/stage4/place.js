@@ -1,8 +1,8 @@
-/* Workbench — Place Value Lab — build, round, compare, and explore below zero
-   Cambridge Primary Mathematics 0096, Stage 4. Objectives: 4Np.01, 4Np.02, 4Np.03, 4Np.05 */
+/* Workbench — Place Value Lab — build, shift, round, compare, and explore below zero
+   Cambridge Primary Mathematics 0096, Stage 4. Objectives: 4Np.01, 4Np.02, 4Np.03, 4Np.05, 4Ni.07, 4Ni.08 */
 
 import {h, rand} from "../../../engine/dom.js";
-import {t, addStrings} from "../../../engine/i18n.js";
+import {t, getLang, addStrings} from "../../../engine/i18n.js";
 import {celebrate, hudQuestion, hudScore, hudActions, foldlessHud} from "../../../engine/ui.js";
 import {sfxGold, sfxWrong} from "../../../engine/audio.js";
 import STRINGS from "./place.strings.js";
@@ -15,65 +15,179 @@ addStrings(STRINGS);
    4Np.02 partition into standard and expanded form
    4Np.03 round 3- and 4-digit numbers to the nearest 10 or 100
    4Np.05 order integers below zero (temperature contexts)
+   4Ni.07/.08 multiply and divide whole numbers by 10 and 100
    ============================================================ */
 const fmt=n=>String(n).replace(/\B(?=(\d{3})+(?!\d))/g,",");
 const digits4=n=>String(n).padStart(4,"0").split("").map(Number);   // [th,h,t,o]
 
-/* ---------- tab 1 — Place Bench (4Np.01, .02) ---------- */
-/* Base-ten blocks: a unit, a rod of ten, a flat of a hundred, a solid
-   thousand — each column draws that many of its own shape, so nine
-   hundreds genuinely looks bulkier than nine tens. */
-const PV_COLS=["th","h","t","o"];
-function pvBlocks(sz,count){
-  const el=h("div","pv-blockrow");
-  for(let i=0;i<count;i++) el.appendChild(h("div","pv-b pv-b-"+sz));
-  return el;
+/* ---------- tab 1 — Number Bench (4Np.01, .02, 4Ni.07, .08) ---------- */
+/* 4 core digit sliders sit over 4 consecutive place-value columns. ×10/÷10
+   don't touch those digits — they relabel which columns the same 4 sit in,
+   which IS actually multiplying/dividing the number by 10 (every digit's
+   value scales by 10x): 2904 becomes 29040 read at the same 4 sliders, just
+   shifted one column. Each ×10 also reveals one genuine extra digit at the
+   ones end (any number x10 truly ends in a 0) as a normal, fully draggable
+   slider of its own — not tied to the core 4, and reset to 0 the next time
+   a fresh x10 reveals it. Capped at the hundred-thousands column going up
+   and the hundredths column going down. */
+const PVB_MIN_SHIFT=-2, PVB_MAX_SHIFT=2;
+const PVB_LABEL_KEYS=["pvbHundredths","pvbTenths","pvbO","pvbT","pvbH","pvbTh","pvbTTh","pvbHTh"];   // index = exp+2
+function pvbTermStr(digit,exp){
+  if(digit===0) return null;
+  if(exp>=0) return String(digit*Math.pow(10,exp));
+  return "0."+"0".repeat(-exp-1)+digit;   // exp=-1 -> "0.d"; exp=-2 -> "0.0d"
+}
+
+/* Number-to-words. EN and VI aren't just vocabulary swaps of one template —
+   Vietnamese has its own grammar (linh/mốt/lăm, explicit "không trăm" for a
+   non-leading zero-hundreds group) that doesn't map onto the English
+   algorithm, so each language gets its own self-contained function rather
+   than one shared template with substituted words. */
+const PVB_EN_ONES=["zero","one","two","three","four","five","six","seven","eight","nine","ten",
+  "eleven","twelve","thirteen","fourteen","fifteen","sixteen","seventeen","eighteen","nineteen"];
+const PVB_EN_TENS=["","","twenty","thirty","forty","fifty","sixty","seventy","eighty","ninety"];
+function pvbUnder100En(n){
+  if(n<20) return PVB_EN_ONES[n];
+  const t=Math.floor(n/10), o=n%10;
+  return PVB_EN_TENS[t]+(o?"-"+PVB_EN_ONES[o]:"");
+}
+function pvbUnder1000En(n){
+  const h=Math.floor(n/100), rest=n%100;
+  if(h===0) return pvbUnder100En(rest);
+  return PVB_EN_ONES[h]+" hundred"+(rest?" and "+pvbUnder100En(rest):"");
+}
+function pvbWordsEn(n){
+  if(n===0) return "zero";
+  const th=Math.floor(n/1000), rest=n%1000;
+  if(th===0) return pvbUnder1000En(rest);
+  const out=pvbUnder1000En(th)+" thousand";
+  if(rest===0) return out;
+  if(rest<100) return out+" and "+pvbUnder100En(rest);
+  return out+" "+pvbUnder1000En(rest);
+}
+
+const PVB_VI_ONES=["không","một","hai","ba","bốn","năm","sáu","bảy","tám","chín"];
+function pvbUnder100Vi(n){
+  if(n<10) return PVB_VI_ONES[n];
+  if(n===10) return "mười";
+  const t=Math.floor(n/10), o=n%10;
+  const tensWord=t===1?"mười":PVB_VI_ONES[t]+" mươi";
+  if(o===0) return tensWord;
+  const oneWord=(o===1&&t>=2)?"mốt":(o===5?"lăm":PVB_VI_ONES[o]);
+  return tensWord+" "+oneWord;
+}
+/* `forceHundred` says a group is NOT the leading one — Vietnamese spells
+   out "không trăm" for a zero-hundreds group once you're past the
+   thousands boundary (1,040 -> "một nghìn không trăm bốn mươi"), unlike a
+   standalone number under 1000, which never does. */
+function pvbUnder1000Vi(n,forceHundred){
+  const h=Math.floor(n/100), rest=n%100;
+  if(h===0){
+    if(!forceHundred) return pvbUnder100Vi(rest);
+    return rest<10 ? "không trăm linh "+PVB_VI_ONES[rest] : "không trăm "+pvbUnder100Vi(rest);
+  }
+  const out=PVB_VI_ONES[h]+" trăm";
+  if(rest===0) return out;
+  return rest<10 ? out+" linh "+PVB_VI_ONES[rest] : out+" "+pvbUnder100Vi(rest);
+}
+function pvbWordsVi(n){
+  if(n===0) return "không";
+  const th=Math.floor(n/1000), rest=n%1000;
+  if(th===0) return pvbUnder1000Vi(rest,false);
+  const out=pvbUnder1000Vi(th,false)+" nghìn";
+  return rest===0 ? out : out+" "+pvbUnder1000Vi(rest,true);
+}
+function pvbCap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+function pvbWords(intPart,decDigits){
+  const vi=getLang()==="vi";
+  let s=vi?pvbWordsVi(intPart):pvbWordsEn(intPart);
+  if(decDigits.length){
+    const ones=vi?PVB_VI_ONES:PVB_EN_ONES;
+    s+=" "+(vi?"phẩy":"point")+" "+decDigits.map(d=>ones[d]).join(" ");
+  }
+  return pvbCap(s);
 }
 function renderBench(side,stage){
-  let d=[3,2,8,5];   // th,h,t,o
+  const start=rand([2904,3003]);
+  const d=digits4(start);   // the 4 core digits, at whatever columns `shift` currently puts them in
+  let shift=0;
+  const extras=[];          // extras[i]: the (i+1)-th genuine digit x10 reveals, closest-to-ones first
   const wrap=h("div","pv-wrap bench"), stack=h("div","pv-stack");
   wrap.appendChild(stack); stage.appendChild(wrap);
-  const big=h("div","pv-big");
-  const blockBox=h("div","pv-blocks");
+  stack.appendChild(h("div","pv-note",t("pvBenchHelp")));
+  const cols=h("div","pvb-cols");
   const expand=h("div","pv-eq");
-  const alt=h("div","pv-eq alt");
-  stack.append(big,blockBox,expand,alt);
+  const words=h("div","pvb-words");
+  const btnRow=h("div","pvb-btnrow");
+  stack.append(cols,expand,words,btnRow);
 
-  const panel=h("div","panel");
-  panel.append(h("h4",null,t("gPvBench").toUpperCase()));
-  const row=h("div","pv-ctrls");
-  const labels=[t("thLabel"),t("hLabel"),t("tLabel"),t("oLabel")];
-  const digitEls=[];
-  labels.forEach((lab,i)=>{
-    const c=h("div","pv-ctrl");
-    const inc=h("button","btn alt pv-step","+");
-    const val=h("div","pv-digit",String(d[i]));
-    const dec=h("button","btn alt pv-step","−");
-    const l=h("div","pv-clab",lab);
-    inc.onclick=()=>{ d[i]=Math.min(9,d[i]+1); draw(); };
-    dec.onclick=()=>{ d[i]=Math.max(0,d[i]-1); draw(); };
-    c.append(inc,val,dec,l);
-    row.appendChild(c);
-    digitEls.push(val);
-  });
-  panel.appendChild(row);
-  panel.appendChild(h("p","note",t("pvBenchHelp")));
-  side.appendChild(panel);
+  const divBtn=h("button","pvb-shiftbtn",t("pvbDiv10"));
+  const mulBtn=h("button","pvb-shiftbtn",t("pvbMul10"));
+  divBtn.onclick=()=>{ if(shift>PVB_MIN_SHIFT){ shift--; draw(); } };
+  mulBtn.onclick=()=>{ if(shift<PVB_MAX_SHIFT){ shift++; extras[shift-1]=0; draw(); } };
+  btnRow.append(divBtn,mulBtn);
+
+  function currentColumns(){
+    const topExp=3+shift;
+    const out=[0,1,2,3].map(i=>({exp:topExp-i,val:d[i]}));
+    for(let i=0;i<shift;i++) out.push({exp:shift-1-i,val:extras[i]});
+    return out.sort((a,b)=>b.exp-a.exp);
+  }
+  function expandText(){
+    const terms=[];
+    currentColumns().forEach(c=>{ const term=pvbTermStr(c.val,c.exp); if(term) terms.push(term); });
+    return t("expandLbl").toUpperCase()+"   "+(terms.length?terms.join(" + "):"0");
+  }
+  function wordsText(){
+    let intPart=0; const decDigits=[];
+    currentColumns().forEach(c=>{
+      if(c.exp>=0) intPart+=c.val*Math.pow(10,c.exp);
+      else decDigits.push(c.val);
+    });
+    return t("wordsLbl").toUpperCase()+"   "+pvbWords(intPart,decDigits);
+  }
+
+  function makeCol(exp,val,onInput){
+    const col=h("div","pvb-col");
+    const digitEl=h("div","pv-big pvb-digit",String(val));
+    const vwrap=h("div","pvb-vwrap");
+    const inp=document.createElement("input");
+    inp.type="range"; inp.min=0; inp.max=9; inp.step=1; inp.value=val;
+    inp.className="pvb-vslider";
+    inp.setAttribute("aria-label",t(PVB_LABEL_KEYS[exp+2]));
+    inp.oninput=()=>{ onInput(+inp.value); digitEl.textContent=inp.value; expand.textContent=expandText(); words.textContent=wordsText(); };
+    vwrap.appendChild(inp);
+    col.append(vwrap,digitEl,h("div","pvb-bracket"),h("div","pv-clab pvb-lab",t(PVB_LABEL_KEYS[exp+2])));
+    return col;
+  }
 
   function draw(){
-    digitEls.forEach((el,i)=>el.textContent=String(d[i]));
-    const n=d[0]*1000+d[1]*100+d[2]*10+d[3];
-    big.textContent=fmt(n);
-    blockBox.innerHTML="";
-    PV_COLS.forEach((sz,i)=>{ if(d[i]>0) blockBox.appendChild(pvBlocks(sz,d[i])); });
-    const terms=[];
-    if(d[0]) terms.push(d[0]*1000);
-    if(d[1]) terms.push(d[1]*100);
-    if(d[2]) terms.push(d[2]*10);
-    if(d[3]) terms.push(d[3]);
-    expand.textContent=t("expandLbl").toUpperCase()+"   "+(terms.length?terms.join(" + "):"0");
-    const hundreds=Math.floor(n/100), ones=n%100;
-    alt.textContent=t("altLbl").toUpperCase()+"   "+hundreds+" "+t("hundredsWord")+" + "+ones+" "+t("onesWord");
+    cols.innerHTML="";
+    const topExp=3+shift;
+    const exps=[0,1,2,3].map(i=>topExp-i);
+
+    exps.forEach((exp,ci)=>{
+      cols.appendChild(makeCol(exp,d[ci],v=>{ d[ci]=v; }));
+      // the "." lines up with the digit row by reusing the same vwrap/bracket/
+      // label rhythm as a real column, just with those rows made invisible —
+      // any other way of centring it drifts once font metrics change
+      if(exp===0 && (ci<exps.length-1 || shift>0)){
+        const dotCol=h("div","pvb-col pvb-dotcol");
+        const dotBracket=h("div","pvb-bracket"); dotBracket.style.visibility="hidden";
+        const dotLabel=h("div","pv-clab pvb-lab"," "); dotLabel.style.visibility="hidden";
+        dotCol.append(h("div","pvb-vwrap"), h("div","pv-big pvb-digit pvb-dot","."), dotBracket, dotLabel);
+        cols.appendChild(dotCol);
+      }
+    });
+    for(let i=0;i<shift;i++){
+      const exp=shift-1-i;
+      cols.appendChild(makeCol(exp,extras[i],v=>{ extras[i]=v; }));
+    }
+
+    divBtn.disabled=shift<=PVB_MIN_SHIFT;
+    mulBtn.disabled=shift>=PVB_MAX_SHIFT;
+    expand.textContent=expandText();
+    words.textContent=wordsText();
   }
   draw();
 }
@@ -312,7 +426,7 @@ function renderOrder(side,stage){
 
 export default {
   games:[
-    {id:"bench", name:"gPvBench", blurb:"gPvBenchP", render:renderBench},
+    {id:"bench", name:"gPvBench", blurb:"gPvBenchP", render:renderBench, full:true},
     {id:"round", name:"gRound", blurb:"gRoundP", render:renderRound, full:true},
     {id:"zero",  name:"gZero",  blurb:"gZeroP",  render:renderZero},
     {id:"order", name:"gOrder", blurb:"gOrderP", render:renderOrder, full:true}

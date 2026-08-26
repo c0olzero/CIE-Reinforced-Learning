@@ -12,6 +12,25 @@ All notable changes to this project are documented here, newest first.
 
 Each version bump gets an entry here and a matching `git tag` (e.g. `v1.0.0`).
 
+## [1.5.0] - 2026-08-26
+
+### Added
+- **Place Value Lab**: reworked Number Bench. A number now starts on 4
+  vertical 0-9 sliders (Thousands..Ones) instead of +/- steppers, with the
+  base-ten block picture retired. ×10/÷10 buttons relabel those same
+  digits onto new place-value columns — which really is multiplying or
+  dividing by 10, not just a cosmetic shift — and each ×10 reveals one
+  more genuine digit at the low end, up to the hundred-thousands column;
+  ÷10 goes the other way down to hundredths. A written-word form ("Two
+  thousand nine hundred and four" / "Hai nghìn chín trăm linh bốn") reads
+  the number aloud in text, styled large and in blue, alongside the
+  existing expanded-form line — the two languages use separate
+  algorithms since Vietnamese numeral grammar (mốt/lăm substitutions, an
+  explicit "không trăm" for a non-leading zero-hundreds group) isn't a
+  vocabulary swap of the English one. The starting number is now a
+  coin-flip between 2904 and 3003 instead of always 2904. Covers 4Ni.07
+  and 4Ni.08 (multiply/divide by 10 and 100) for the first time.
+
 ## [1.4.0] - 2026-08-24
 
 ### Added

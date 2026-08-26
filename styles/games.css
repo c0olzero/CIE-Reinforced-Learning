@@ -559,24 +559,43 @@
 .pv-big.mid{font-size:clamp(30px,5vw,50px)}
 .pv-big.small{font-size:clamp(24px,4vw,36px)}
 .pv-eq{font-family:var(--mono);font-size:14px;letter-spacing:.06em;color:var(--chalk-dim);text-align:center;padding:0 12px}
-.pv-eq.alt{opacity:.85}
-
-/* base-ten blocks: unit < rod < flat < solid, one shape per column */
-.pv-blocks{display:flex;flex-direction:column;gap:10px;align-items:center;min-height:190px;justify-content:center}
-.pv-blockrow{display:flex;flex-wrap:wrap;gap:6px;align-items:flex-end;justify-content:center;max-width:440px}
-.pv-b{border-radius:3px}
-.pv-b-o{width:16px;height:16px;background:var(--c1)}
-.pv-b-t{width:14px;height:110px;background:var(--c2);border-radius:3px}
-.pv-b-h{width:62px;height:62px;background:var(--c3);border-radius:4px;
-  background-image:linear-gradient(rgba(255,255,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.3) 1px,transparent 1px);
-  background-size:20.6px 20.6px}
-.pv-b-th{width:70px;height:70px;background:var(--c4);border-radius:6px;border:3px solid var(--ink)}
-
-.pv-ctrls{display:flex;gap:8px;justify-content:center}
-.pv-ctrl{display:flex;flex-direction:column;align-items:center;gap:4px;width:60px}
-.pv-step{width:32px;height:32px;padding:0;border-radius:8px;font-size:16px}
-.pv-digit{font-family:var(--fun);font-weight:800;font-size:22px;color:var(--ink)}
 .pv-clab{font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:#8A9A8F}
+
+/* Number Bench: a row of vertical 0-9 sliders, one per active place-value
+   column. Each <input type=range> is laid out horizontally at its native
+   size, then rotated -90deg around its own centre so it reads bottom (0)
+   to top (9) — dragging up increases the digit. */
+.pvb-cols{display:flex;align-items:flex-end;justify-content:center;gap:14px;pointer-events:auto}
+.pvb-col{display:flex;flex-direction:column;align-items:center;gap:10px;width:64px}
+.pvb-vwrap{position:relative;width:56px;height:170px}
+.pvb-vslider{position:absolute;top:50%;left:50%;width:170px;height:44px;
+  transform:translate(-50%,-50%) rotate(-90deg);margin:0;padding:0;
+  -webkit-appearance:none;appearance:none;background:transparent;cursor:grab}
+.pvb-vslider::-webkit-slider-runnable-track{height:44px;border-radius:22px;
+  background:rgba(247,242,231,.14);border:2px solid rgba(223,233,227,.3)}
+.pvb-vslider::-moz-range-track{height:44px;border-radius:22px;
+  background:rgba(247,242,231,.14);border:2px solid rgba(223,233,227,.3)}
+.pvb-vslider::-webkit-slider-thumb{-webkit-appearance:none;width:38px;height:38px;
+  margin-top:3px;border-radius:50%;background:var(--amber);border:2px solid var(--ink);cursor:grab}
+.pvb-vslider::-moz-range-thumb{width:38px;height:38px;border-radius:50%;
+  background:var(--amber);border:2px solid var(--ink);cursor:grab}
+.pvb-vslider:active{cursor:grabbing}
+.pvb-vslider:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.pvb-bracket{width:70%;height:1px;background:rgba(223,233,227,.3)}
+/* fixed height (room for 2 lines) so a long label like "Ten thousands"
+   wrapping doesn't grow that one column taller and push its slider/digit/
+   bracket up relative to every column with a one-line label */
+.pvb-lab{text-transform:uppercase;text-align:center;line-height:13px;height:26px}
+.pvb-dotcol{width:auto}
+.pvb-dot{align-self:center}
+.pvb-words{font-family:var(--fun);font-weight:800;font-size:clamp(20px,2.8vw,30px);
+  color:var(--c3);text-transform:uppercase;text-align:center;padding:0 12px}
+.pvb-btnrow{display:flex;gap:16px;pointer-events:auto}
+.pvb-shiftbtn{min-width:110px;height:52px;border-radius:14px;background:var(--paper);color:var(--ink);
+  font-family:var(--fun);font-weight:800;font-size:20px;box-shadow:0 8px 18px -8px rgba(0,0,0,.6);
+  transition:transform .12s}
+.pvb-shiftbtn:hover:not(:disabled){transform:translateY(-2px)}
+.pvb-shiftbtn:disabled{opacity:.35;cursor:default;box-shadow:none}
 
 /* rounding number line, shown inside the celebration overlay's proof slot */
 .pv-line{display:flex;align-items:center;gap:14px;width:100%;max-width:420px}
