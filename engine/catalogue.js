@@ -64,9 +64,9 @@ export const CATALOGUE=[
 
   { id:"place", subject:"math", stage:4, strand:"number", live:true,
     title:{en:"Place Value", vi:"Giá Trị Theo Vị Trí"},
-    blurb:{en:"Build a number in blocks, round it, and explore below zero.",
-           vi:"Xây một số bằng khối, làm tròn, và khám phá dưới 0."}, colors:[3,4,1,2],
-    objectives:["4Np.01","4Np.02","4Np.03","4Np.05"],
+    blurb:{en:"Build a number with sliders, round it, and explore below zero.",
+           vi:"Xây một số bằng thanh trượt, làm tròn, và khám phá dưới 0."}, colors:[3,4,1,2],
+    objectives:["4Np.01","4Np.02","4Np.03","4Np.05","4Ni.07","4Ni.08"],
     load:()=>import("../subjects/math/stage4/place.js") },
 
   { id:"time",  subject:"math", stage:4, strand:"geometry", live:true,

@@ -14,7 +14,7 @@ addStrings(STRINGS);
    4Np.01 read, write, compose and order numbers to 10,000
    4Np.02 partition into standard and expanded form
    4Np.03 round 3- and 4-digit numbers to the nearest 10 or 100
-   4Np.05 order integers below zero (temperature contexts)
+   4Np.05 order integers below zero
    4Ni.07/.08 multiply and divide whole numbers by 10 and 100
    ============================================================ */
 const fmt=n=>String(n).replace(/\B(?=(\d{3})+(?!\d))/g,",");
@@ -259,57 +259,92 @@ function renderRound(side,stage){
 }
 
 /* ---------- tab 3 — Below Zero (4Np.05) ---------- */
-/* Two independent thermometers with a live comparison symbol between them —
-   free play, no scoring. The tube is a plain fill bar so it stays pixel-exact
-   regardless of which browser draws the native slider beside it. */
-const PV_TMIN=-20, PV_TMAX=40, PV_TUBE_H=170;
-function pvTube(val){
-  const frac=Math.max(0,Math.min(1,(val-PV_TMIN)/(PV_TMAX-PV_TMIN)));
-  const zeroFrac=(0-PV_TMIN)/(PV_TMAX-PV_TMIN);
-  const tube=h("div","pv-tube");
-  tube.style.height=PV_TUBE_H+"px";
-  const fill=h("div","pv-fill");
-  fill.style.height=(frac*PV_TUBE_H)+"px";
-  fill.style.background=val<0?"var(--c3)":val>0?"var(--c1)":"var(--chalk-dim)";
-  const zero=h("div","pv-zero"); zero.style.bottom=(zeroFrac*PV_TUBE_H)+"px";
-  tube.append(fill,zero);
-  return tube;
+/* One shared number line, -20..20, with two draggable integer dots. The
+   big equation and the bracket above the line show the SAME value —
+   always blue minus gold — so when gold sits to the right of blue (a
+   bigger number), that value is genuinely negative, not just a distance. */
+const BZ_MIN=-20, BZ_MAX=20;
+/* the track's rendered width is read live (getBoundingClientRect), never
+   assumed — .bz-inner's CSS width is itself clamped by an ancestor's
+   max-width, so a hardcoded pixel constant here would silently drift out
+   of sync with where the track actually draws */
+const bzXOf=(v,trackW)=>(v-BZ_MIN)/(BZ_MAX-BZ_MIN)*trackW;
+function bzValAt(clientX,trackRect){
+  const frac=Math.max(0,Math.min(1,(clientX-trackRect.left)/trackRect.width));
+  return Math.round(BZ_MIN+frac*(BZ_MAX-BZ_MIN));
 }
 function renderZero(side,stage){
-  const wrap=h("div","pv-wrap bench"), stack=h("div","pv-stack"), row=h("div","pv-zrow");
-  stack.appendChild(row); wrap.appendChild(stack); stage.appendChild(wrap);
+  let blue=7, gold=-8;
+  const wrap=h("div","pv-wrap bench"), stack=h("div","pv-stack");
+  wrap.appendChild(stack); stage.appendChild(wrap);
+  stack.appendChild(h("div","pv-note",t("zeroHelp")));
 
-  function unit(val){
-    const col=h("div","pv-zcol");
-    const readout=h("div","pv-big small");
-    const tubeWrap=h("div");
-    const lw=h("div","lever-wrap");
-    lw.appendChild(h("div","ticks"));
-    const lev=document.createElement("input");
-    lev.type="range"; lev.min=PV_TMIN; lev.max=PV_TMAX; lev.value=val; lev.className="lever";
-    lw.appendChild(lev);
-    const ll=h("div","leverlab"); ll.append(h("span",null,PV_TMIN+"°"),h("span",null,PV_TMAX+"°"));
-    lw.appendChild(ll);
-    col.append(readout,tubeWrap,lw);
-    return {col,readout,tubeWrap,lev};
+  const eq=h("div","bz-eq");
+  const eqBlue=h("span","bz-blue"), eqGold=h("span","bz-gold"), eqResult=h("span","bz-result");
+  eq.append(eqBlue," − (",eqGold,") = ",eqResult);
+  stack.appendChild(eq);
+
+  const trackWrap=h("div","bz-trackwrap");
+  const inner=h("div","bz-inner");
+  trackWrap.appendChild(inner);
+  stack.appendChild(trackWrap);
+
+  const bracket=h("div","bz-bracket");
+  const bracketLbl=h("div","bz-bracket-lbl");
+  bracket.appendChild(bracketLbl);
+  const axis=h("div","bz-axis");
+  const ticks=h("div","bz-ticks");
+  const blueDot=document.createElement("button"); blueDot.className="bz-dot bz-dot-blue";
+  const goldDot=document.createElement("button"); goldDot.className="bz-dot bz-dot-gold";
+  inner.append(bracket,axis,ticks,blueDot,goldDot);
+
+  function trackW(){ return inner.getBoundingClientRect().width; }
+  const w=trackW();   // inner is already in the live DOM at this point, so this is a real width
+  for(let v=BZ_MIN;v<=BZ_MAX;v++){
+    const major=v%10===0;
+    const tick=h("div","bz-tick"+(major?" major":""));
+    tick.style.left=bzXOf(v,w)+"px";
+    ticks.appendChild(tick);
+    if(major){
+      const lab=h("div","bz-ticklab",String(v));
+      lab.style.left=bzXOf(v,w)+"px";
+      ticks.appendChild(lab);
+    }
   }
-  const a=unit(4), b=unit(-6);
-  const sym=h("div","pv-sym","?");
-  row.append(a.col,sym,b.col);
-  stack.appendChild(h("div","pv-note",t("freezing")));
 
-  const panel=h("div","panel");
-  panel.append(h("h4",null,t("gZero").toUpperCase()),h("p","note",t("zeroHelp")));
-  side.appendChild(panel);
+  function wireDot(dot,getVal,setVal){
+    let dragging=false;
+    dot.addEventListener("pointerdown",e=>{ dragging=true; dot.setPointerCapture(e.pointerId); });
+    dot.addEventListener("pointermove",e=>{
+      if(!dragging) return;
+      setVal(bzValAt(e.clientX,inner.getBoundingClientRect()));
+    });
+    const stop=()=>{ dragging=false; };
+    dot.addEventListener("pointerup",stop);
+    dot.addEventListener("pointercancel",stop);
+    dot.addEventListener("keydown",e=>{
+      if(e.key==="ArrowLeft"){ setVal(Math.max(BZ_MIN,getVal()-1)); e.preventDefault(); }
+      else if(e.key==="ArrowRight"){ setVal(Math.min(BZ_MAX,getVal()+1)); e.preventDefault(); }
+    });
+  }
+  wireDot(blueDot,()=>blue,v=>{ blue=v; draw(); });
+  wireDot(goldDot,()=>gold,v=>{ gold=v; draw(); });
 
   function draw(){
-    const A=+a.lev.value, B=+b.lev.value;
-    a.readout.textContent=A+"°C"; b.readout.textContent=B+"°C";
-    a.tubeWrap.innerHTML=""; a.tubeWrap.appendChild(pvTube(A));
-    b.tubeWrap.innerHTML=""; b.tubeWrap.appendChild(pvTube(B));
-    sym.textContent=A<B?"<":A>B?">":"=";
+    const w=trackW();
+    const diff=blue-gold;
+    eqBlue.textContent=String(blue);
+    eqGold.textContent=String(gold);
+    eqResult.textContent=String(diff);
+    blueDot.style.left=bzXOf(blue,w)+"px";
+    goldDot.style.left=bzXOf(gold,w)+"px";
+    blueDot.setAttribute("aria-label",t("bzBlueLabel")(blue));
+    goldDot.setAttribute("aria-label",t("bzGoldLabel")(gold));
+    const x1=bzXOf(Math.min(blue,gold),w), x2=bzXOf(Math.max(blue,gold),w);
+    bracket.style.left=x1+"px";
+    bracket.style.width=Math.max(2,x2-x1)+"px";
+    bracketLbl.textContent=String(diff);
   }
-  a.lev.oninput=draw; b.lev.oninput=draw;
   draw();
 }
 
@@ -428,7 +463,7 @@ export default {
   games:[
     {id:"bench", name:"gPvBench", blurb:"gPvBenchP", render:renderBench, full:true},
     {id:"round", name:"gRound", blurb:"gRoundP", render:renderRound, full:true},
-    {id:"zero",  name:"gZero",  blurb:"gZeroP",  render:renderZero},
+    {id:"zero",  name:"gZero",  blurb:"gZeroP",  render:renderZero, full:true},
     {id:"order", name:"gOrder", blurb:"gOrderP", render:renderOrder, full:true}
   ]
 };

@@ -12,6 +12,24 @@ All notable changes to this project are documented here, newest first.
 
 Each version bump gets an entry here and a matching `git tag` (e.g. `v1.0.0`).
 
+## [1.6.0] - 2026-08-26
+
+### Added
+- **Place Value Lab**: reworked Below Zero. Two thermometers with a
+  less-than/equals/greater-than comparison symbol are gone — instead a
+  single shared number line from
+  -20 to 20 holds a blue and a gold dot, both draggable (mouse, touch, or
+  arrow keys once focused). A big equation above always reads blue minus
+  gold, and a bracket over the line repeats that same signed value, so
+  dragging gold to the right of blue produces a genuine negative result
+  rather than a bare on-screen gap length — this is now about subtracting
+  across zero, not just comparing which number is colder.
+- **Place Value Lab**'s catalogue card and objective list had drifted out
+  of date across the last couple of reworks — the blurb still said "in
+  blocks" after Number Bench dropped the base-ten blocks, and 4Ni.07/.08
+  (multiply/divide by 10 and 100), covered since Number Bench's ×10/÷10
+  rework, was never added to the card's objective list. Both fixed.
+
 ## [1.5.0] - 2026-08-26
 
 ### Added
