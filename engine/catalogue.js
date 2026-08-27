@@ -20,8 +20,8 @@ export const SUBJECTS=[
 
 export const STRANDS=[
   { id:"number", name:{en:"Number", vi:"Số"},
-    blurb:{en:"Place value, times tables, fractions and decimals.",
-           vi:"Giá trị theo vị trí, bảng nhân, phân số và số thập phân."} },
+    blurb:{en:"Place value, times tables, fractions, decimals and time.",
+           vi:"Giá trị theo vị trí, bảng nhân, phân số, số thập phân và thời gian."} },
   { id:"geometry", name:{en:"Geometry & Measure", vi:"Hình Học & Đo Lường"},
     blurb:{en:"Shapes, angles, position and units.",
            vi:"Hình khối, góc, vị trí và đơn vị đo."} },
@@ -69,10 +69,17 @@ export const CATALOGUE=[
     objectives:["4Np.01","4Np.02","4Np.03","4Np.05","4Ni.07","4Ni.08"],
     load:()=>import("../subjects/math/stage4/place.js") },
 
-  { id:"time",  subject:"math", stage:4, strand:"geometry", live:true,
+  { id:"time",  subject:"math", stage:4, strand:"number", live:true,
     title:{en:"Telling Time", vi:"Xem Giờ"},
     blurb:{en:"Read a clock, switch between 12- and 24-hour time, and work out how long something takes.",
            vi:"Xem giờ, đổi giữa giờ 12 và giờ 24, và tính xem việc gì đó mất bao lâu."}, colors:[1,3,5,2],
     objectives:["4Gt.01","4Gt.02","4Gt.03","4Gt.04"],
-    load:()=>import("../subjects/math/stage4/time.js") }
+    load:()=>import("../subjects/math/stage4/time.js") },
+
+  { id:"perim", subject:"math", stage:4, strand:"geometry", live:true,
+    title:{en:"Perimeter & Area", vi:"Chu Vi & Diện Tích"},
+    blurb:{en:"Trace a shape's edge, split its area, then measure one yourself.",
+           vi:"Lần theo cạnh của một hình, chia diện tích, rồi tự mình đo một hình."}, colors:[2,4,5],
+    objectives:["4Gg.02","4Gg.03","4Gg.04"],
+    load:()=>import("../subjects/math/stage4/perimeter.js") }
 ];

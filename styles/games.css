@@ -716,3 +716,44 @@
 .clk-eltl-durlab.before{fill:var(--c3)}
 .clk-eltl-durlab.dur{fill:var(--c5)}
 
+/* ---------- perimeter & area lab ---------- */
+.pa-wrap{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:22px;padding:16px}
+.pa-wrap.bench{min-height:330px;gap:26px}
+.pa-gridwrap{display:flex;justify-content:center;pointer-events:auto}
+/* the outline hugs the grid's own rendered box exactly — line-height:0 stops
+   the inline-block from picking up baseline whitespace under the grid */
+.pa-outline{display:inline-block;border:4px solid var(--c3);border-radius:4px;line-height:0}
+/* no grid gap — the SVG boundary/trace overlay is drawn in the same unit
+   grid as these cells, and needs cellPx to be the ONLY thing scaling that
+   mapping (see paSceneNode). A border per cell (box-sizing:border-box, so
+   it doesn't change the track size) stands in for the old gap-revealed
+   grid line. */
+.pa-grid{display:grid}
+.pa-cell{background:var(--c1);border:1px solid rgba(0,0,0,.3)}
+.pa-cell.empty{background:transparent}
+.pa-eq{font-family:var(--mono);font-size:22px;letter-spacing:.04em;color:var(--chalk-dim);text-align:center;min-height:28px}
+.pa-eq span{font-weight:800}
+/* the quiz celebration's equation sits where .dimtext usually would —
+   same bottom margin before the Next button, but full box width instead
+   of .dimtext's 44ch cap, since a long C/T-shape equation needs the room */
+.pa-eq.dim-eq{margin:0 auto 18px}
+
+/* Measurement Bench: an SVG overlay sits over the coloured grid — a faint
+   true outline always shows the shape's real edge (not just its bounding
+   box, which would cut across an L/T/C shape's notch), and the Perimeter
+   button draws a second bright path + dot on top of it, progressively */
+.pa-rel{position:relative;margin:14px}
+.pa-svg{position:absolute;inset:0;pointer-events:none;overflow:visible}
+.pa-boundary{fill:none;stroke:var(--chalk);stroke-width:.05;opacity:.45}
+/* stroke colour is set per-instance in JS (one path per traced segment, each
+   coloured to match its own equation term) so no default here */
+.pa-trace{fill:none;stroke-width:.14;stroke-linecap:round;stroke-linejoin:round}
+.pa-dot{fill:var(--c3);stroke:var(--ink);stroke-width:.035}
+.pa-btnrow{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;pointer-events:auto;margin-top:14px}
+.pa-btn{min-width:120px;height:52px;padding:0 18px;border-radius:14px;background:var(--paper);color:var(--ink);
+  font-family:var(--fun);font-weight:800;font-size:17px;box-shadow:0 8px 18px -8px rgba(0,0,0,.6);
+  transition:transform .12s,background .15s}
+.pa-btn:hover{transform:translateY(-2px)}
+.pa-btn.active{background:var(--amber)}
+

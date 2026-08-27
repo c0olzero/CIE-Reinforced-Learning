@@ -12,6 +12,26 @@ All notable changes to this project are documented here, newest first.
 
 Each version bump gets an entry here and a matching `git tag` (e.g. `v1.0.0`).
 
+## [1.7.0] - 2026-08-27
+
+### Added
+- **Perimeter & Area Lab** (Geometry & Measure, 4Gg.02–.04): a Measurement
+  Bench — pick a rectangle, L, T or C shape and either trace its perimeter
+  (a dot runs the boundary side by side, each side drawn in its own
+  colour and speed proportional to its length) or split its area (each
+  piece lights up in turn), with a colour-coded equation underneath that
+  adds up exactly what's on screen — 4 + 2 + 1 + 3 cm, not just a bare
+  total. A Shape Quiz asks for the perimeter or area of a random
+  rectangle or two-rectangle compound shape; its celebration screen
+  proves the answer the same way the bench does (the same coloured
+  trace/fill and equation) instead of a plain recap, never repeats the
+  same shape twice running, and never asks the same measurement more
+  than three times in a row.
+
+### Changed
+- **Telling Time** moved from the Geometry & Measure strand to Number,
+  and the Number strand's card blurb now mentions time.
+
 ## [1.6.0] - 2026-08-26
 
 ### Added
