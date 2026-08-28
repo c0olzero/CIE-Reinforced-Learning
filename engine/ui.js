@@ -36,7 +36,15 @@ export function celebrate(stage,ok,text,onNext,nextLabel,extra){
     word.appendChild(sp);
   });
   box.appendChild(word);
-  if(extra){ extra.classList.add("dim-extra"); box.appendChild(extra); }   // proof, not just words
+  // wrapped, not stamped directly onto extra: extra's own display type
+  // (block, inline, svg...) varies by caller, and text-align:center on
+  // .dimbox only ever centers inline content — a flex wrapper centers
+  // the proof regardless of what kind of element it turns out to be
+  if(extra){
+    const extraWrap=h("div","dim-extra");
+    extraWrap.appendChild(extra);
+    box.appendChild(extraWrap);
+  }   // proof, not just words
   // usually a plain sentence, but a caller can pass a built DOM node instead
   // (e.g. a real stacked fraction glyph inline, not text like "3/19")
   box.appendChild(text instanceof Node ? text : h("p","dimtext",text));

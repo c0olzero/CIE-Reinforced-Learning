@@ -12,6 +12,33 @@ All notable changes to this project are documented here, newest first.
 
 Each version bump gets an entry here and a matching `git tag` (e.g. `v1.0.0`).
 
+## [1.8.0] - 2026-08-27
+
+### Added
+- **Data Lab** (Statistics & Probability, 4Ss.01–.03): Sort It drags items
+  into a Venn or Carroll diagram by two independent properties, drawing
+  from three domains each round — shapes, numbers (odd/even, multiples of
+  3/5, greater-than-10), and vehicles (2 vs. 4 wheels, has an engine) —
+  with a proper Carroll layout: each property gets its own labelled axis
+  instead of a caption line, and the whole diagram is centred. Chart Bench
+  shows one dataset as a tally chart, pictogram, bar chart, and dot plot,
+  so it's visibly the same data drawn four ways. Read the Data asks
+  most/least/how-many/difference/total questions, including a two-dataset
+  comparison with matched axis scales.
+- **Statistics Lab** (Statistics & Probability, 4Sp.01–.02): Spinner Bench
+  spins an 8-wedge spinner once or twenty at a time, with a live tally and
+  a dashed tick marking the theoretical proportion so results visibly
+  settle toward it. Chance Words asks how likely a spinner is to land on
+  a given colour, evenly covering all five words from Impossible to
+  Certain.
+
+### Fixed
+- The celebration screen's proof visual (the shape/chart/spinner shown
+  alongside the verdict) could sit flush against the left edge instead of
+  centred, depending on what kind of element a module handed it. Fixed in
+  the shared celebration code, so every module's proof is centred now,
+  not just the ones that happened to work before.
+
 ## [1.7.0] - 2026-08-27
 
 ### Added

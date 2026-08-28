@@ -81,5 +81,19 @@ export const CATALOGUE=[
     blurb:{en:"Trace a shape's edge, split its area, then measure one yourself.",
            vi:"Lần theo cạnh của một hình, chia diện tích, rồi tự mình đo một hình."}, colors:[2,4,5],
     objectives:["4Gg.02","4Gg.03","4Gg.04"],
-    load:()=>import("../subjects/math/stage4/perimeter.js") }
+    load:()=>import("../subjects/math/stage4/perimeter.js") },
+
+  { id:"data", subject:"math", stage:4, strand:"stats", live:true,
+    title:{en:"Data Lab", vi:"Xưởng Dữ Liệu"},
+    blurb:{en:"Sort it into a diagram, chart it, then read it back.",
+           vi:"Phân loại vào sơ đồ, vẽ biểu đồ, rồi đọc lại."}, colors:[3,4,5,0],
+    objectives:["4Ss.01","4Ss.02","4Ss.03"],
+    load:()=>import("../subjects/math/stage4/data.js") },
+
+  { id:"chance", subject:"math", stage:4, strand:"stats", live:true,
+    title:{en:"Statistics Lab", vi:"Xưởng Thống Kê"},
+    blurb:{en:"Spin it, tally it, then say how likely it was.",
+           vi:"Quay, kiểm đếm, rồi nói xem khả năng xảy ra là bao nhiêu."}, colors:[0,2,3,5],
+    objectives:["4Sp.01","4Sp.02"],
+    load:()=>import("../subjects/math/stage4/chance.js") }
 ];

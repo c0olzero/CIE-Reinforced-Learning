@@ -45,7 +45,9 @@ export const T = {
     diffH:"Hard",
     diffNote:"Normal slows the pacing. The clock is 30s either way.",
     comboLbl:"Combo",
-    bonusSec:"+1s"
+    bonusSec:"+1s",
+    cName:{c0:"Red", c1:"Amber", c2:"Teal", c3:"Blue", c4:"Purple", c5:"Green"},
+    shName:{circle:"Circle", square:"Square", triangle:"Triangle", star:"Star"}
   },
   vi:{
     loading:"Đang tải…", loadFail:"Không tải được. Kiểm tra kết nối nhé.",
@@ -88,7 +90,9 @@ export const T = {
     diffH:"Khó",
     diffNote:"Chế độ Bình thường chậm hơn. Đồng hồ vẫn 30 giây.",
     comboLbl:"Chuỗi",
-    bonusSec:"+1 giây"
+    bonusSec:"+1 giây",
+    cName:{c0:"Đỏ", c1:"Hổ Phách", c2:"Xanh Ngọc", c3:"Xanh Dương", c4:"Tím", c5:"Xanh Lá"},
+    shName:{circle:"Hình Tròn", square:"Hình Vuông", triangle:"Hình Tam Giác", star:"Ngôi Sao"}
   }
 };
 
