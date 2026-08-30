@@ -9,25 +9,46 @@
    and gaps in coverage are visible at a glance. `load` is a dynamic import: the
    code for a module is only fetched when someone opens it.
 
-   Every module also carries a `strand` — the top-level choice on the hub's
-   first screen, matching the Cambridge framework's own strands (Number,
-   Geometry & Measure, Statistics & Probability). A module without one won't
-   appear under any strand. */
+   The hub is four levels: subject -> strand -> module -> game. Every module
+   carries both a `subject` and a `strand`; every strand carries the `subject`
+   it belongs to. A module missing either won't be reachable from the hub.
+
+   Strand ids must stay unique across subjects — they are the route key. */
 
 export const SUBJECTS=[
-  {id:"math", name:"subjMath", syllabus:"0096"}
+  { id:"math", syllabus:"0096",
+    name:{en:"Mathematics", vi:"Toán"},
+    blurb:{en:"Number, shape, measure and data.",
+           vi:"Số, hình, phép đo và dữ liệu."} },
+  { id:"science", syllabus:"0097",
+    name:{en:"Science", vi:"Khoa Học"},
+    blurb:{en:"Living things, materials, energy and the Earth.",
+           vi:"Sinh vật, vật chất, năng lượng và Trái Đất."} }
 ];
 
 export const STRANDS=[
-  { id:"number", name:{en:"Number", vi:"Số"},
+  { id:"number", subject:"math", name:{en:"Number", vi:"Số"},
     blurb:{en:"Place value, times tables, fractions, decimals and time.",
            vi:"Giá trị theo vị trí, bảng nhân, phân số, số thập phân và thời gian."} },
-  { id:"geometry", name:{en:"Geometry & Measure", vi:"Hình Học & Đo Lường"},
+  { id:"geometry", subject:"math", name:{en:"Geometry & Measure", vi:"Hình Học & Đo Lường"},
     blurb:{en:"Shapes, angles, position and units.",
            vi:"Hình khối, góc, vị trí và đơn vị đo."} },
-  { id:"stats", name:{en:"Statistics & Probability", vi:"Thống Kê & Xác Suất"},
+  { id:"stats", subject:"math", name:{en:"Statistics & Probability", vi:"Thống Kê & Xác Suất"},
     blurb:{en:"Charts, data and the language of chance.",
-           vi:"Biểu đồ, dữ liệu và ngôn ngữ của xác suất."} }
+           vi:"Biểu đồ, dữ liệu và ngôn ngữ của xác suất."} },
+
+  { id:"bio", subject:"science", name:{en:"Biology", vi:"Sinh Học"},
+    blurb:{en:"Plants, bodies, animal groups and food chains.",
+           vi:"Thực vật, cơ thể, nhóm động vật và chuỗi thức ăn."} },
+  { id:"chem", subject:"science", name:{en:"Chemistry", vi:"Hoá Học"},
+    blurb:{en:"Solids, liquids, gases and what materials can do.",
+           vi:"Chất rắn, chất lỏng, chất khí và tính chất vật liệu."} },
+  { id:"phys", subject:"science", name:{en:"Physics", vi:"Vật Lý"},
+    blurb:{en:"Energy, heat, light, forces and magnets.",
+           vi:"Năng lượng, nhiệt, ánh sáng, lực và nam châm."} },
+  { id:"earth", subject:"science", name:{en:"Earth & Space", vi:"Trái Đất & Vũ Trụ"},
+    blurb:{en:"Inside the Earth, its soils, and the day-night cycle.",
+           vi:"Bên trong Trái Đất, các loại đất, và chu kỳ ngày đêm."} }
 ];
 
 export const CATALOGUE=[
@@ -95,5 +116,17 @@ export const CATALOGUE=[
     blurb:{en:"Spin it, tally it, then say how likely it was.",
            vi:"Quay, kiểm đếm, rồi nói xem khả năng xảy ra là bao nhiêu."}, colors:[0,2,3,5],
     objectives:["4Sp.01","4Sp.02"],
-    load:()=>import("../subjects/math/stage4/chance.js") }
+    load:()=>import("../subjects/math/stage4/chance.js") },
+
+  /* ---- Science (0097) ----
+     The Stage 4 science summary we are working from lists topics by section
+     number rather than Cambridge's own objective codes, so `objectives` here
+     carries those section refs ("Sci 2.1"). Swap them for the real codes when
+     the full framework is to hand — nothing but this field depends on them. */
+  { id:"matter", subject:"science", stage:4, strand:"chem", live:true,
+    title:{en:"Matter Lab", vi:"Xưởng Vật Chất"},
+    blurb:{en:"Heat it, cool it, and name what just happened.",
+           vi:"Đun nóng, làm lạnh, rồi gọi tên điều vừa xảy ra."}, colors:[3,2,1,5],
+    objectives:["Sci 2.1"],
+    load:()=>import("../subjects/science/stage4/matter.js") }
 ];

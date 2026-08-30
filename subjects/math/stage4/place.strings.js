@@ -24,7 +24,7 @@ export default {
     qWhich:"Which symbol goes in the middle?",
     qBiggest:"Tap the biggest number.",
     qSmallest:"Tap the smallest number.",
-    cmpWhy:function(a,b,sym,place){return place==null
+    pvCmpWhy:function(a,b,sym,place){return place==null
       ? a+" "+sym+" "+b+" — every digit matches."
       : a+" "+sym+" "+b+" — look at the "+place+" column first.";},
     orderWhy:function(list){return "In order: "+list.join(" < ")+".";},
@@ -54,7 +54,7 @@ export default {
     qWhich:"Dấu nào điền vào giữa?",
     qBiggest:"Chạm vào số lớn nhất.",
     qSmallest:"Chạm vào số nhỏ nhất.",
-    cmpWhy:function(a,b,sym,place){return place==null
+    pvCmpWhy:function(a,b,sym,place){return place==null
       ? a+" "+sym+" "+b+" — mọi chữ số đều giống nhau."
       : a+" "+sym+" "+b+" — nhìn vào hàng "+place+" trước tiên.";},
     orderWhy:function(list){return "Thứ tự: "+list.join(" < ")+".";},

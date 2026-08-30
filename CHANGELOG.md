@@ -12,6 +12,38 @@ All notable changes to this project are documented here, newest first.
 
 Each version bump gets an entry here and a matching `git tag` (e.g. `v1.0.0`).
 
+## [1.10.0] - 2026-08-30
+
+### Added
+- **Science (0097) is now a second subject.** The hub gained a top-level
+  subject picker — Mathematics or Science — above the existing strand
+  screen, so navigation is now subject → strand → module → game. Every
+  existing maths module moved under Mathematics unchanged; Science opens
+  onto its own four strands (Biology, Chemistry, Physics, Earth & Space),
+  each with its own icon.
+- **Matter Lab** (Science, Chemistry — states of matter and phase changes):
+  a Particle Bench where one tank of particles rearranges as you drag the
+  temperature from -20°C to 120°C — locked in a vibrating lattice as a
+  solid, pooling with a surface as a liquid, filling the whole tank as a
+  gas — calling out 0°C and 100°C as they're reached. Then two quizzes,
+  Solid, Liquid or Gas? (everyday things) and Name the Change (melting,
+  freezing, evaporating, condensing, set in real moments like steam on a
+  cold mirror), and an Arcade that drops things to be sorted into the
+  right jar, playable by click or the 1/2/3 keys.
+
+### Fixed
+- `verify.js` was silently checking a stale bundle: esbuild wrote it to a
+  path resolved against the working directory while Node read one resolved
+  against the current drive root, so on Windows the two were different
+  files. It had been re-verifying a three-week-old build and reporting a
+  pass — including missing that three modules existed at all. Both ends now
+  use one absolute path, and the walker follows the new subject level.
+- `cmpWhy` was defined by both Fraction Lab and Place Value Lab with
+  different signatures, so whichever module loaded second silently replaced
+  the other's explanation text — dropping Place Value's "look at the tens
+  column first" hint, or appending "every digit matches" to a comparison of
+  two fractions. Place Value's is now `pvCmpWhy`.
+
 ## [1.9.0] - 2026-08-30
 
 ### Changed

@@ -1,14 +1,19 @@
 /* Bundle the module graph, run it in a headless DOM, open every tab.
    Requires: npm i -D esbuild jsdom      Usage: node verify.js */
-const {execSync}=require("child_process"), fs=require("fs"), path=require("path");
-execSync("npx esbuild engine/main.js --bundle --format=iife --outfile=/tmp/wb.js --log-level=warning",{stdio:"inherit"});
+const {execSync}=require("child_process"), fs=require("fs"), path=require("path"), os=require("os");
+/* One absolute path for both the write and the read. "/tmp/wb.js" is NOT that:
+   esbuild resolved it against the cwd while Node's readFileSync resolved it
+   against the current DRIVE root, so on Windows this silently bundled to one
+   file and verified a different, stale one — reporting a three-week-old pass. */
+const BUNDLE=path.join(os.tmpdir(),"wb-verify.js");
+execSync(`npx esbuild engine/main.js --bundle --format=iife --outfile="${BUNDLE}" --log-level=warning`,{stdio:"inherit"});
 const css=["base","games","responsive"].map(f=>fs.readFileSync(`styles/${f}.css`,"utf8")).join("\n");
 let html=fs.readFileSync("index.html","utf8")
   .replace(/<link rel="stylesheet"[^>]*>/g,"")
   .replace(/<script type="module"[^>]*><\/script>/,"")
   .replace(/<script>\s*if\("serviceWorker"[\s\S]*?<\/script>/,"")
   .replace("</head>",`<style>${css}</style></head>`)
-  .replace("</body>",`<script>${fs.readFileSync("/tmp/wb.js","utf8")}</script></body>`);
+  .replace("</body>",`<script>${fs.readFileSync(BUNDLE,"utf8")}</script></body>`);
 const {JSDOM}=require("jsdom"); const errs=[];
 const dom=new JSDOM(html,{runScripts:"dangerously",pretendToBeVisual:true,beforeParse(w){
   w.ResizeObserver=class{observe(){}disconnect(){}unobserve(){}};
@@ -26,30 +31,44 @@ const dom=new JSDOM(html,{runScripts:"dangerously",pretendToBeVisual:true,before
 const w=dom.window,d=w.document;
 const click=e=>{ if(e) e.dispatchEvent(new w.MouseEvent("click",{bubbles:true})); };
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-/* Hub is now two levels: strand picker, then that strand's module list. */
+/* Hub is three levels above a module: subject -> strand -> module list.
+   Subject and strand cards share the .card.strand class, so each level is
+   re-queried after its own click rather than by class alone. */
+const home=async()=>{ let g=0;
+  while(!d.querySelector("#backBtn").hidden && g++<6){ click(d.querySelector("#backBtn")); await sleep(60); } };
 (async()=>{
-  await sleep(700); let n=0, live=0;
-  const strands=d.querySelectorAll(".card.strand:not(.soon)").length;
-  for(let s=0;s<strands;s++){
-    let guard=0;
-    while(!d.querySelector("#backBtn").hidden && guard++<5){ click(d.querySelector("#backBtn")); await sleep(60); }
-    click([...d.querySelectorAll(".card.strand:not(.soon)")][s]); await sleep(300);
-    const modCount=d.querySelectorAll(".card:not(.strand):not(.soon)").length;
-    for(let m=0;m<modCount;m++){
-      click([...d.querySelectorAll(".card:not(.strand):not(.soon)")][m]); await sleep(500);
-      const tabs=[...d.querySelectorAll(".tab")];
-      if(!tabs.length){ errs.push("strand "+s+" module "+m+" did not load"); }
-      else{
-        live++;
-        for(let i=0;i<tabs.length;i++){
-          click([...d.querySelectorAll(".tab")][i]); await sleep(120);
-          for(const b of [...d.querySelectorAll(".abtn,.btn,.thumb,.shape,.diffbtn")].slice(0,5)) click(b);
-          await sleep(60); n++;
+  await sleep(700); let n=0, live=0, seen=0;
+  await home();
+  const subjects=d.querySelectorAll(".card.strand:not(.soon)").length;
+  if(!subjects) errs.push("no subject cards on the hub");
+  for(let sub=0;sub<subjects;sub++){
+    await home();
+    click([...d.querySelectorAll(".card.strand:not(.soon)")][sub]); await sleep(300);
+    const strands=d.querySelectorAll(".card.strand:not(.soon)").length;
+    if(!strands) errs.push("subject "+sub+" showed no strands");
+    for(let s=0;s<strands;s++){
+      await home();
+      click([...d.querySelectorAll(".card.strand:not(.soon)")][sub]); await sleep(200);
+      click([...d.querySelectorAll(".card.strand:not(.soon)")][s]); await sleep(300);
+      const modCount=d.querySelectorAll(".card:not(.strand):not(.soon)").length;
+      for(let m=0;m<modCount;m++){
+        seen++;
+        click([...d.querySelectorAll(".card:not(.strand):not(.soon)")][m]); await sleep(500);
+        const tabs=[...d.querySelectorAll(".tab")];
+        if(!tabs.length){ errs.push("subject "+sub+" strand "+s+" module "+m+" did not load"); }
+        else{
+          live++;
+          for(let i=0;i<tabs.length;i++){
+            click([...d.querySelectorAll(".tab")][i]); await sleep(120);
+            for(const b of [...d.querySelectorAll(".abtn,.btn,.thumb,.shape,.diffbtn")].slice(0,5)) click(b);
+            await sleep(60); n++;
+          }
         }
+        click(d.querySelector("#backBtn")); await sleep(60);   // back to this strand's module list
       }
-      click(d.querySelector("#backBtn")); await sleep(60);   // back to this strand's module list
     }
   }
+  if(seen!==live) errs.push(`${seen} module cards but only ${live} rendered tabs`);
   console.log(`\n${n} tabs across ${live} modules — ${errs.length} error(s)`);
   errs.slice(0,10).forEach(e=>console.log("  *",e));
   process.exit(errs.length?1:0);

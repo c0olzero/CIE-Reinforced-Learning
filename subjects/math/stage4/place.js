@@ -445,7 +445,7 @@ function renderOrder(side,stage){
     proof.style.margin="0 auto";
     proof.append(pvTiles(A,diffIdx),pvTiles(B,diffIdx));
     const place=diffIdx<0?null:t(PLACE_NAMES[diffIdx]);
-    celebrate(stage,ok,t("cmpWhy")(fmt(A),fmt(B),truth,place),deal,t("nextQ"),proof);
+    celebrate(stage,ok,t("pvCmpWhy")(fmt(A),fmt(B),truth,place),deal,t("nextQ"),proof);
   }
   function answerPick(said){
     if(answered) return; answered=true;

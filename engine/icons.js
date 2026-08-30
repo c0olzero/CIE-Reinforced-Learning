@@ -60,5 +60,59 @@ function iconStats(){
   return s;
 }
 
-const ICONS={number:iconNumber, geometry:iconGeometry, stats:iconStats};
+/* Biology — a sprouting seedling: stem with two leaves above a soil line. */
+function iconBio(){
+  const s=svg();
+  s.append(
+    el("line",Object.assign({x1:8,y1:34,x2:32,y2:34},STROKE)),
+    el("line",Object.assign({x1:20,y1:34,x2:20,y2:14},STROKE)),
+    el("path",Object.assign({d:"M20,22 C14,22 10,18 10,13 C16,13 20,17 20,22 Z"},STROKE)),
+    el("path",Object.assign({d:"M20,18 C26,18 30,14 30,9 C24,9 20,13 20,18 Z"},STROKE))
+  );
+  return s;
+}
+
+/* Chemistry — a flask with a liquid line and a bubble. */
+function iconChem(){
+  const s=svg();
+  s.append(
+    el("line",Object.assign({x1:16,y1:6,x2:24,y2:6},STROKE)),
+    el("path",Object.assign({d:"M18,6 L18,16 L9,30 A3,3 0 0 0 12,34 L28,34 A3,3 0 0 0 31,30 L22,16 L22,6"},STROKE)),
+    el("path",Object.assign({d:"M12.5,26 L27.5,26"},STROKE)),
+    el("circle",{cx:17,cy:30,r:2,fill:"currentColor"})
+  );
+  return s;
+}
+
+/* Physics — a magnet's horseshoe with its two pole tips. */
+function iconPhys(){
+  const s=svg();
+  s.append(
+    el("path",Object.assign({d:"M11,30 L11,18 A9,9 0 0 1 29,18 L29,30"},STROKE)),
+    el("line",Object.assign({x1:11,y1:30,x2:11,y2:34},STROKE)),
+    el("line",Object.assign({x1:29,y1:30,x2:29,y2:34},STROKE)),
+    el("circle",{cx:11,cy:34,r:2.2,fill:"currentColor"}),
+    el("circle",{cx:29,cy:34,r:2.2,fill:"currentColor"})
+  );
+  return s;
+}
+
+/* Earth & Space — a planet with an orbit ring cutting across it. */
+function iconEarth(){
+  const s=svg();
+  s.append(
+    el("circle",Object.assign({cx:20,cy:20,r:11},STROKE)),
+    el("ellipse",Object.assign({cx:20,cy:20,rx:18,ry:6.5,transform:"rotate(-20 20 20)"},STROKE)),
+    el("circle",{cx:20,cy:20,r:3.2,fill:"currentColor"})
+  );
+  return s;
+}
+
+const ICONS={number:iconNumber, geometry:iconGeometry, stats:iconStats,
+             bio:iconBio, chem:iconChem, phys:iconPhys, earth:iconEarth};
 export function strandIcon(id){ return (ICONS[id]||iconNumber)(); }
+
+/* Subject icons for the hub's new first screen. Maths reuses the abacus;
+   Science gets the flask, so the two read as different at a glance. */
+const SUBJECT_ICONS={math:iconNumber, science:iconChem};
+export function subjectIcon(id){ return (SUBJECT_ICONS[id]||iconNumber)(); }
