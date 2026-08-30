@@ -12,6 +12,24 @@ All notable changes to this project are documented here, newest first.
 
 Each version bump gets an entry here and a matching `git tag` (e.g. `v1.0.0`).
 
+## [1.10.1] - 2026-08-30
+
+### Changed
+- **Matter Lab** — Particle Bench: the slider now picks the state directly,
+  ordered gas → liquid → solid, instead of a temperature in °C. The
+  particle behaviour is unchanged, and the temperatures didn't go with the
+  old slider — each state names the band it lives in ("Water is liquid
+  between 0°C and 100°C"), so 0°C and 100°C are still what's being taught.
+- **Matter Lab** — Arcade: falling items now ride in a bordered box. 70%
+  are gold and pay points only; 30% are blue and pay points plus an extra
+  second. Blue boxes carry a "+1s" badge, because blue and gold are already
+  this module's colours for solid and gas — a colour-only cue would read as
+  a hint about which jar the item belongs in.
+
+### Fixed
+- **Matter Lab** — Arcade: items spawned on top of the shell's clock and
+  score readout. The lane now starts below them.
+
 ## [1.10.0] - 2026-08-30
 
 ### Added

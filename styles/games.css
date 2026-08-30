@@ -969,11 +969,22 @@
 .mt-changerow.proof .mt-ico,.mt-card.proof .mt-ico{font-size:clamp(38px,7vw,60px)}
 
 /* arcade */
-.mt-arc{position:absolute;inset:0;display:flex;flex-direction:column;padding:12px;pointer-events:none}
+/* top padding clears the shell's own clock (top:14px, up to a 54px face) and
+   the score readout, so a box never drops through the numbers */
+.mt-arc{position:absolute;inset:0;display:flex;flex-direction:column;
+  padding:84px 12px 12px;pointer-events:none}
 .mt-lane{position:relative;flex:1;min-height:0}
 .mt-faller{position:absolute;left:50%;transform:translateX(-50%);
-  display:flex;flex-direction:column;align-items:center;gap:4px}
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  padding:10px 16px;border-radius:12px;border:3px solid var(--chalk-dim);
+  background:rgba(247,242,231,.05)}
+.mt-faller.gold{border-color:var(--c1)}
+.mt-faller.blue{border-color:var(--c3)}
 .mt-faller[hidden]{display:none}
+/* says what the blue border means, so the payout never rides on colour alone */
+.mt-badge{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--c3);
+  border:2px solid var(--c3);border-radius:999px;padding:1px 8px;margin-top:2px}
+.mt-badge[hidden]{display:none}
 .mt-faller .mt-ico{font-size:clamp(40px,7vw,64px)}
 .mt-faller .mt-itemname{font-size:clamp(14px,2vw,18px)}
 .mt-jars{display:flex;gap:10px;justify-content:center;pointer-events:auto}

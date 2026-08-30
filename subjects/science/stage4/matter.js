@@ -24,9 +24,9 @@ addStrings(STRINGS);
 
 /* ---------- tuning ---------- */
 const MT_PARTICLES=24;      // particles on the bench — enough to read as a lattice, few enough to follow
-const MT_FREEZE=0, MT_BOIL=100;
 const MT_ARC_GOOD=300, MT_ARC_BAD=150, MT_ARC_MISS=100;
-const MT_ARC_TIME=1000;     // ms added for a correct sort
+const MT_ARC_TIME=1000;     // ms added by a blue box only
+const MT_ARC_BLUE=0.3;      // 30% of boxes are blue (points AND time); the rest gold
 const MT_FALL_SECS=3.4;     // seconds for one item to fall the whole way on Hard
 const MT_FALL_RAMP=0.965;   // each sorted item speeds the next one up slightly
 const MT_FALL_FLOOR=0.45;   // ...but never below this fraction of the starting time
@@ -85,11 +85,12 @@ function mtShuffle(arr){
 /* The picture IS the lesson here: the same particles rearrange rather than
    three separate diagrams, so "it's the same stuff, just arranged differently"
    is something you watch happen instead of something you're told. */
-function stateFor(temp){
-  if(temp<MT_FREEZE) return "solid";
-  if(temp<MT_BOIL) return "liquid";
-  return "gas";
-}
+/* The slider picks the state directly, ordered the way it's usually drawn:
+   gas on the left, then liquid, then solid. The temperatures didn't get
+   dropped along with the old temperature slider — each state still names the
+   range it lives in, so 0°C and 100°C are still the thing being taught. */
+const MT_SLIDER=["gas","liquid","solid"];
+const rangeNote=s=>t(s==="solid"?"mtRangeSolid":s==="liquid"?"mtRangeLiquid":"mtRangeGas");
 function renderBench(side,stage){
   const wrap=h("div","mt-wrap bench"), stack=h("div","mt-stack");
   wrap.appendChild(stack); stage.appendChild(wrap);
@@ -106,14 +107,15 @@ function renderBench(side,stage){
   stack.appendChild(readout);
 
   const p1=h("div","panel");
-  p1.append(h("h4",null,t("mtTemp").toUpperCase()));
+  p1.append(h("h4",null,t("mtState").toUpperCase()));
   const lw=h("div","lever-wrap"); lw.appendChild(h("div","ticks"));
   const lever=document.createElement("input");
-  lever.type="range"; lever.min=-20; lever.max=120; lever.step=1; lever.value=20;
-  lever.className="lever"; lever.setAttribute("aria-label",t("mtTemp"));
+  lever.type="range"; lever.min=0; lever.max=2; lever.step=1; lever.value=1;
+  lever.className="lever"; lever.setAttribute("aria-label",t("mtState"));
   lw.appendChild(lever); p1.appendChild(lw);
-  const tempOut=h("p","note");
-  p1.appendChild(tempOut);
+  const labs=h("div","clk-unit-labs");
+  MT_SLIDER.forEach(s=>labs.appendChild(h("span",null,stateLabel(s))));
+  p1.appendChild(labs);
   side.appendChild(p1);
 
   /* particles live in logical 0..100 space and are positioned in %, so the
@@ -131,7 +133,7 @@ function renderBench(side,stage){
   }
   const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  let temp=20, raf=0, alive=true;
+  let state="liquid", raf=0, alive=true;
   pending.push(()=>{ alive=false; cancelAnimationFrame(raf); });
 
   /* Reposition as well as re-velocity on every state change. Letting the
@@ -152,11 +154,10 @@ function renderBench(side,stage){
       }
     });
   }
-  let shown=stateFor(temp);
+  let shown=state;
   seedFor(shown);
 
   function step(){
-    const state=stateFor(temp);
     parts.forEach(p=>{
       if(state==="solid"){
         // pinned to the lattice, only vibrating on the spot
@@ -182,21 +183,19 @@ function renderBench(side,stage){
   }
 
   function draw(){
-    const state=stateFor(temp);
     if(state!==shown){ shown=state; seedFor(state); }
     box.classList.remove("solid","liquid","gas");
     box.classList.add(state);
     stateName.textContent=stateLabel(state);
     stateName.className="mt-statename "+state;
     note.textContent=t(state==="solid"?"mtSolidNote":state==="liquid"?"mtLiquidNote":"mtGasNote");
-    tempOut.textContent=temp+"°C";
-    // call out the two thresholds exactly when they're reached
-    thresh.textContent = temp===MT_FREEZE ? t("mtAtFreeze")
-                       : temp===MT_BOIL   ? t("mtAtBoil") : "";
-    thresh.classList.toggle("on",temp===MT_FREEZE||temp===MT_BOIL);
+    [...labs.children].forEach((el,i)=>el.classList.toggle("active",MT_SLIDER[i]===state));
+    // the temperature band this state lives in — still where 0°C and 100°C get taught
+    thresh.textContent=rangeNote(state);
+    thresh.classList.add("on");
     if(reduce) step();
   }
-  lever.oninput=()=>{ temp=+lever.value; draw(); };
+  lever.oninput=()=>{ state=MT_SLIDER[+lever.value]; draw(); };
   draw();
   if(!reduce) raf=requestAnimationFrame(step);
 }
@@ -298,7 +297,11 @@ function renderArcade(side,stage){
   const lane=h("div","mt-lane"); wrap.appendChild(lane);
   const faller=h("div","mt-faller");
   const fIco=h("div","mt-ico"), fName=h("div","mt-itemname");
-  faller.append(fIco,fName); lane.appendChild(faller);
+  /* the +1s badge, not the blue itself, is what says "this one buys time" —
+     blue and gold are already the bench's colours for solid and gas, so a
+     colour-only cue here would read as a hint about the answer */
+  const fBadge=h("div","mt-badge",t("bonusSec"));
+  faller.append(fIco,fName,fBadge); lane.appendChild(faller);
 
   const jars=h("div","mt-jars"); wrap.appendChild(jars);
   const jarEls={};
@@ -309,14 +312,17 @@ function renderArcade(side,stage){
   });
   wrap.appendChild(h("p","mt-hint",t("mtBinHint")));
 
-  let cur=null, y=0, fallMs=0, lastId=null, api=null;
+  let cur=null, y=0, fallMs=0, lastId=null, api=null, bonus=false;
 
   function spawn(){
     let pick;
     do{ pick=rand(MT_ITEMS); }while(MT_ITEMS.length>1 && pick.id===lastId);
     lastId=pick.id; cur=pick;
+    bonus=Math.random()<MT_ARC_BLUE;
     fIco.textContent=cur.ico;
     fName.textContent=itemLabel(cur);
+    faller.className="mt-faller "+(bonus?"blue":"gold");
+    fBadge.hidden=!bonus;
     y=0; faller.style.top="0%"; faller.hidden=false;
   }
   function sort(state){
@@ -325,8 +331,11 @@ function renderArcade(side,stage){
     const ok=state===cur.state;
     if(ok){
       const pts=api.award(MT_ARC_GOOD);
-      api.addTime(MT_ARC_TIME);
-      api.pop(rect.left+rect.width/2,rect.top,"+"+pts,"var(--c5)");
+      // only a blue box buys time; a gold one is points alone
+      if(bonus) api.addTime(MT_ARC_TIME);
+      api.pop(rect.left+rect.width/2,rect.top,
+              bonus?"+"+pts+" "+t("bonusSec"):"+"+pts,
+              bonus?"var(--c3)":"var(--c5)");
       sfxGold();
       fallMs=Math.max(MT_FALL_SECS*1000*MT_FALL_FLOOR,fallMs*MT_FALL_RAMP);
     }else{
@@ -350,7 +359,8 @@ function renderArcade(side,stage){
   api=arcadeShell(stage,{
     how:"arcHowMt",
     key:"mtarc",
-    rules:[["var(--c5)","ruleMtGood"],["var(--red)","ruleMtBad"],["var(--c1)","ruleMtMiss"]],
+    rules:[["var(--c1)","ruleMtGold"],["var(--c3)","ruleMtBlue"],
+           ["var(--red)","ruleMtBad"],["var(--c5)","ruleMtMiss"]],
     reset(){
       fallMs=MT_FALL_SECS*1000;      // Normal stretches this via tm below
       spawn();
