@@ -85,12 +85,31 @@ function mtShuffle(arr){
 /* The picture IS the lesson here: the same particles rearrange rather than
    three separate diagrams, so "it's the same stuff, just arranged differently"
    is something you watch happen instead of something you're told. */
-/* The slider picks the state directly, ordered the way it's usually drawn:
-   gas on the left, then liquid, then solid. The temperatures didn't get
-   dropped along with the old temperature slider — each state still names the
-   range it lives in, so 0°C and 100°C are still the thing being taught. */
+/* The slider runs continuously from gas (0) to solid (1), ordered the way the
+   three states are usually drawn. Nothing snaps: speed, colour and how tightly
+   the particles are held all move with it, so a kid sees one substance being
+   cooled rather than three separate diagrams swapped in and out. The band the
+   slider is currently in only decides the wording, not the picture.
+
+   The temperatures didn't get dropped along with the old temperature slider —
+   each band still names the range it lives in, so 0°C and 100°C are still the
+   thing being taught. */
 const MT_SLIDER=["gas","liquid","solid"];
+/* Band edges sit where the picture actually changes, not at even thirds: the
+   lattice only takes hold from 0.72, and calling it a solid before then left
+   the word saying "solid" over particles still flowing like a liquid. */
+const MT_LOCK=0.72;
+const bandFor=e=>e<0.30?"gas":e<MT_LOCK?"liquid":"solid";
 const rangeNote=s=>t(s==="solid"?"mtRangeSolid":s==="liquid"?"mtRangeLiquid":"mtRangeGas");
+
+/* gold -> green -> blue, matching --c1 / --c5 / --c3. Interpolated rather than
+   switched so the colour reports the slider's exact position, not just a band. */
+const MT_GOLD=[240,166,60], MT_GREEN=[127,181,80], MT_BLUE=[76,143,209];
+const mix=(a,b,k)=>a.map((v,i)=>Math.round(v+(b[i]-v)*k));
+function stateColor(e){
+  const c = e<0.5 ? mix(MT_GOLD,MT_GREEN,e/0.5) : mix(MT_GREEN,MT_BLUE,(e-0.5)/0.5);
+  return "rgb("+c[0]+","+c[1]+","+c[2]+")";
+}
 function renderBench(side,stage){
   const wrap=h("div","mt-wrap bench"), stack=h("div","mt-stack");
   wrap.appendChild(stack); stage.appendChild(wrap);
@@ -110,7 +129,7 @@ function renderBench(side,stage){
   p1.append(h("h4",null,t("mtState").toUpperCase()));
   const lw=h("div","lever-wrap"); lw.appendChild(h("div","ticks"));
   const lever=document.createElement("input");
-  lever.type="range"; lever.min=0; lever.max=2; lever.step=1; lever.value=1;
+  lever.type="range"; lever.min=0; lever.max=100; lever.step=1; lever.value=50;
   lever.className="lever"; lever.setAttribute("aria-label",t("mtState"));
   lw.appendChild(lever); p1.appendChild(lw);
   const labs=h("div","clk-unit-labs");
@@ -133,69 +152,74 @@ function renderBench(side,stage){
   }
   const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  let state="liquid", raf=0, alive=true;
+  let e=0.5, raf=0, alive=true;                  // 0 = gas, 1 = solid
   pending.push(()=>{ alive=false; cancelAnimationFrame(raf); });
 
-  /* Reposition as well as re-velocity on every state change. Letting the
-     particles drift out of the old arrangement looked like a clump for the
-     first few seconds, which teaches the opposite of "a gas spreads out to
-     fill the space" — the arrangement has to read correctly immediately. */
-  function seedFor(state){
-    parts.forEach(p=>{
-      if(state==="solid"){
-        p.x=p.hx; p.y=p.hy; p.vx=0; p.vy=0;
-      }else{
-        const top=state==="liquid"?46:8;
-        p.x=8+Math.random()*84;
-        p.y=top+Math.random()*(92-top);
-        const sp=state==="liquid"?0.18:0.75;
-        const a=Math.random()*Math.PI*2;
-        p.vx=Math.cos(a)*sp; p.vy=Math.sin(a)*sp;
-      }
-    });
-  }
-  let shown=state;
-  seedFor(shown);
+  // give every particle a heading to start with; the speed itself is set from
+  // the slider each frame, so this only ever fixes the direction
+  parts.forEach(p=>{
+    const a=Math.random()*Math.PI*2;
+    p.vx=Math.cos(a); p.vy=Math.sin(a);
+    p.x=8+Math.random()*84; p.y=8+Math.random()*84;
+  });
+
+  const MT_SP_GAS=0.85, MT_SP_SOLID=0.02;
+  /* Three things move with the slider, all continuous:
+       speed  — fast when free, almost nothing once solid
+       lid    — the top of the space they may occupy, so a gas filling the tank
+                visibly collapses into a liquid with a surface as it cools
+       grip   — how strongly each particle is pulled back to its lattice spot;
+                zero until well into the solid third, then it takes over and
+                the free motion is damped away, which is what "locked in a
+                fixed pattern" actually looks like happening */
+  const speedAt=v=>MT_SP_SOLID+(MT_SP_GAS-MT_SP_SOLID)*Math.pow(1-v,1.7);
+  const lidAt=v=>6+40*Math.min(1,v/0.5);         // 6 (whole tank) -> 46 (pooled)
+  // exponent below 1 so the grip bites soon after the solid band starts,
+  // rather than leaving the first slice of "solid" still sloshing about
+  const gripAt=v=>v<MT_LOCK?0:Math.pow((v-MT_LOCK)/(1-MT_LOCK),0.75);
 
   function step(){
+    const sp=speedAt(e), lid=lidAt(e), grip=gripAt(e);
+    // a small FIXED tremor: scaling it up with grip made a solid jiggle harder
+    // than the liquid it had just frozen from, which is backwards
+    const wob=reduce?0:0.5;
     parts.forEach(p=>{
-      if(state==="solid"){
-        // pinned to the lattice, only vibrating on the spot
-        p.ph+=0.08;
-        const amp=reduce?0:1.5;
-        p.x=p.hx+Math.cos(p.ph)*amp;
-        p.y=p.hy+Math.sin(p.ph*1.3)*amp;
-      }else{
-        // liquid keeps a surface and pools at the bottom; gas fills everything
-        const top=state==="liquid"?42:6;
-        p.x+=p.vx; p.y+=p.vy;
-        if(p.x<6){ p.x=6; p.vx=Math.abs(p.vx); }
-        if(p.x>94){ p.x=94; p.vx=-Math.abs(p.vx); }
-        if(p.y<top){ p.y=top; p.vy=Math.abs(p.vy); }
-        if(p.y>94){ p.y=94; p.vy=-Math.abs(p.vy); }
+      const mag=Math.hypot(p.vx,p.vy)||1;        // keep heading, retune the speed
+      p.vx=p.vx/mag*sp; p.vy=p.vy/mag*sp;
+      p.x+=p.vx*(1-grip); p.y+=p.vy*(1-grip);
+      if(grip>0){
+        p.ph+=0.05;
+        p.x+=(p.hx+Math.cos(p.ph)*wob-p.x)*grip*0.14;
+        p.y+=(p.hy+Math.sin(p.ph*1.3)*wob-p.y)*grip*0.14;
       }
+      if(p.x<6){ p.x=6; p.vx=Math.abs(p.vx); }
+      if(p.x>94){ p.x=94; p.vx=-Math.abs(p.vx); }
+      if(p.y<lid){ p.y=lid; p.vy=Math.abs(p.vy); }
+      if(p.y>94){ p.y=94; p.vy=-Math.abs(p.vy); }
     });
+    const col=stateColor(e);
     dots.forEach((d,i)=>{
       d.style.left=parts[i].x+"%";
       d.style.top=parts[i].y+"%";
+      d.style.background=col;
     });
     if(alive && !reduce) raf=requestAnimationFrame(step);
   }
 
   function draw(){
-    if(state!==shown){ shown=state; seedFor(state); }
-    box.classList.remove("solid","liquid","gas");
-    box.classList.add(state);
-    stateName.textContent=stateLabel(state);
-    stateName.className="mt-statename "+state;
-    note.textContent=t(state==="solid"?"mtSolidNote":state==="liquid"?"mtLiquidNote":"mtGasNote");
-    [...labs.children].forEach((el,i)=>el.classList.toggle("active",MT_SLIDER[i]===state));
+    const band=bandFor(e);
+    stateName.textContent=stateLabel(band);
+    // the wording switches at the band edges, but the colour is the slider's
+    // own exact position, so the name and the picture never disagree
+    stateName.style.color=stateColor(e);
+    note.textContent=t(band==="solid"?"mtSolidNote":band==="liquid"?"mtLiquidNote":"mtGasNote");
+    [...labs.children].forEach((el,i)=>el.classList.toggle("active",MT_SLIDER[i]===band));
     // the temperature band this state lives in — still where 0°C and 100°C get taught
-    thresh.textContent=rangeNote(state);
+    thresh.textContent=rangeNote(band);
     thresh.classList.add("on");
     if(reduce) step();
   }
-  lever.oninput=()=>{ state=MT_SLIDER[+lever.value]; draw(); };
+  lever.oninput=()=>{ e=+lever.value/100; draw(); };
   draw();
   if(!reduce) raf=requestAnimationFrame(step);
 }

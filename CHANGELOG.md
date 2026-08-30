@@ -12,6 +12,19 @@ All notable changes to this project are documented here, newest first.
 
 Each version bump gets an entry here and a matching `git tag` (e.g. `v1.0.0`).
 
+## [1.10.2] - 2026-08-31
+
+### Changed
+- **Matter Lab** — Particle Bench: the state slider is continuous instead of
+  snapping to three positions. Speed, colour and how tightly the particles
+  are held all move with it, so cooling reads as one substance changing
+  rather than three diagrams being swapped in. The particles run fast and
+  gold as a gas, slow and turn green through the liquid range, then settle
+  into a barely-trembling blue lattice as a solid — 36x slower at the solid
+  end than the gas end. The band names sit where the picture actually
+  changes rather than at even thirds, so the word never says "solid" over
+  particles still flowing.
+
 ## [1.10.1] - 2026-08-30
 
 ### Changed
